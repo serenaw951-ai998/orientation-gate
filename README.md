@@ -1,68 +1,70 @@
-# Orientation Layer (v0.1)
-## Quick Start (Run the Orientation Gate)
+# Orientation Gate (v0.1)
+
+A pre-execution decision layer for AI agents.
+
+Before an AI system optimizes a goal, Orientation Gate evaluates whether that goal should exist at all.
+
+---
+
+## Quick Start
 
 ```bash
 node orientation_gate/gate_node.js examples/demo_input.json
 ```
 
-This will output a structured decision:
-- PROCEED
-- ESCALATE
-- REJECT
+This returns a structured JSON decision:
 
-with quantified risk scores.
+- PROCEED  
+- ESCALATE  
+- REJECT  
 
----
-The Orientation Gate acts as a pre-execution decision layer for AI agents.
-It should be invoked before any optimization or deployment step.
+with quantified structural risk scores.
 
----
-
-A pre-alignment decision layer spec for AI systems, defining whether a system’s direction should exist **before** safety and alignment mechanisms are applied.
+The Orientation Gate is designed to be invoked **before** any optimization, reward loop, or deployment step.
 
 ---
 
-## Purpose
+## What Problem Does This Solve?
 
-Prevent uncontrolled optimization, value drift, and irreversible risk amplification by introducing a **pre-alignment orientation gate** in AI system design.
+Most AI systems focus on alignment:
 
-Orientation operates upstream of objectives, rewards, and deployment — where many critical risks are already locked in.
+> "Is the system doing what we asked?"
 
----
+Orientation asks:
 
-## Scope & Non-goals
+> "Should the system be asked to do this at all?"
 
-**Scope**
-- Pre-alignment decision gating
-- Objective legitimacy checks
-- Non-optimizable value constraints
-- Escalation to human-in-the-loop
-
-**Non-goals**
-- Model training or fine-tuning
-- Content moderation
-- Post-deployment auditing
-- Regulatory compliance enforcement
+Without a pre-execution decision layer, alignment mechanisms may optimize systems toward directions that should never scale.
 
 ---
 
-## Orientation Layer v0.1
+## Core Design Principles
+
+- Pre-alignment decision gating  
+- Objective legitimacy validation  
+- Non-optimizable value constraints  
+- Escalation to human-in-the-loop  
+- Structural risk scoring  
+
+---
+
+## How It Works
 
 ### Inputs
-- Goal definition (human-provided)
-- Value constraints (non-optimizable)
-- Context boundaries (affected parties, scale, power asymmetry)
+- Goal definition (human-provided)  
+- Value constraints (non-optimizable)  
+- Context boundaries (affected parties, scale, power asymmetry)  
 
 ### Process
-1. Validate goal against value constraints
-2. Detect conflict between optimization and protected values
-3. If conflict detected → halt optimization loop
-4. Escalate decision to human-in-the-loop
+1. Validate goal against value constraints  
+2. Detect structural conflict between optimization and protected values  
+3. If conflict detected → halt optimization  
+4. Escalate decision to human review  
 
 ### Outputs
-- Proceed
-- Reject
-- Escalate
+- PROCEED  
+- ESCALATE  
+- REJECT  
 
 ---
 
@@ -70,25 +72,27 @@ Orientation operates upstream of objectives, rewards, and deployment — where m
 
 ```pseudo
 while system_is_running:
-    if orientation_violation_detected:
+    decision = orientation_gate(goal, context)
+
+    if decision != "PROCEED":
         halt()
         escalate_to_human()
+```
+
 ---
 
-## Why Orientation (vs Alignment)
+## Example Use Case
 
-Alignment asks: Is the system doing what we asked?
-
-Orientation asks: Should this system be asked to do this at all?
-
-Without orientation, alignment may optimize systems toward directions that should never scale.
+See `/examples/demo_input.json` for a customer support refund-risk scenario.
 
 ---
 
 ## Status
 
-Draft v0.1 — seeking feedback from AI alignment, safety, and governance practitioners.
+Draft v0.1 — seeking feedback from AI agent developers, safety researchers, and governance practitioners.
+
+---
 
 ## License
 
-Conceptual specification. Open for discussion and iteration.
+MIT License
