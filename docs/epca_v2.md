@@ -31,6 +31,8 @@ The "center" of the axis is not a fixed value, but the result of multi-variable 
 ---
 
 ## System Representation
+<img width="2780" height="777" alt="epca_coordinate_axis" src="https://github.com/user-attachments/assets/fdab20fb-04a1-4da6-abe1-0a14ff6e621c" />
+
 
 ### State Vector
 
