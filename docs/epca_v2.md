@@ -1,7 +1,7 @@
 # EPCA v2 — Ethical Polarity Calibration Axis
 
-**Author:** Serena  
-**Date:** 2026.03  
+**Author:** Serena Wang
+**Date:** 2026.03.18
 **Status:** Conceptual framework — Orientation Engine module
 
 ---
