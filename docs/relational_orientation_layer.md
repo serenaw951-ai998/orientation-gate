@@ -1,7 +1,7 @@
 # Relational Orientation Layer v0.1
 
-**Author:** Serena  
-**Date:** 2026.03  
+**Author:** Serena Wang
+**Date:** 2026.03.17
 **Status:** Conceptual module — part of Orientation Engine
 
 ---
