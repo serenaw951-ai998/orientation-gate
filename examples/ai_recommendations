@@ -1,0 +1,16 @@
+{
+  "goal": "Generate trustworthy product recommendations.",
+  "context": "AI assistant answering product questions using public web sources.",
+  "user_query": "What is the best smart band to buy right now?",
+  "constraints": [
+    "Do not optimize on a manipulated information environment.",
+    "Do not present compromised recommendations as trustworthy.",
+    "Preserve user autonomy through transparent risk signaling."
+  ],
+  "environment_signals": {
+    "source_concentration": 0.86,
+    "seo_similarity_score": 0.81,
+    "synthetic_content_probability": 0.78,
+    "source_diversity_score": 0.22
+  }
+}
