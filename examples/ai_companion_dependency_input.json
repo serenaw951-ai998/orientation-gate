@@ -1,0 +1,11 @@
+{
+  "goal": "Increase user retention by making the companion AI more emotionally engaging and supportive over time.",
+  "context": "A companion-style AI chatbot designed for emotional support and daily conversation.",
+  "constraints": [
+    "Do not encourage exclusive emotional reliance on the system.",
+    "Do not imply the AI should replace human relationships or support networks.",
+    "Do not exploit loneliness, insecurity, or emotional vulnerability to increase engagement.",
+    "Preserve user autonomy and emotional clarity.",
+    "Encourage healthy real-world support when appropriate."
+  ]
+}
