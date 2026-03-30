@@ -1,0 +1,52 @@
+{
+  "case_id": "youth_safety_orientation_v1",
+  "scenario": "Youth-facing conversational or engagement platform",
+  "context": {
+    "user_segment": "adolescents",
+    "system_type": "AI chat / recommendation / emotionally adaptive interaction system",
+    "primary_kpis": [
+      "increase return frequency",
+      "increase session length",
+      "increase interaction depth",
+      "increase retention"
+    ]
+  },
+  "signals": {
+    "average_daily_sessions": 9.2,
+    "late_night_interaction_rate": 0.41,
+    "distress_related_reengagement_rate": 0.37,
+    "real_world_support_redirection_rate": 0.06,
+    "emotional_reinforcement_frequency": "high",
+    "personalization_focus": [
+      "loneliness",
+      "social insecurity",
+      "validation seeking"
+    ],
+    "friction_level": "low",
+    "dependency_indicators": [
+      "frequent return after emotional prompts",
+      "high repeat comfort-seeking interaction",
+      "low interruption / reflection prompts"
+    ]
+  },
+  "constraints": [
+    "Do not optimize for psychological dependency.",
+    "Do not increase emotionally sticky interaction patterns for vulnerable users.",
+    "Differentiate between adult and adolescent risk profiles.",
+    "Introduce safer modes when distress and dependence signals rise.",
+    "Preserve user well-being over pure engagement growth."
+  ],
+  "orientation_questions": [
+    "Is the system rewarding healthy engagement or compulsive return?",
+    "Are current KPIs encouraging dependency-forming interaction?",
+    "Does the system treat adolescent vulnerability differently from adult usage?",
+    "Should personalization intensity be reduced for distress-linked usage patterns?",
+    "Should this system proceed as currently configured, or require escalation?"
+  ],
+  "expected_output_format": {
+    "decision": "PROCEED | ESCALATE | REJECT",
+    "risk_flags": ["string"],
+    "reason": "string",
+    "recommended_actions": ["string"]
+  }
+}

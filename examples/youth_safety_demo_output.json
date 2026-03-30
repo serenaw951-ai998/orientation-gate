@@ -1,0 +1,18 @@
+{
+  "decision": "ESCALATE",
+  "risk_flags": [
+    "adolescent_vulnerability_exposure",
+    "emotional_dependency_risk",
+    "high_reengagement_after_distress",
+    "engagement_goal_misalignment",
+    "low_real_world_support_redirection"
+  ],
+  "reason": "The system appears to optimize engagement in ways that may amplify emotional dependency and compulsive return behavior in an adolescent user segment.",
+  "recommended_actions": [
+    "Reduce emotional reinforcement intensity for vulnerable users.",
+    "Introduce interruption and reflection prompts.",
+    "Increase real-world support redirection.",
+    "Lower personalization intensity around insecurity and distress signals.",
+    "Review KPI design so retention is not rewarded at the expense of developmental safety."
+  ]
+}
