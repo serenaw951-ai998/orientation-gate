@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music Prompt Engine · 音乐提示词生成器</title>
+<meta name="description" content="调参数 → 生成音乐提示词 → 粘到任意 AI 音乐软件">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --surface2: #f0ede8;
+    --border: rgba(0,0,0,0.10);
+    --border-strong: rgba(0,0,0,0.20);
+    --text: #1a1917;
+    --text-muted: #6b6860;
+    --text-hint: #9b9890;
+    --accent: #2a2825;
+    --tag-active-bg: #1a1917;
+    --tag-active-text: #f7f6f3;
+    --inst-active-bg: #1a1917;
+    --inst-active-text: #f7f6f3;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141412;
+      --surface: #1e1d1b;
+      --surface2: #272522;
+      --border: rgba(255,255,255,0.09);
+      --border-strong: rgba(255,255,255,0.18);
+      --text: #f0ede8;
+      --text-muted: #9b9890;
+      --text-hint: #6b6860;
+      --accent: #f0ede8;
+      --tag-active-bg: #f0ede8;
+      --tag-active-text: #1a1917;
+      --inst-active-bg: #f0ede8;
+      --inst-active-text: #1a1917;
+    }
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 5rem;
+  }
+
+  header {
+    margin-bottom: 3rem;
+  }
+
+  .logo {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-hint);
+    margin-bottom: 1rem;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+
+  .tagline {
+    font-size: 15px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .section {
+    margin-bottom: 2.5rem;
+  }
+
+  .section-header {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-hint);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  /* Sliders */
+  .slider-row {
+    display: grid;
+    grid-template-columns: 88px 1fr 64px;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 12px;
+  }
+
+  .slider-label { font-size: 13px; color: var(--text); }
+  .slider-poles {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--text-hint);
+    margin-top: 3px;
+  }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--border-strong);
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--text);
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+  input[type=range]::-moz-range-thumb {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--text);
+    border: none;
+    cursor: pointer;
+  }
+
+  .slider-val {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  /* Tags */
+  .tag-group { display: flex; flex-wrap: wrap; gap: 7px; }
+
+  .tag {
+    font-size: 12px;
+    padding: 6px 13px;
+    border-radius: 20px;
+    border: 0.5px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.12s;
+    user-select: none;
+    line-height: 1;
+  }
+  .tag:hover { color: var(--text); border-color: var(--accent); }
+  .tag.active {
+    background: var(--tag-active-bg);
+    color: var(--tag-active-text);
+    border-color: var(--tag-active-bg);
+  }
+
+  /* Instrument cards */
+  .cat-label {
+    font-size: 11px;
+    color: var(--text-hint);
+    margin: 14px 0 7px;
+    font-weight: 500;
+  }
+  .cat-label:first-child { margin-top: 0; }
+
+  .inst-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 7px;
+  }
+
+  .inst-card {
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 9px 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.12s;
+    background: var(--surface);
+  }
+  .inst-card:hover { border-color: var(--border-strong); }
+  .inst-card.active {
+    background: var(--inst-active-bg);
+    border-color: var(--inst-active-bg);
+  }
+  .inst-card.active .inst-name { color: var(--inst-active-text); }
+  .inst-card.active .inst-meta { color: rgba(255,255,255,0.5); }
+
+  @media (prefers-color-scheme: dark) {
+    .inst-card.active .inst-meta { color: rgba(20,20,18,0.55); }
+  }
+
+  .inst-name { font-size: 13px; color: var(--text); margin-bottom: 2px; font-weight: 500; }
+  .inst-meta { font-size: 11px; color: var(--text-hint); }
+
+  /* Divider */
+  .divider { height: 0.5px; background: var(--border); margin: 2.5rem 0; }
+
+  /* Output */
+  .output-area {
+    background: var(--surface2);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    border: 0.5px solid var(--border);
+    min-height: 88px;
+    margin-bottom: 1rem;
+  }
+
+  .output-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .output-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-hint);
+  }
+
+  .output-compat {
+    font-size: 11px;
+    color: var(--text-hint);
+  }
+
+  .output-text {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.75;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    word-break: break-word;
+  }
+
+  .output-text.placeholder { color: var(--text-hint); font-family: inherit; font-size: 14px; }
+
+  /* Buttons */
+  .btn-row { display: flex; gap: 8px; }
+
+  .btn-gen {
+    flex: 1;
+    padding: 13px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: var(--radius);
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    transition: opacity 0.12s;
+    letter-spacing: 0.01em;
+  }
+  .btn-gen:hover { opacity: 0.85; }
+  .btn-gen:active { opacity: 0.7; transform: scale(0.99); }
+
+  .btn-copy {
+    padding: 13px 20px;
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: var(--radius);
+    background: transparent;
+    border: 0.5px solid var(--border-strong);
+    color: var(--text-muted);
+    transition: all 0.12s;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+  .btn-copy:hover { background: var(--surface); color: var(--text); }
+
+  .hint { font-size: 12px; color: var(--text-hint); margin-top: 8px; min-height: 18px; }
+
+  footer {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 0.5px solid var(--border);
+    font-size: 12px;
+    color: var(--text-hint);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  footer a { color: var(--text-hint); text-decoration: none; }
+  footer a:hover { color: var(--text-muted); }
+
+  @media (max-width: 480px) {
+    .page { padding: 2rem 1rem 4rem; }
+    h1 { font-size: 22px; }
+    .slider-row { grid-template-columns: 72px 1fr 56px; gap: 10px; }
+    .inst-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+    .btn-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="logo">SenuxTech · Music Prompt Engine</div>
+    <h1>音乐提示词生成器</h1>
+    <p class="tagline">调参数 · 选配器 → 生成提示词 → 粘到任意 AI 音乐软件</p>
+  </header>
+
+  <!-- 情绪维度 -->
+  <div class="section">
+    <div class="section-header">情绪维度</div>
+
+    <div class="slider-row">
+      <div><div class="slider-label">情绪温度</div><div class="slider-poles"><span>冷</span><span>暖</span></div></div>
+      <input type="range" min="1" max="10" value="5" id="temp" step="1">
+      <div class="slider-val" id="temp-out">中性</div>
+    </div>
+
+    <div class="slider-row">
+      <div><div class="slider-label">张力曲线</div><div class="slider-poles"><span>平缓</span><span>激烈</span></div></div>
+      <input type="range" min="1" max="10" value="5" id="tension" step="1">
+      <div class="slider-val" id="tension-out">中等</div>
+    </div>
+
+    <div class="slider-row">
+      <div><div class="slider-label">明暗基调</div><div class="slider-poles"><span>暗</span><span>亮</span></div></div>
+      <input type="range" min="1" max="10" value="5" id="brightness" step="1">
+      <div class="slider-val" id="brightness-out">中性</div>
+    </div>
+
+    <div class="slider-row">
+      <div><div class="slider-label">空间感</div><div class="slider-poles"><span>紧密</span><span>空旷</span></div></div>
+      <input type="range" min="1" max="10" value="5" id="space" step="1">
+      <div class="slider-val" id="space-out">平衡</div>
+    </div>
+
+    <div class="slider-row">
+      <div><div class="slider-label">对称度</div><div class="slider-poles"><span>破碎</span><span>工整</span></div></div>
+      <input type="range" min="1" max="10" value="5" id="symmetry" step="1">
+      <div class="slider-val" id="symmetry-out">平衡</div>
+    </div>
+  </div>
+
+  <!-- 配器 -->
+  <div class="section">
+    <div class="section-header">配器选择（可多选）</div>
+
+    <div class="cat-label">弦乐</div>
+    <div class="inst-grid">
+      <div class="inst-card" data-en="lush strings"><div class="inst-name">弦乐组</div><div class="inst-meta">暖 · 史诗</div></div>
+      <div class="inst-card" data-en="solo violin"><div class="inst-name">独奏小提琴</div><div class="inst-meta">细腻 · 哀婉</div></div>
+      <div class="inst-card" data-en="solo cello"><div class="inst-name">大提琴</div><div class="inst-meta">深沉 · 温厚</div></div>
+      <div class="inst-card" data-en="pizzicato strings"><div class="inst-name">拨弦</div><div class="inst-meta">轻巧 · 俏皮</div></div>
+    </div>
+
+    <div class="cat-label">键盘</div>
+    <div class="inst-grid">
+      <div class="inst-card" data-en="acoustic piano"><div class="inst-name">钢琴</div><div class="inst-meta">中性 · 万能</div></div>
+      <div class="inst-card" data-en="electric piano"><div class="inst-name">电钢琴</div><div class="inst-meta">温暖 · 复古</div></div>
+      <div class="inst-card" data-en="soft synth pads"><div class="inst-name">合成弦垫</div><div class="inst-meta">冷 · 氛围</div></div>
+      <div class="inst-card" data-en="church organ"><div class="inst-name">管风琴</div><div class="inst-meta">宏大 · 庄严</div></div>
+    </div>
+
+    <div class="cat-label">弹拨乐</div>
+    <div class="inst-grid">
+      <div class="inst-card" data-en="acoustic guitar"><div class="inst-name">木吉他</div><div class="inst-meta">自然 · 亲近</div></div>
+      <div class="inst-card" data-en="electric guitar"><div class="inst-name">电吉他</div><div class="inst-meta">力量 · 摇滚</div></div>
+      <div class="inst-card" data-en="guqin"><div class="inst-name">古琴</div><div class="inst-meta">古风 · 悠远</div></div>
+      <div class="inst-card" data-en="pipa"><div class="inst-name">琵琶</div><div class="inst-meta">国风 · 激昂</div></div>
+      <div class="inst-card" data-en="guzheng"><div class="inst-name">古筝</div><div class="inst-meta">流动 · 清雅</div></div>
+    </div>
+
+    <div class="cat-label">管乐 / 人声</div>
+    <div class="inst-grid">
+      <div class="inst-card" data-en="flute"><div class="inst-name">长笛</div><div class="inst-meta">轻盈 · 空灵</div></div>
+      <div class="inst-card" data-en="erhu"><div class="inst-name">二胡</div><div class="inst-meta">悲切 · 人声感</div></div>
+      <div class="inst-card" data-en="brass section"><div class="inst-name">铜管组</div><div class="inst-meta">宏伟 · 英雄</div></div>
+      <div class="inst-card" data-en="choir vocals"><div class="inst-name">合唱团</div><div class="inst-meta">神圣 · 宏大</div></div>
+      <div class="inst-card" data-en="breathy female vocals"><div class="inst-name">人声气息</div><div class="inst-meta">柔 · 亲密</div></div>
+    </div>
+
+    <div class="cat-label">节奏 / 打击</div>
+    <div class="inst-grid">
+      <div class="inst-card" data-en="live drums"><div class="inst-name">真鼓</div><div class="inst-meta">有力 · 真实</div></div>
+      <div class="inst-card" data-en="electronic beats"><div class="inst-name">电子鼓</div><div class="inst-meta">现代 · 律动</div></div>
+      <div class="inst-card" data-en="taiko drums"><div class="inst-name">太鼓</div><div class="inst-meta">震撼 · 史诗</div></div>
+      <div class="inst-card" data-en="no drums, percussion-free"><div class="inst-name">无打击乐</div><div class="inst-meta">纯净 · 留白</div></div>
+    </div>
+
+    <div class="cat-label">电子音色</div>
+    <div class="inst-grid">
+      <div class="inst-card" data-en="deep bass synth"><div class="inst-name">低音合成器</div><div class="inst-meta">厚重 · 底气</div></div>
+      <div class="inst-card" data-en="arpeggiated synth"><div class="inst-name">琶音合成器</div><div class="inst-meta">流动 · 科技</div></div>
+      <div class="inst-card" data-en="ambient texture layers"><div class="inst-name">氛围层</div><div class="inst-meta">漂浮 · 冥想</div></div>
+    </div>
+  </div>
+
+  <!-- 风格 -->
+  <div class="section">
+    <div class="section-header">风格 / 场景（单选）</div>
+    <div class="tag-group" id="genre-tags">
+      <span class="tag" data-val="short drama">短剧</span>
+      <span class="tag" data-val="web novel">网文</span>
+      <span class="tag" data-val="lo-fi">Lo-fi</span>
+      <span class="tag" data-val="cinematic">电影感</span>
+      <span class="tag" data-val="pop">流行</span>
+      <span class="tag" data-val="ambient">氛围</span>
+      <span class="tag" data-val="electronic">电子</span>
+      <span class="tag" data-val="traditional Chinese">国风</span>
+      <span class="tag" data-val="game OST">游戏配乐</span>
+    </div>
+  </div>
+
+  <!-- 情绪 -->
+  <div class="section">
+    <div class="section-header">情绪关键词（可多选）</div>
+    <div class="tag-group" id="mood-tags">
+      <span class="tag" data-val="longing">思念</span>
+      <span class="tag" data-val="heartbreak">心碎</span>
+      <span class="tag" data-val="resilience">坚韧</span>
+      <span class="tag" data-val="hope">希望</span>
+      <span class="tag" data-val="rage">愤怒</span>
+      <span class="tag" data-val="melancholy">忧郁</span>
+      <span class="tag" data-val="euphoria">狂喜</span>
+      <span class="tag" data-val="numbness">麻木</span>
+      <span class="tag" data-val="tenderness">柔情</span>
+      <span class="tag" data-val="dread">恐惧</span>
+      <span class="tag" data-val="nostalgia">怀旧</span>
+      <span class="tag" data-val="determination">决意</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Output -->
+  <div class="output-area">
+    <div class="output-top">
+      <div class="output-label">生成的提示词</div>
+      <div class="output-compat">适用：Suno · Udio · 天工 · 网易云创作 · 任意 AI 音乐软件</div>
+    </div>
+    <div class="output-text placeholder" id="output">选好参数后点击生成 →</div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-gen" onclick="generate()">生成提示词</button>
+    <button class="btn-copy" onclick="copyPrompt()">复制</button>
+  </div>
+  <div class="hint" id="hint"></div>
+
+  <footer>
+    <span>Music Prompt Engine · SenuxTech</span>
+    <span>免费工具，欢迎分享</span>
+  </footer>
+
+</div>
+
+<script>
+const tempLabels    = ['极冷','很冷','偏冷','微冷','中性','微暖','偏暖','很暖','极暖','炽热'];
+const tensionLabels = ['极平','很平','平缓','微动','中等','微张','有力','强烈','激烈','爆发'];
+const brightLabels  = ['极暗','很暗','暗沉','偏暗','中性','微亮','偏亮','明亮','很亮','极亮'];
+const spaceLabels   = ['极密','很密','紧密','偏密','平衡','偏空','宽阔','空旷','很空','无垠'];
+const symLabels     = ['极碎','很碎','破碎','不稳','平衡','稳定','工整','规整','很整','极整'];
+
+function bindSlider(id, labels, outId) {
+  const el = document.getElementById(id);
+  const out = document.getElementById(outId);
+  el.addEventListener('input', () => { out.textContent = labels[parseInt(el.value)-1]; });
+  out.textContent = labels[parseInt(el.value)-1];
+}
+bindSlider('temp',       tempLabels,    'temp-out');
+bindSlider('tension',    tensionLabels, 'tension-out');
+bindSlider('brightness', brightLabels,  'brightness-out');
+bindSlider('space',      spaceLabels,   'space-out');
+bindSlider('symmetry',   symLabels,     'symmetry-out');
+
+document.querySelectorAll('.inst-card').forEach(c => {
+  c.addEventListener('click', () => c.classList.toggle('active'));
+});
+
+function setupTags(groupId, multi) {
+  document.getElementById(groupId).querySelectorAll('.tag').forEach(t => {
+    t.addEventListener('click', () => {
+      if (!multi) document.getElementById(groupId).querySelectorAll('.tag').forEach(x => x.classList.remove('active'));
+      t.classList.toggle('active');
+    });
+  });
+}
+setupTags('genre-tags', false);
+setupTags('mood-tags', true);
+
+function getActiveInst() {
+  return [...document.querySelectorAll('.inst-card.active')].map(c => c.dataset.en);
+}
+function getActive(groupId) {
+  return [...document.getElementById(groupId).querySelectorAll('.tag.active')].map(t => t.dataset.val);
+}
+
+function generate() {
+  const temp       = parseInt(document.getElementById('temp').value);
+  const tension    = parseInt(document.getElementById('tension').value);
+  const brightness = parseInt(document.getElementById('brightness').value);
+  const space      = parseInt(document.getElementById('space').value);
+  const symmetry   = parseInt(document.getElementById('symmetry').value);
+
+  const genres      = getActive('genre-tags');
+  const moods       = getActive('mood-tags');
+  const instruments = getActiveInst();
+
+  let parts = [];
+
+  if (genres.length)      parts.push(genres.join(', '));
+  if (moods.length)       parts.push(moods.join(', '));
+  if (instruments.length) parts.push(instruments.join(', '));
+  else {
+    if (temp <= 3)       parts.push('cold synth pads, sparse piano');
+    else if (temp <= 6)  parts.push('acoustic piano, soft strings');
+    else                 parts.push('warm strings, rich brass');
+  }
+
+  if (tension <= 3)       parts.push('slow tempo, quiet, minimal');
+  else if (tension <= 5)  parts.push('moderate tempo, mid dynamics');
+  else if (tension <= 7)  parts.push('building intensity, dynamic arrangement');
+  else                    parts.push('high energy, dramatic peaks, intense');
+
+  if (brightness <= 3)    parts.push('minor key, dark, heavy reverb');
+  else if (brightness <= 6) parts.push('neutral tonality, slight minor');
+  else                    parts.push('bright major key, uplifting, clear mix');
+
+  if (space <= 3)         parts.push('dry intimate mix');
+  else if (space <= 6)    parts.push('moderate reverb, balanced space');
+  else                    parts.push('vast reverb, wide stereo, cinematic space');
+
+  if (symmetry <= 3)      parts.push('fragmented, irregular phrases');
+  else if (symmetry <= 6) parts.push('loose structure, natural flow');
+  else                    parts.push('clear structure, steady rhythm');
+
+  const out = document.getElementById('output');
+  out.textContent = parts.join(', ');
+  out.classList.remove('placeholder');
+}
+
+function copyPrompt() {
+  const text = document.getElementById('output').textContent;
+  if (document.getElementById('output').classList.contains('placeholder')) return;
+  navigator.clipboard.writeText(text).then(() => {
+    document.getElementById('hint').textContent = '已复制 ✓ 粘到你的 AI 音乐软件即可';
+    setTimeout(() => document.getElementById('hint').textContent = '', 3000);
+  }).catch(() => {
+    const el = document.getElementById('output');
+    const range = document.createRange();
+    range.selectNode(el);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    document.getElementById('hint').textContent = '请手动 Ctrl+C 复制';
+  });
+}
+</script>
+</body>
+</html>
