@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music Prompt Engine · SenuxTech</title>
+<meta name="description" content="Dial in your emotion parameters → generate a music prompt → paste into any AI music tool">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --surface2: #f0ede8;
+    --border: rgba(0,0,0,0.10);
+    --border-strong: rgba(0,0,0,0.20);
+    --text: #1a1917;
+    --text-muted: #6b6860;
+    --text-hint: #9b9890;
+    --accent: #2a2825;
+    --tag-active-bg: #1a1917;
+    --tag-active-text: #f7f6f3;
+    --inst-active-bg: #1a1917;
+    --inst-active-text: #f7f6f3;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141412;
+      --surface: #1e1d1b;
+      --surface2: #272522;
+      --border: rgba(255,255,255,0.09);
+      --border-strong: rgba(255,255,255,0.18);
+      --text: #f0ede8;
+      --text-muted: #9b9890;
+      --text-hint: #6b6860;
+      --accent: #f0ede8;
+      --tag-active-bg: #f0ede8;
+      --tag-active-text: #1a1917;
+      --inst-active-bg: #f0ede8;
+      --inst-active-text: #1a1917;
+    }
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+    min-height: 100vh;
+  }
+
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 5rem;
+  }
+
+  header { margin-bottom: 3rem; }
+
+  .logo {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-hint);
+    margin-bottom: 1rem;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+
+  .tagline {
+    font-size: 15px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  .section { margin-bottom: 2.5rem; }
+
+  .section-header {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-hint);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  .slider-row {
+    display: grid;
+    grid-template-columns: 110px 1fr 80px;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 12px;
+  }
+
+  .slider-label { font-size: 13px; color: var(--text); }
+  .slider-poles {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: var(--text-hint);
+    margin-top: 3px;
+  }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--border-strong);
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--text);
+    cursor: pointer;
+    transition: transform 0.1s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+  input[type=range]::-moz-range-thumb {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--text);
+    border: none;
+    cursor: pointer;
+  }
+
+  .slider-val {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .tag-group { display: flex; flex-wrap: wrap; gap: 7px; }
+
+  .tag {
+    font-size: 12px;
+    padding: 6px 13px;
+    border-radius: 20px;
+    border: 0.5px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.12s;
+    user-select: none;
+    line-height: 1;
+  }
+  .tag:hover { color: var(--text); border-color: var(--accent); }
+  .tag.active {
+    background: var(--tag-active-bg);
+    color: var(--tag-active-text);
+    border-color: var(--tag-active-bg);
+  }
+
+  .cat-label {
+    font-size: 11px;
+    color: var(--text-hint);
+    margin: 14px 0 7px;
+    font-weight: 500;
+  }
+  .cat-label:first-child { margin-top: 0; }
+
+  .inst-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 7px;
+  }
+
+  .inst-card {
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 9px 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.12s;
+    background: var(--surface);
+  }
+  .inst-card:hover { border-color: var(--border-strong); }
+  .inst-card.active {
+    background: var(--inst-active-bg);
+    border-color: var(--inst-active-bg);
+  }
+  .inst-card.active .inst-name { color: var(--inst-active-text); }
+  .inst-card.active .inst-meta { color: rgba(255,255,255,0.45); }
+
+  @media (prefers-color-scheme: dark) {
+    .inst-card.active .inst-meta { color: rgba(20,20,18,0.5); }
+  }
+
+  .inst-name { font-size: 13px; color: var(--text); margin-bottom: 2px; font-weight: 500; }
+  .inst-meta { font-size: 11px; color: var(--text-hint); }
+
+  .divider { height: 0.5px; background: var(--border); margin: 2.5rem 0; }
+
+  .output-area {
+    background: var(--surface2);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    border: 0.5px solid var(--border);
+    min-height: 88px;
+    margin-bottom: 1rem;
+  }
+
+  .output-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .output-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-hint);
+  }
+
+  .output-compat { font-size: 11px; color: var(--text-hint); }
+
+  .output-text {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.75;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    word-break: break-word;
+  }
+  .output-text.placeholder { color: var(--text-hint); font-family: inherit; font-size: 14px; }
+
+  .btn-row { display: flex; gap: 8px; }
+
+  .btn-gen {
+    flex: 1;
+    padding: 13px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: var(--radius);
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    transition: opacity 0.12s;
+    letter-spacing: 0.01em;
+  }
+  .btn-gen:hover { opacity: 0.85; }
+  .btn-gen:active { opacity: 0.7; transform: scale(0.99); }
+
+  .btn-copy {
+    padding: 13px 20px;
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: var(--radius);
+    background: transparent;
+    border: 0.5px solid var(--border-strong);
+    color: var(--text-muted);
+    transition: all 0.12s;
+    white-space: nowrap;
+    font-weight: 500;
+  }
+  .btn-copy:hover { background: var(--surface); color: var(--text); }
+
+  .hint { font-size: 12px; color: var(--text-hint); margin-top: 8px; min-height: 18px; }
+
+  footer {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 0.5px solid var(--border);
+    font-size: 12px;
+    color: var(--text-hint);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  @media (max-width: 480px) {
+    .page { padding: 2rem 1rem 4rem; }
+    h1 { font-size: 22px; }
+    .slider-row { grid-template-columns: 90px 1fr 64px; gap: 10px; }
+    .inst-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+    .btn-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <div class="logo">SenuxTech · Music Prompt Engine</div>
+    <h1>Music Prompt Engine</h1>
+    <p class="tagline">Dial your emotion parameters · select instruments → generate a prompt → paste into any AI music tool</p>
+  </header>
+
+  <!-- Emotion Dimensions -->
+  <div class="section">
+    <div class="section-header">Emotion Dimensions</div>
+
+    <div class="slider-row">
+      <div>
+        <div class="slider-label">Temperature</div>
+        <div class="slider-poles"><span>Cold</span><span>Warm</span></div>
+      </div>
+      <input type="range" min="1" max="10" value="5" id="temp" step="1">
+      <div class="slider-val" id="temp-out">Neutral</div>
+    </div>
+
+    <div class="slider-row">
+      <div>
+        <div class="slider-label">Tension</div>
+        <div class="slider-poles"><span>Calm</span><span>Intense</span></div>
+      </div>
+      <input type="range" min="1" max="10" value="5" id="tension" step="1">
+      <div class="slider-val" id="tension-out">Moderate</div>
+    </div>
+
+    <div class="slider-row">
+      <div>
+        <div class="slider-label">Brightness</div>
+        <div class="slider-poles"><span>Dark</span><span>Bright</span></div>
+      </div>
+      <input type="range" min="1" max="10" value="5" id="brightness" step="1">
+      <div class="slider-val" id="brightness-out">Neutral</div>
+    </div>
+
+    <div class="slider-row">
+      <div>
+        <div class="slider-label">Space</div>
+        <div class="slider-poles"><span>Intimate</span><span>Vast</span></div>
+      </div>
+      <input type="range" min="1" max="10" value="5" id="space" step="1">
+      <div class="slider-val" id="space-out">Balanced</div>
+    </div>
+
+    <div class="slider-row">
+      <div>
+        <div class="slider-label">Structure</div>
+        <div class="slider-poles"><span>Fragmented</span><span>Ordered</span></div>
+      </div>
+      <input type="range" min="1" max="10" value="5" id="symmetry" step="1">
+      <div class="slider-val" id="symmetry-out">Balanced</div>
+    </div>
+  </div>
+
+  <!-- Instrumentation -->
+  <div class="section">
+    <div class="section-header">Instrumentation (multi-select)</div>
+
+    <div class="cat-label">Strings</div>
+    <div class="inst-grid">
+      <div class="inst-card" data-en="lush strings"><div class="inst-name">String Orchestra</div><div class="inst-meta">Warm · Epic</div></div>
+      <div class="inst-card" data-en="solo violin"><div class="inst-name">Solo Violin</div><div class="inst-meta">Delicate · Sorrowful</div></div>
+      <div class="inst-card" data-en="solo cello"><div class="inst-name">Cello</div><div class="inst-meta">Deep · Resonant</div></div>
+      <div class="inst-card" data-en="pizzicato strings"><div class="inst-name">Pizzicato</div><div class="inst-meta">Light · Playful</div></div>
+    </div>
+
+    <div class="cat-label">Keys</div>
+    <div class="inst-grid">
+      <div class="inst-card" data-en="acoustic piano"><div class="inst-name">Acoustic Piano</div><div class="inst-meta">Versatile · Neutral</div></div>
+      <div class="inst-card" data-en="electric piano"><div class="inst-name">Electric Piano</div><div class="inst-meta">Warm · Retro</div></div>
+      <div class="inst-card" data-en="soft synth pads"><div class="inst-name">Synth Pads</div><div class="inst-meta">Cold · Atmospheric</div></div>
+      <div class="inst-card" data-en="church organ"><div class="inst-name">Organ</div><div class="inst-meta">Grand · Solemn</div></div>
+    </div>
+
+    <div class="cat-label">Plucked</div>
+    <div class="inst-grid">
+      <div class="inst-card" data-en="acoustic guitar"><div class="inst-name">Acoustic Guitar</div><div class="inst-meta">Natural · Intimate</div></div>
+      <div class="inst-card" data-en="electric guitar"><div class="inst-name">Electric Guitar</div><div class="inst-meta">Power · Rock</div></div>
+      <div class="inst-card" data-en="guqin"><div class="inst-name">Guqin</div><div class="inst-meta">Ancient · Meditative</div></div>
+      <div class="inst-card" data-en="pipa"><div class="inst-name">Pipa</div><div class="inst-meta">Chinese · Dramatic</div></div>
+      <div class="inst-card" data-en="guzheng"><div class="inst-name">Guzheng</div><div class="inst-meta">Flowing · Elegant</div></div>
+    </div>
+
+    <div class="cat-label">Wind / Vocals</div>
+    <div class="inst-grid">
+      <div class="inst-card" data-en="flute"><div class="inst-name">Flute</div><div class="inst-meta">Airy · Ethereal</div></div>
+      <div class="inst-card" data-en="erhu"><div class="inst-name">Erhu</div><div class="inst-meta">Mournful · Human</div></div>
+      <div class="inst-card" data-en="brass section"><div class="inst-name">Brass Section</div><div class="inst-meta">Heroic · Majestic</div></div>
+      <div class="inst-card" data-en="choir vocals"><div class="inst-name">Choir</div><div class="inst-meta">Sacred · Grand</div></div>
+      <div class="inst-card" data-en="breathy female vocals"><div class="inst-name">Breathy Vocals</div><div class="inst-meta">Soft · Intimate</div></div>
+    </div>
+
+    <div class="cat-label">Rhythm / Percussion</div>
+    <div class="inst-grid">
+      <div class="inst-card" data-en="live drums"><div class="inst-name">Live Drums</div><div class="inst-meta">Powerful · Real</div></div>
+      <div class="inst-card" data-en="electronic beats"><div class="inst-name">Electronic Beats</div><div class="inst-meta">Modern · Groove</div></div>
+      <div class="inst-card" data-en="taiko drums"><div class="inst-name">Taiko Drums</div><div class="inst-meta">Epic · Impact</div></div>
+      <div class="inst-card" data-en="no drums, percussion-free"><div class="inst-name">No Percussion</div><div class="inst-meta">Pure · Sparse</div></div>
+    </div>
+
+    <div class="cat-label">Electronic</div>
+    <div class="inst-grid">
+      <div class="inst-card" data-en="deep bass synth"><div class="inst-name">Bass Synth</div><div class="inst-meta">Heavy · Foundation</div></div>
+      <div class="inst-card" data-en="arpeggiated synth"><div class="inst-name">Arp Synth</div><div class="inst-meta">Flowing · Futuristic</div></div>
+      <div class="inst-card" data-en="ambient texture layers"><div class="inst-name">Ambient Texture</div><div class="inst-meta">Floating · Meditative</div></div>
+    </div>
+  </div>
+
+  <!-- Genre -->
+  <div class="section">
+    <div class="section-header">Style / Context (single select)</div>
+    <div class="tag-group" id="genre-tags">
+      <span class="tag" data-val="short drama">Short Drama</span>
+      <span class="tag" data-val="cinematic">Cinematic</span>
+      <span class="tag" data-val="lo-fi">Lo-fi</span>
+      <span class="tag" data-val="ambient">Ambient</span>
+      <span class="tag" data-val="pop">Pop</span>
+      <span class="tag" data-val="electronic">Electronic</span>
+      <span class="tag" data-val="traditional Chinese">Traditional Chinese</span>
+      <span class="tag" data-val="game OST">Game OST</span>
+      <span class="tag" data-val="web novel">Web Novel</span>
+    </div>
+  </div>
+
+  <!-- Mood -->
+  <div class="section">
+    <div class="section-header">Emotion Keywords (multi-select)</div>
+    <div class="tag-group" id="mood-tags">
+      <span class="tag" data-val="longing">Longing</span>
+      <span class="tag" data-val="heartbreak">Heartbreak</span>
+      <span class="tag" data-val="resilience">Resilience</span>
+      <span class="tag" data-val="hope">Hope</span>
+      <span class="tag" data-val="rage">Rage</span>
+      <span class="tag" data-val="melancholy">Melancholy</span>
+      <span class="tag" data-val="euphoria">Euphoria</span>
+      <span class="tag" data-val="numbness">Numbness</span>
+      <span class="tag" data-val="tenderness">Tenderness</span>
+      <span class="tag" data-val="dread">Dread</span>
+      <span class="tag" data-val="nostalgia">Nostalgia</span>
+      <span class="tag" data-val="determination">Determination</span>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="output-area">
+    <div class="output-top">
+      <div class="output-label">Generated Prompt</div>
+      <div class="output-compat">Works with: Suno · Udio · Kling · any AI music tool</div>
+    </div>
+    <div class="output-text placeholder" id="output">Set your parameters and click Generate →</div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-gen" onclick="generate()">Generate Prompt</button>
+    <button class="btn-copy" onclick="copyPrompt()">Copy</button>
+  </div>
+  <div class="hint" id="hint"></div>
+
+  <footer>
+    <span>Music Prompt Engine · SenuxTech</span>
+    <span>Free to use · share freely</span>
+  </footer>
+
+</div>
+
+<script>
+const tempLabels    = ['Icy','Very cold','Cold','Slightly cold','Neutral','Slightly warm','Warm','Very warm','Hot','Blazing'];
+const tensionLabels = ['Still','Very calm','Calm','Gentle','Moderate','Rising','Forceful','Intense','Dramatic','Explosive'];
+const brightLabels  = ['Pitch dark','Very dark','Dark','Dim','Neutral','Soft light','Bright','Very bright','Radiant','Blinding'];
+const spaceLabels   = ['Suffocating','Very tight','Tight','Slightly close','Balanced','Open','Spacious','Vast','Enormous','Infinite'];
+const symLabels     = ['Chaotic','Very fragmented','Fragmented','Unstable','Balanced','Stable','Ordered','Structured','Very ordered','Rigid'];
+
+function bindSlider(id, labels, outId) {
+  const el = document.getElementById(id);
+  const out = document.getElementById(outId);
+  el.addEventListener('input', () => { out.textContent = labels[parseInt(el.value)-1]; });
+  out.textContent = labels[parseInt(el.value)-1];
+}
+bindSlider('temp',       tempLabels,    'temp-out');
+bindSlider('tension',    tensionLabels, 'tension-out');
+bindSlider('brightness', brightLabels,  'brightness-out');
+bindSlider('space',      spaceLabels,   'space-out');
+bindSlider('symmetry',   symLabels,     'symmetry-out');
+
+document.querySelectorAll('.inst-card').forEach(c => {
+  c.addEventListener('click', () => c.classList.toggle('active'));
+});
+
+function setupTags(groupId, multi) {
+  document.getElementById(groupId).querySelectorAll('.tag').forEach(t => {
+    t.addEventListener('click', () => {
+      if (!multi) document.getElementById(groupId).querySelectorAll('.tag').forEach(x => x.classList.remove('active'));
+      t.classList.toggle('active');
+    });
+  });
+}
+setupTags('genre-tags', false);
+setupTags('mood-tags', true);
+
+function getActiveInst() {
+  return [...document.querySelectorAll('.inst-card.active')].map(c => c.dataset.en);
+}
+function getActive(groupId) {
+  return [...document.getElementById(groupId).querySelectorAll('.tag.active')].map(t => t.dataset.val);
+}
+
+function generate() {
+  const temp       = parseInt(document.getElementById('temp').value);
+  const tension    = parseInt(document.getElementById('tension').value);
+  const brightness = parseInt(document.getElementById('brightness').value);
+  const space      = parseInt(document.getElementById('space').value);
+  const symmetry   = parseInt(document.getElementById('symmetry').value);
+
+  const genres      = getActive('genre-tags');
+  const moods       = getActive('mood-tags');
+  const instruments = getActiveInst();
+
+  let parts = [];
+
+  if (genres.length)      parts.push(genres.join(', '));
+  if (moods.length)       parts.push(moods.join(', '));
+  if (instruments.length) parts.push(instruments.join(', '));
+  else {
+    if (temp <= 3)      parts.push('cold synth pads, sparse piano');
+    else if (temp <= 6) parts.push('acoustic piano, soft strings');
+    else                parts.push('warm strings, rich brass');
+  }
+
+  if (tension <= 3)       parts.push('slow tempo, quiet, minimal');
+  else if (tension <= 5)  parts.push('moderate tempo, mid dynamics');
+  else if (tension <= 7)  parts.push('building intensity, dynamic arrangement');
+  else                    parts.push('high energy, dramatic peaks, intense');
+
+  if (brightness <= 3)    parts.push('minor key, dark, heavy reverb');
+  else if (brightness <= 6) parts.push('neutral tonality, slight minor');
+  else                    parts.push('bright major key, uplifting, clear mix');
+
+  if (space <= 3)         parts.push('dry intimate mix');
+  else if (space <= 6)    parts.push('moderate reverb, balanced space');
+  else                    parts.push('vast reverb, wide stereo, cinematic space');
+
+  if (symmetry <= 3)      parts.push('fragmented, irregular phrases');
+  else if (symmetry <= 6) parts.push('loose structure, natural flow');
+  else                    parts.push('clear structure, steady rhythm');
+
+  const out = document.getElementById('output');
+  out.textContent = parts.join(', ');
+  out.classList.remove('placeholder');
+}
+
+function copyPrompt() {
+  const out = document.getElementById('output');
+  if (out.classList.contains('placeholder')) return;
+  navigator.clipboard.writeText(out.textContent).then(() => {
+    document.getElementById('hint').textContent = 'Copied ✓ — paste into your AI music tool';
+    setTimeout(() => document.getElementById('hint').textContent = '', 3000);
+  }).catch(() => {
+    const range = document.createRange();
+    range.selectNode(out);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    document.getElementById('hint').textContent = 'Please copy manually with Ctrl+C';
+  });
+}
+</script>
+</body>
+</html>
