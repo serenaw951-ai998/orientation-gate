@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>叙事张力引擎 · Narrative Tension Engine</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=DM+Mono:wght@300;400&display=swap');
+
+  :root {
+    --bg: #fef9f4;
+    --surface: #ffffff;
+    --surface2: #fdf3ec;
+    --surface3: #fde8d8;
+    --border: #e8d5c4;
+    --border2: #d4b8a0;
+    --text: #1a2744;
+    --text2: #2d4070;
+    --muted: #7a6858;
+    --accent: #c4783a;
+    --accent2: #e8a060;
+    --gold: #b87830;
+    --blue: #1a3a6a;
+    --green: #2a6a50;
+    --red: #8a3030;
+    --tag-a: #e8f0f8;
+    --tag-a-border: #a0b8d4;
+    --tag-a-text: #1a3a6a;
+    --tag-b: #f8ece0;
+    --tag-b-border: #d4a070;
+    --tag-b-text: #6a3010;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Serif SC', serif;
+    min-height: 100vh;
+    padding: 48px 24px 80px;
+    background-image:
+      radial-gradient(ellipse at 0% 100%, rgba(232,160,96,0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 100% 0%, rgba(196,120,58,0.08) 0%, transparent 50%);
+  }
+
+  .container { max-width: 1040px; margin: 0 auto; }
+
+  header {
+    text-align: center;
+    margin-bottom: 52px;
+  }
+
+  .header-deco {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    display: block;
+    margin-bottom: 18px;
+  }
+
+  h1 {
+    font-size: clamp(32px, 5vw, 54px);
+    font-weight: 300;
+    line-height: 1.2;
+    color: var(--blue);
+    margin-bottom: 10px;
+  }
+
+  h1 strong { font-weight: 600; color: var(--accent); }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.8;
+    font-weight: 300;
+  }
+
+  .header-ornament {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin: 18px 0 0;
+    color: var(--accent2);
+    font-size: 12px;
+    opacity: 0.6;
+  }
+
+  .header-ornament::before,
+  .header-ornament::after {
+    content: '';
+    width: 40px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent2));
+  }
+
+  .header-ornament::after {
+    background: linear-gradient(90deg, var(--accent2), transparent);
+  }
+
+  /* Scene input */
+  .scene-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 28px;
+    margin-bottom: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    box-shadow: 0 2px 12px rgba(196,120,58,0.06);
+  }
+
+  @media (max-width: 640px) { .scene-bar { grid-template-columns: 1fr; } }
+
+  .scene-field label {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .scene-field input,
+  .scene-field select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Noto Serif SC', serif;
+    font-size: 13px;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .scene-field input:focus,
+  .scene-field select:focus { border-color: var(--accent2); }
+
+  /* Character panels */
+  .chars-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 680px) { .chars-layout { grid-template-columns: 1fr; } }
+
+  .char-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 26px;
+    box-shadow: 0 2px 12px rgba(196,120,58,0.05);
+  }
+
+  .char-panel.char-a { border-top: 3px solid var(--tag-a-border); }
+  .char-panel.char-b { border-top: 3px solid var(--tag-b-border); }
+
+  .char-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .char-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+  }
+
+  .char-a .char-badge { background: var(--tag-a); color: var(--tag-a-text); border: 1px solid var(--tag-a-border); }
+  .char-b .char-badge { background: var(--tag-b); color: var(--tag-b-text); border: 1px solid var(--tag-b-border); }
+
+  .char-name-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Noto Serif SC', serif;
+    font-size: 13px;
+    padding: 7px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .char-name-input:focus { border-color: var(--accent2); }
+
+  .archetype-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+
+  .archetype-btn {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 11px;
+    padding: 5px 10px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    background: var(--surface2);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .archetype-btn:hover {
+    border-color: var(--accent2);
+    color: var(--text);
+    background: #fff5ec;
+  }
+
+  .slider-group { margin-bottom: 16px; }
+
+  .slider-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 7px;
+  }
+
+  .slider-label { font-size: 12px; color: var(--text2); }
+  .slider-desc { font-size: 10px; color: var(--muted); margin-top: 1px; font-weight: 300; }
+
+  .slider-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    color: var(--accent);
+    min-width: 20px;
+    text-align: right;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    height: 3px;
+    -webkit-appearance: none;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .char-a input[type="range"] { background: linear-gradient(90deg, var(--tag-a-border), var(--border)); }
+  .char-b input[type="range"] { background: linear-gradient(90deg, var(--tag-b-border), var(--border)); }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 2px solid var(--accent);
+    cursor: pointer;
+    box-shadow: 0 1px 4px rgba(196,120,58,0.2);
+    transition: transform 0.15s;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.25); }
+
+  .run-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #1a3a6a, #2d5090);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 15px;
+    font-weight: 400;
+    cursor: pointer;
+    letter-spacing: 0.08em;
+    transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(26,58,106,0.2);
+    margin-bottom: 20px;
+  }
+
+  .run-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(26,58,106,0.3);
+  }
+
+  /* Results */
+  .results {
+    display: none;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .results.visible { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(196,120,58,0.05);
+  }
+
+  .result-panel-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .result-panel-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .score-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .score-big {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 72px;
+    font-weight: 300;
+    line-height: 1;
+    color: var(--blue);
+  }
+
+  .score-meta { padding-bottom: 8px; }
+
+  .score-level {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 100px;
+    display: inline-block;
+    margin-bottom: 6px;
+  }
+
+  .level-低 { background: #e8f0f8; color: #4a6a8a; border: 1px solid #a0b8d4; }
+  .level-中等 { background: #f8f0e0; color: #8a6020; border: 1px solid #c8a060; }
+  .level-高 { background: #f8ece0; color: #8a4020; border: 1px solid #d4905a; }
+  .level-强烈 { background: #f0e8f4; color: #602880; border: 1px solid #b080c8; }
+
+  .score-rel { font-size: 13px; color: var(--muted); font-weight: 300; }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  @media (max-width: 600px) { .metrics-grid { grid-template-columns: 1fr 1fr; } }
+
+  .metric-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    text-align: center;
+  }
+
+  .metric-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .metric-val {
+    font-size: 22px;
+    font-weight: 300;
+    color: var(--blue);
+  }
+
+  .pacing-box {
+    background: linear-gradient(135deg, #f8f4ec, #f4ede0);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+
+  .pacing-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--blue);
+    margin-bottom: 6px;
+  }
+
+  .pacing-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.8;
+    font-weight: 300;
+  }
+
+  .tags-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; }
+
+  .tag-driver {
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 100px;
+    background: #e8f0f8;
+    color: var(--blue);
+    border: 1px solid #a0b8d4;
+  }
+
+  .tag-weak {
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 100px;
+    background: #f8f0e0;
+    color: var(--gold);
+    border: 1px solid #c8a060;
+  }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+    margin-top: 16px;
+  }
+
+  .suggestion-list { list-style: none; }
+  .suggestion-list li {
+    font-size: 13px;
+    color: var(--text);
+    padding: 9px 0 9px 18px;
+    position: relative;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+  .suggestion-list li:last-child { border-bottom: none; }
+  .suggestion-list li::before { content: '◦'; position: absolute; left: 2px; color: var(--accent2); }
+
+  .trigger-item {
+    font-size: 12px;
+    padding: 9px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 6px;
+    line-height: 1.6;
+    color: var(--text);
+    font-weight: 300;
+  }
+
+  .trigger-name { font-weight: 600; color: var(--gold); }
+
+  /* Prompt output */
+  .prompt-panel {
+    background: linear-gradient(135deg, #1a2744, #2d4070);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 20px rgba(26,39,68,0.15);
+  }
+
+  .prompt-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 16px;
+  }
+
+  .prompt-text {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 13px;
+    color: rgba(255,255,255,0.88);
+    line-height: 2;
+    font-weight: 300;
+    white-space: pre-wrap;
+    margin-bottom: 16px;
+  }
+
+  .copy-btn {
+    padding: 10px 24px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    color: rgba(255,255,255,0.8);
+    font-family: 'Noto Serif SC', serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.05em;
+  }
+
+  .copy-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+  .copy-btn.copied { background: rgba(96,160,128,0.3); border-color: rgba(96,160,128,0.5); color: #a0e0c0; }
+
+  footer {
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    margin-top: 20px;
+  }
+
+  footer a { color: var(--accent2); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <span class="header-deco">SenuxTech · Narrative Tension Engine v0.1</span>
+    <h1>叙事<strong>张力</strong>引擎</h1>
+    <p class="subtitle">为短剧与网文创作者设计 · 输入两个角色的参数，生成张力报告与故事创作Prompt</p>
+    <div class="header-ornament">◈</div>
+  </header>
+
+  <!-- 场景设置 -->
+  <div class="scene-bar">
+    <div class="scene-field">
+      <label>场景描述</label>
+      <input type="text" id="scene-setting" placeholder="例：总裁办公室，会议前五分钟" />
+    </div>
+    <div class="scene-field">
+      <label>时间压力</label>
+      <select id="scene-time">
+        <option value="none">无时间压力</option>
+        <option value="low">低（有余裕）</option>
+        <option value="medium" selected>中（有点紧张）</option>
+        <option value="high">高（即将发生）</option>
+        <option value="critical">极高（最后机会）</option>
+      </select>
+    </div>
+    <div class="scene-field">
+      <label>故事类型</label>
+      <select id="scene-genre">
+        <option value="romance">都市言情</option>
+        <option value="drama">职场权谋</option>
+        <option value="revenge">复仇逆袭</option>
+        <option value="family">豪门恩怨</option>
+        <option value="fantasy">古风仙侠</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 两个角色 -->
+  <div class="chars-layout">
+
+    <!-- 角色A -->
+    <div class="char-panel char-a">
+      <div class="char-header">
+        <span class="char-badge">角色 A</span>
+        <input class="char-name-input" type="text" id="name-a" placeholder="角色名称（例：冷漠总裁）" />
+      </div>
+
+      <div class="archetype-row">
+        <button class="archetype-btn" onclick="loadArchetype('a','controller')">掌控者</button>
+        <button class="archetype-btn" onclick="loadArchetype('a','unguarded')">无防备者</button>
+        <button class="archetype-btn" onclick="loadArchetype('a','conflicted')">矛盾者</button>
+        <button class="archetype-btn" onclick="loadArchetype('a','observer')">旁观者</button>
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <div><div class="slider-label">欲望强度</div><div class="slider-desc">渴望程度有多深？</div></div>
+          <div class="slider-val" id="val-a-desire">5</div>
+        </div>
+        <input type="range" min="0" max="10" value="5" id="a-desire" oninput="updateVal('a-desire')">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <div><div class="slider-label">克制程度</div><div class="slider-desc">压抑与控制的能力</div></div>
+          <div class="slider-val" id="val-a-restraint">5</div>
+        </div>
+        <input type="range" min="0" max="10" value="5" id="a-restraint" oninput="updateVal('a-restraint')">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <div><div class="slider-label">风险承受</div><div class="slider-desc">若暴露，后果有多严重？</div></div>
+          <div class="slider-val" id="val-a-risk">5</div>
+        </div>
+        <input type="range" min="0" max="10" value="5" id="a-risk" oninput="updateVal('a-risk')">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <div><div class="slider-label">权力位置</div><div class="slider-desc">在关系中的控制力（10=完全主导）</div></div>
+          <div class="slider-val" id="val-a-power">5</div>
+        </div>
+        <input type="range" min="0" max="10" value="5" id="a-power" oninput="updateVal('a-power')">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <div><div class="slider-label">已知信息</div><div class="slider-desc">对对方的了解程度</div></div>
+          <div class="slider-val" id="val-a-info">5</div>
+        </div>
+        <input type="range" min="0" max="10" value="5" id="a-info" oninput="updateVal('a-info')">
+      </div>
+    </div>
+
+    <!-- 角色B -->
+    <div class="char-panel char-b">
+      <div class="char-header">
+        <span class="char-badge">角色 B</span>
+        <input class="char-name-input" type="text" id="name-b" placeholder="角色名称（例：不甘认输的秘书）" />
+      </div>
+
+      <div class="archetype-row">
+        <button class="archetype-btn" onclick="loadArchetype('b','controller')">掌控者</button>
+        <button class="archetype-btn" onclick="loadArchetype('b','unguarded')">无防备者</button>
+        <button class="archetype-btn" onclick="loadArchetype('b','conflicted')">矛盾者</button>
+        <button class="archetype-btn" onclick="loadArchetype('b','observer')">旁观者</button>
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <div><div class="slider-label">欲望强度</div><div class="slider-desc">渴望程度有多深？</div></div>
+          <div class="slider-val" id="val-b-desire">5</div>
+        </div>
+        <input type="range" min="0" max="10" value="5" id="b-desire" oninput="updateVal('b-desire')">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <div><div class="slider-label">克制程度</div><div class="slider-desc">压抑与控制的能力</div></div>
+          <div class="slider-val" id="val-b-restraint">5</div>
+        </div>
+        <input type="range" min="0" max="10" value="5" id="b-restraint" oninput="updateVal('b-restraint')">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <div><div class="slider-label">风险承受</div><div class="slider-desc">若暴露，后果有多严重？</div></div>
+          <div class="slider-val" id="val-b-risk">5</div>
+        </div>
+        <input type="range" min="0" max="10" value="5" id="b-risk" oninput="updateVal('b-risk')">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <div><div class="slider-label">权力位置</div><div class="slider-desc">在关系中的控制力（10=完全主导）</div></div>
+          <div class="slider-val" id="val-b-power">5</div>
+        </div>
+        <input type="range" min="0" max="10" value="5" id="b-power" oninput="updateVal('b-power')">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <div><div class="slider-label">已知信息</div><div class="slider-desc">对对方的了解程度</div></div>
+          <div class="slider-val" id="val-b-info">5</div>
+        </div>
+        <input type="range" min="0" max="10" value="5" id="b-info" oninput="updateVal('b-info')">
+      </div>
+    </div>
+  </div>
+
+  <!-- 输出风格选择 -->
+  <div style="background:#fff;border:1px solid #e8d5c4;border-radius:16px;padding:24px 28px;margin-bottom:16px;box-shadow:0 2px 12px rgba(196,120,58,0.05);">
+    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:#7a6858;margin-bottom:16px;display:flex;align-items:center;gap:10px;">
+      输出风格
+      <span style="flex:1;height:1px;background:#e8d5c4;display:block;"></span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+      <label style="cursor:pointer;">
+        <input type="radio" name="style" value="restrained" checked style="display:none;">
+        <div class="style-card" id="style-restrained" onclick="selectStyle('restrained')" style="border:2px solid #1a3a6a;background:#e8f0f8;border-radius:12px;padding:14px;text-align:center;transition:all 0.15s;">
+          <div style="font-size:18px;margin-bottom:6px;">🌿</div>
+          <div style="font-size:13px;font-weight:600;color:#1a3a6a;margin-bottom:4px;">克制留白</div>
+          <div style="font-size:11px;color:#7a6858;line-height:1.5;">细腻情感<br>潜台词为主<br>张力悬而未决</div>
+        </div>
+      </label>
+      <label style="cursor:pointer;">
+        <input type="radio" name="style" value="emotional" style="display:none;">
+        <div class="style-card" id="style-emotional" onclick="selectStyle('emotional')" style="border:2px solid #e8d5c4;background:#fff;border-radius:12px;padding:14px;text-align:center;transition:all 0.15s;">
+          <div style="font-size:18px;margin-bottom:6px;">🌊</div>
+          <div style="font-size:13px;font-weight:600;color:#1a2744;margin-bottom:4px;">情绪起伏</div>
+          <div style="font-size:11px;color:#7a6858;line-height:1.5;">有压抑有释放<br>情感弧线明显<br>适度爆发</div>
+        </div>
+      </label>
+      <label style="cursor:pointer;">
+        <input type="radio" name="style" value="payoff" style="display:none;">
+        <div class="style-card" id="style-payoff" onclick="selectStyle('payoff')" style="border:2px solid #e8d5c4;background:#fff;border-radius:12px;padding:14px;text-align:center;transition:all 0.15s;">
+          <div style="font-size:18px;margin-bottom:6px;">⚡</div>
+          <div style="font-size:13px;font-weight:600;color:#1a2744;margin-bottom:4px;">爽文爆点</div>
+          <div style="font-size:11px;color:#7a6858;line-height:1.5;">冲突强烈<br>爽点密集<br>情绪酣畅</div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <button class="run-btn" onclick="runEngine()">生成张力报告 →</button>
+
+  <!-- 结果 -->
+  <div class="results" id="results">
+
+    <div class="result-panel">
+      <div class="result-panel-title">张力诊断报告</div>
+
+      <div class="score-row">
+        <div class="score-big" id="score-big">—</div>
+        <div class="score-meta">
+          <div><span class="score-level" id="score-level">—</span></div>
+          <div class="score-rel" id="score-rel" style="margin-top:8px">—</div>
+        </div>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-name">冲突强度</div>
+          <div class="metric-val" id="m-conflict">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-name">高潮潜力</div>
+          <div class="metric-val" id="m-climax">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-name">微张力密度</div>
+          <div class="metric-val" id="m-micro">—</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-name">张力延迟</div>
+          <div class="metric-val" id="m-delay">—</div>
+        </div>
+      </div>
+
+      <div class="pacing-box">
+        <div class="pacing-name" id="pacing-name">—</div>
+        <div class="pacing-desc" id="pacing-desc">—</div>
+      </div>
+
+      <div class="section-label">主要驱动因素</div>
+      <div class="tags-row" id="drivers"></div>
+
+      <div class="section-label">薄弱环节</div>
+      <div class="tags-row" id="weaknesses"></div>
+
+      <div class="section-label">写作建议</div>
+      <ul class="suggestion-list" id="suggestions"></ul>
+
+      <div class="section-label">推荐场景触发器</div>
+      <div id="triggers"></div>
+    </div>
+
+    <!-- Story Prompt -->
+    <div class="prompt-panel">
+      <div class="prompt-title">故事创作 Prompt · 可直接发送给豆包 / DeepSeek</div>
+      <div class="prompt-text" id="prompt-text">—</div>
+      <button class="copy-btn" id="copy-btn" onclick="copyPrompt()">复制 Prompt</button>
+    </div>
+
+  </div>
+
+  <footer>
+    <a href="https://www.senuxtech.com" target="_blank">SenuxTech</a> · 叙事张力引擎 v0.1 · 为短剧与网文创作者设计
+  </footer>
+
+</div>
+
+<script>
+function updateVal(id) {
+  document.getElementById('val-' + id).textContent = document.getElementById(id).value;
+}
+
+function getChar(prefix) {
+  return {
+    name: document.getElementById('name-' + prefix).value || (prefix === 'a' ? '角色A' : '角色B'),
+    desire: +document.getElementById(prefix + '-desire').value,
+    restraint: +document.getElementById(prefix + '-restraint').value,
+    risk: +document.getElementById(prefix + '-risk').value,
+    power: +document.getElementById(prefix + '-power').value,
+    info: +document.getElementById(prefix + '-info').value
+  };
+}
+
+function calcAll(a, b) {
+  // 第一层：每个人内心的矛盾（欲望强 × 克制高 = 内心张力最大）
+  const innerA = (a.desire * a.restraint) / 10;
+  const innerB = (b.desire * b.restraint) / 10;
+
+  // 第二层：两人之间的结构差距
+  const desireGap = Math.abs(a.desire - b.desire);
+  const powerImbal = Math.abs(a.power - b.power);
+  const infoGap = Math.abs(a.info - b.info);
+
+  // 第三层：辅助计算用
+  const emotionalAsym = Math.abs(a.restraint - b.restraint);
+  const avgDesire = (a.desire + b.desire) / 2;
+  const avgRisk = (a.risk + b.risk) / 2;
+  const avgSuppression = (a.restraint + b.restraint) / 2;
+
+  // 综合张力公式
+  // A内心张力25% + B内心张力25% + 欲望差距20% + 权力差距15% + 信息差15%
+  const tension = (innerA * 0.25) + (innerB * 0.25) + (desireGap * 0.20) + (powerImbal * 0.15) + (infoGap * 0.15);
+
+  // 其他指标
+  const conflict = (avgDesire * 0.4) + (avgRisk * 0.3) + (powerImbal * 0.3);
+  const climax = (avgDesire * 0.3) + (avgRisk * 0.4) + (powerImbal * 0.3);
+  const micro = (infoGap * 0.4) + (avgSuppression * 0.3) + (emotionalAsym * 0.3);
+  const delay = (avgSuppression * 0.5) + ((10 - avgDesire) * 0.25) + (avgRisk * 0.25);
+
+  return { tension, conflict, climax, micro, delay, innerA, innerB, desireGap, emotionalAsym, powerImbal, avgSuppression, infoGap, avgDesire, avgRisk };
+}
+
+function getLevel(t) {
+  if (t < 3) return '低';
+  if (t < 6) return '中等';
+  if (t < 8) return '高';
+  return '强烈';
+}
+
+const PACING = {
+  slow_burn: { name: '慢燃型 Slow Burn', desc: '张力缓慢积累，情感长期压抑，偶有小爆发。高潮在漫长等待后突然到来。最适合高克制差距场景。' },
+  explosive: { name: '爆炸型 Explosive', desc: '张力直接强烈，无需铺垫。持续微爆发，高潮来得快、冲击力强。适合欲望强烈且克制较低的场景。' },
+  suppressed: { name: '压抑型 Suppressed', desc: '内在压力几乎无法控制，表面仅有细微裂缝。一旦崩溃，彻底碎裂。适合权力不对等、高克制场景。' },
+  wave: { name: '波浪型 Wave Pattern', desc: '张力多次达到峰值，释放与积累交替出现。每次峰值比上次更高。适合长篇叙事与多章节结构。' },
+  mixed: { name: '混合型', desc: '目前没有明显主轴节奏。建议强化某一核心维度，锁定更清晰的张力风格。' }
+};
+
+function getPacing(m, a, b) {
+  const avgR = (a.restraint + b.restraint) / 2;
+  const avgD = (a.desire + b.desire) / 2;
+  if (avgR >= 7 && avgD >= 6 && m.conflict <= 5) return 'slow_burn';
+  if (avgR <= 4 && avgD >= 8 && m.conflict >= 7) return 'explosive';
+  if (avgR >= 7 && m.powerImbal >= 4) return 'suppressed';
+  if (avgR >= 5 && avgD >= 6 && m.infoGap >= 4) return 'wave';
+  return 'mixed';
+}
+
+const GENRE_LABELS = {
+  romance: '都市言情',
+  drama: '职场权谋',
+  revenge: '复仇逆袭',
+  family: '豪门恩怨',
+  fantasy: '古风仙侠'
+};
+
+const TIME_LABELS = {
+  none: '无时间压力',
+  low: '时间充裕',
+  medium: '略有紧迫',
+  high: '时间紧迫',
+  critical: '千钧一发'
+};
+
+function selectStyle(style) {
+  ['restrained','emotional','payoff'].forEach(s => {
+    const el = document.getElementById('style-' + s);
+    if (s === style) {
+      el.style.border = '2px solid #1a3a6a';
+      el.style.background = '#e8f0f8';
+    } else {
+      el.style.border = '2px solid #e8d5c4';
+      el.style.background = '#fff';
+    }
+  });
+  document.querySelector(`input[value="${style}"]`).checked = true;
+}
+
+function getStyle() {
+  return document.querySelector('input[name="style"]:checked').value;
+}
+
+function buildPrompt(a, b, m, pacing, level) {
+  const scene = document.getElementById('scene-setting').value || '未指定场景';
+  const time = TIME_LABELS[document.getElementById('scene-time').value];
+  const genre = GENRE_LABELS[document.getElementById('scene-genre').value];
+  const pi = PACING[pacing];
+  const style = getStyle();
+  const aDesc = describeChar(a);
+  const bDesc = describeChar(b);
+
+  const styleInstructions = {
+    restrained: `【输出风格：克制留白】
+· 情感只通过微动作、眼神、停顿传递，绝不直接说破
+· 台词必须有潜台词——说的永远不是真正想说的
+· 信息差要制造"一方暗知、一方全然不知"的窒息感：知道秘密的那方每一个动作都带着隐藏含义，不知情的那方完全无法破译，读者全程比角色知道更多
+· 欲望必须一高一低：一方已经深陷，另一方还在试探边缘，制造单向拉扯的张力
+· 结尾绝对不做任何释放——留下一个细节、一个动作、一句话，让读者觉得"还差一步"，欲罢不能
+· 避免任何直白情感表达或冲突爆发`,
+
+    emotional: `【输出风格：情绪起伏】
+· 结构：压抑（前1/3）→ 裂缝出现（中1/3）→ 小爆发+收回（后1/3）
+· 中间安排1-2个情绪爆发点（争执、误会、意外触碰、话说一半收回）
+· 信息差要在中间爆发点引爆：不知情的一方说出了什么，让知情的一方瞬间失控，又迅速掩盖
+· 欲望一高一低：渴望更深的那方主动靠近一步，迟疑的那方后退半步——这个半步就是张力
+· 结尾：有情感弧线的小完结，但必须留一个悬念钩子（一个未解释的动作、一句没说完的话、一个意味深长的停顿），让读者立刻想看下一章
+· 台词可以比克制版更直接，但每句话背后仍有没说出口的部分`,
+
+    payoff: `【输出风格：爽文爆点】
+· 每300字必须有一个清晰的小爽点：打脸、反击、强势逆转、身份揭秘、信息差爆破
+· 信息差是最大的爽点来源：知情的强势方以为自己掌控一切，不知情的一方在某一刻用一句话或一个行动完全打乱对方的计划——这个瞬间是全文最大爽点，必须有
+· 欲望必须不对等：一方明显更主动、更渴望、更难控制，另一方相对迟疑——追与被追的张力才是爽感核心
+· 强势角色必须在某一刻真实失控，不是小裂缝，是明显的慌乱或暴露——读者要看到"霸总也有怕的东西"
+· 弱势角色必须有一次彻底的清醒反击，让强势方哑口无言或当场愣住
+· 结尾：情绪释放要酣畅，但最后一句话或最后一个动作必须是钩子——危机解除了，但关系里还有一个未解决的悬念，让读者停不下来`
+  };
+
+  return `请根据以下设定，创作一段${genre}短剧场景（800-1200字）：
+
+【场景设定】
+${scene}，${time}。
+
+【角色设定】
+${a.name}：${aDesc}
+${b.name}：${bDesc}
+
+【张力参数】
+· 整体张力强度：${m.tension.toFixed(1)} / 10（${level}）
+· ${a.name}内心张力：${m.innerA.toFixed(1)}（欲望${a.desire} × 克制${a.restraint}）
+· ${b.name}内心张力：${m.innerB.toFixed(1)}（欲望${b.desire} × 克制${b.restraint}）
+· 节奏类型：${pi.name}
+· 冲突强度：${m.conflict.toFixed(1)}，高潮潜力：${m.climax.toFixed(1)}
+· 权力差距：${m.powerImbal.toFixed(1)}，信息差：${m.infoGap.toFixed(1)}
+
+${styleInstructions[style]}
+
+【信息差设计】
+· ${a.name}已知信息${a.info} vs ${b.name}已知信息${b.info}
+· ${a.info > b.info ? `${a.name}知道${b.name}不知道的事——这是最大的张力来源。${a.name}的每个决定、每句话背后都有隐藏动机，${b.name}完全无法破译。在关键时刻，这个信息差必须有一次爆发或险些暴露的瞬间。` : a.info < b.info ? `${b.name}知道${a.name}不知道的事——${b.name}表面被动，实则掌握主动权。在关键时刻让这个反转浮出水面。` : '两人信息对等——张力来自其他维度，可通过误解或隐瞒制造信息差。'}
+
+【欲望落差设计】
+· ${a.name}欲望${a.desire} vs ${b.name}欲望${b.desire}
+· ${Math.abs(a.desire - b.desire) < 2 ? `两人欲望过于相近（差距${Math.abs(a.desire - b.desire)}），写作中必须人为制造落差：让${a.desire >= b.desire ? a.name : b.name}的渴望更主动外露，让${a.desire >= b.desire ? b.name : a.name}表现出更多迟疑和退缩，才能产生追与被追的张力。` : `欲望差距${Math.abs(a.desire - b.desire)}，${a.desire > b.desire ? a.name : b.name}明显更主动渴望，${a.desire > b.desire ? b.name : a.name}相对迟疑——充分利用这个落差制造追逐感。`}
+
+【角色心理提示】
+· ${a.name}：${a.restraint > 7 ? '极度压抑，内心汹涌但表面如常，偶有一秒失控又迅速收回' : a.restraint < 4 ? '情绪外露，难以掩饰内心状态' : '有所克制，但裂缝偶有显现'}
+· ${b.name}：${b.restraint > 7 ? '极度压抑，内心汹涌但表面如常，偶有一秒失控又迅速收回' : b.restraint < 4 ? '情绪外露，难以掩饰内心状态' : '有所克制，但裂缝偶有显现'}
+· 权力差距${m.powerImbal.toFixed(1)}——${m.powerImbal >= 6 ? '结构性悬殊，弱势方每一步都需谨慎，强势方习惯掌控却在这段关系里第一次感到失控' : m.powerImbal >= 3 ? '略有倾斜，形成微妙压力' : '势均力敌，张力来自情感层而非权力层'}`;
+}
+
+function describeChar(c) {
+  const desireDesc = c.desire >= 8 ? '欲望强烈' : c.desire >= 5 ? '有所渴望' : '情感内敛';
+  const restraintDesc = c.restraint >= 8 ? '极度克制' : c.restraint >= 5 ? '有所压抑' : '情感外露';
+  const powerDesc = c.power >= 7 ? '处于主导地位' : c.power >= 4 ? '地位相对平衡' : '处于弱势位置';
+  const infoDesc = c.info >= 7 ? '掌握较多信息' : c.info >= 4 ? '信息部分' : '所知有限';
+  return `${desireDesc}，${restraintDesc}，${powerDesc}，${infoDesc}`;
+}
+
+function runEngine() {
+  const a = getChar('a');
+  const b = getChar('b');
+  const m = calcAll(a, b);
+  const pacing = getPacing(m, a, b);
+  const level = getLevel(m.tension);
+  const pi = PACING[pacing];
+
+  document.getElementById('score-big').textContent = m.tension.toFixed(1);
+  document.getElementById('score-level').textContent = level;
+  document.getElementById('score-level').className = 'score-level level-' + level;
+  document.getElementById('score-rel').textContent = a.name + ' × ' + b.name;
+
+  document.getElementById('m-conflict').textContent = m.conflict.toFixed(1);
+  document.getElementById('m-climax').textContent = m.climax.toFixed(1);
+  document.getElementById('m-micro').textContent = m.micro.toFixed(1);
+  document.getElementById('m-delay').textContent = m.delay.toFixed(1);
+
+  document.getElementById('pacing-name').textContent = pi.name;
+  document.getElementById('pacing-desc').textContent = pi.desc;
+
+  // Drivers
+  const driverItems = [
+    { name: `${a.name}内心张力`, val: m.innerA },
+    { name: `${b.name}内心张力`, val: m.innerB },
+    { name: '欲望差距', val: m.desireGap },
+    { name: '权力差距', val: m.powerImbal },
+    { name: '信息差', val: m.infoGap }
+  ].filter(d => d.val >= 5).sort((a,b) => b.val-a.val).slice(0,3);
+
+  document.getElementById('drivers').innerHTML = driverItems.length
+    ? driverItems.map(d => `<span class="tag-driver">${d.name}（${d.val.toFixed(1)}）</span>`).join('')
+    : '<span style="color:var(--muted);font-size:12px">暂无显著驱动——尝试拉大两人参数差距</span>';
+
+  // Weaknesses
+  const weakItems = [
+    { name: `${a.name}内心张力`, val: m.innerA },
+    { name: `${b.name}内心张力`, val: m.innerB },
+    { name: '欲望差距', val: m.desireGap },
+    { name: '权力差距', val: m.powerImbal },
+    { name: '信息差', val: m.infoGap }
+  ].filter(d => d.val < 2);
+
+  document.getElementById('weaknesses').innerHTML = weakItems.length
+    ? weakItems.map(d => `<span class="tag-weak">${d.name}偏低（${d.val.toFixed(1)}）</span>`).join('')
+    : '<span style="color:var(--green);font-size:12px">未发现明显薄弱环节</span>';
+
+  // Suggestions
+  const sugs = [];
+  if (m.innerA < 3) sugs.push(`${a.name}内心张力不足——同时提高欲望和克制，"想要但不能要"才是张力核心。`);
+  if (m.innerB < 3) sugs.push(`${b.name}内心张力不足——同时提高欲望和克制，"想要但不能要"才是张力核心。`);
+  if (m.desireGap < 2) sugs.push('两人欲望太相近——让一方更渴望，另一方更迟疑，制造情感落差。');
+  if (m.powerImbal < 2) sugs.push('权力太平衡——引入结构性不对等（职位、财富、信息），天然制造压力。');
+  if (m.infoGap < 2) sugs.push('信息差不足——让一方知道对方不知道的秘密，维系场景微张力。');
+  if (sugs.length === 0) sugs.push('张力结构良好，关注场景节奏与情感释放时机的把控。');
+  document.getElementById('suggestions').innerHTML = sugs.slice(0,4).map(s => `<li>${s}</li>`).join('');
+
+  // Triggers
+  const triggers = [
+    { name: '意外接近', desc: '两人试图保持距离，却不得不靠近', check: () => (a.restraint+b.restraint)/2 >= 6 && (a.desire+b.desire)/2 >= 6 },
+    { name: '秘密将露', desc: '某个秘密几乎要被发现', check: () => m.infoGap >= 4 },
+    { name: '被迫示弱', desc: '强势一方不得不暴露脆弱', check: () => m.powerImbal >= 4 },
+    { name: '权力翻转', desc: '强者突然落入弱势', check: () => m.powerImbal >= 5 },
+    { name: '时间压力', desc: '窗口正在关闭，必须立即行动', check: () => document.getElementById('scene-time').value === 'high' || document.getElementById('scene-time').value === 'critical' },
+    { name: '第三者威胁', desc: '新角色出现，威胁现有关系', check: () => m.infoGap >= 3 && m.powerImbal >= 3 }
+  ].filter(t => t.check());
+
+  document.getElementById('triggers').innerHTML = triggers.length
+    ? triggers.map(t => `<div class="trigger-item"><span class="trigger-name">【${t.name}】</span> ${t.desc}</div>`).join('')
+    : '<div style="color:var(--muted);font-size:12px">调整参数以解锁场景触发器</div>';
+
+  // Prompt
+  const prompt = buildPrompt(a, b, m, pacing, level);
+  document.getElementById('prompt-text').textContent = prompt;
+
+  const results = document.getElementById('results');
+  results.style.display = 'block';
+  results.classList.add('visible');
+  setTimeout(() => results.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
+
+function copyPrompt() {
+  const text = document.getElementById('prompt-text').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '已复制 ✓';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '复制 Prompt'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function loadArchetype(prefix, type) {
+  const a = {
+    controller: {desire:7,restraint:9,risk:8,power:8,info:6},
+    unguarded:  {desire:8,restraint:2,risk:6,power:4,info:4},
+    conflicted: {desire:6,restraint:6,risk:7,power:5,info:5},
+    observer:   {desire:5,restraint:7,risk:8,power:5,info:9}
+  }[type];
+  if (!a) return;
+  Object.entries(a).forEach(([k,v]) => {
+    document.getElementById(prefix+'-'+k).value = v;
+    document.getElementById('val-'+prefix+'-'+k).textContent = v;
+  });
+}
+</script>
+</body>
+</html>
