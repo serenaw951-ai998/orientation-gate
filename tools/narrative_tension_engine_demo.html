@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Narrative Tension Engine v0.1</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+
+  :root {
+    --bg: #0d0a0f;
+    --surface: #141018;
+    --surface2: #1a1520;
+    --border: #2a2035;
+    --text: #e8e0f0;
+    --muted: #7a6e8a;
+    --accent: #c084fc;
+    --gold: #f0c060;
+    --red: #f06060;
+    --green: #60d0a0;
+    --low: #4a6a8a;
+    --moderate: #7a8a4a;
+    --high: #c084fc;
+    --intense: #f06090;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    padding: 48px 24px;
+  }
+
+  .container { max-width: 960px; margin: 0 auto; }
+
+  header { margin-bottom: 48px; }
+
+  .tag {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 14px;
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(30px, 5vw, 48px);
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+
+  h1 em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--muted);
+  }
+
+  .subtitle { font-size: 12px; color: var(--muted); line-height: 1.7; max-width: 500px; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+
+  @media (max-width: 700px) { .layout { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+  }
+
+  .panel-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .panel-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .field { margin-bottom: 22px; }
+
+  .field input[type="text"] {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .field input[type="text"]:focus { border-color: var(--accent); }
+
+  .slider-group { margin-bottom: 18px; }
+
+  .slider-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 8px;
+  }
+
+  .slider-label { font-size: 12px; color: var(--text); }
+  .slider-desc { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  .slider-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--accent);
+    min-width: 24px;
+    text-align: right;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    height: 4px;
+    -webkit-appearance: none;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+  .section-title {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 22px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .archetype-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .archetype-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+    line-height: 1.4;
+  }
+
+  .archetype-btn:hover {
+    border-color: var(--accent);
+    color: var(--text);
+    background: var(--surface2);
+  }
+
+  .archetype-name { font-weight: 500; display: block; margin-bottom: 2px; }
+
+  .run-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    border: none;
+    border-radius: 10px;
+    color: #0d0a0f;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: opacity 0.2s, transform 0.15s;
+    margin-top: 8px;
+  }
+
+  .run-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+
+  /* Output */
+  .score-display {
+    text-align: center;
+    padding: 28px 0 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .score-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 64px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .score-label {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 5px 16px;
+    border-radius: 100px;
+    display: inline-block;
+    margin-bottom: 4px;
+  }
+
+  .score-label.Low    { background: rgba(74,106,138,0.2); color: var(--low); border: 1px solid rgba(74,106,138,0.4); }
+  .score-label.Moderate { background: rgba(122,138,74,0.2); color: var(--moderate); border: 1px solid rgba(122,138,74,0.4); }
+  .score-label.High   { background: rgba(192,132,252,0.15); color: var(--high); border: 1px solid rgba(192,132,252,0.3); }
+  .score-label.Intense { background: rgba(240,96,144,0.15); color: var(--intense); border: 1px solid rgba(240,96,144,0.3); }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .metric-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+
+  .metric-name { font-size: 10px; color: var(--muted); margin-bottom: 4px; letter-spacing: 0.05em; }
+  .metric-value { font-size: 18px; font-weight: 500; color: var(--accent); }
+
+  .pacing-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border: 1px solid var(--accent);
+    border-radius: 100px;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .result-section { margin-bottom: 18px; }
+
+  .result-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .driver-tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 4px 10px;
+    border: 1px solid rgba(192,132,252,0.3);
+    border-radius: 6px;
+    color: var(--accent);
+    margin: 3px 3px 3px 0;
+    background: rgba(192,132,252,0.08);
+  }
+
+  .weakness-tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 4px 10px;
+    border: 1px solid rgba(240,96,96,0.3);
+    border-radius: 6px;
+    color: var(--red);
+    margin: 3px 3px 3px 0;
+    background: rgba(240,96,96,0.08);
+  }
+
+  .suggestion-list { list-style: none; }
+
+  .suggestion-list li {
+    font-size: 12px;
+    color: var(--muted);
+    padding: 6px 0 6px 16px;
+    position: relative;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.6;
+  }
+
+  .suggestion-list li:last-child { border-bottom: none; }
+
+  .suggestion-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--gold);
+  }
+
+  .triggers-list { list-style: none; }
+
+  .trigger-item {
+    font-size: 12px;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 6px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  .trigger-name { color: var(--gold); font-weight: 500; }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+    font-size: 12px;
+    gap: 12px;
+  }
+
+  .empty-icon {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    color: var(--border);
+  }
+
+  .gate-result { display: none; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .gate-result.visible {
+    display: block;
+    animation: fadeIn 0.35s ease;
+  }
+
+  footer {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  footer a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <span class="tag">SenuxTech · Narrative Tension Engine v0.1</span>
+    <h1>Tension<br><em>by design.</em></h1>
+    <p class="subtitle">Model, diagnose, and iterate narrative tension between characters. Built for writers and story designers.</p>
+  </header>
+
+  <div class="layout">
+
+    <!-- Input Panel -->
+    <div class="panel">
+      <div class="panel-label">Character & Scene</div>
+
+      <div class="field">
+        <input type="text" id="rel-name" placeholder="Relationship name (e.g. Forbidden Boss × Secretary)" />
+      </div>
+
+      <div class="section-title">Load Archetype</div>
+      <div class="archetype-grid">
+        <button class="archetype-btn" onclick="loadArchetype('controller')">
+          <span class="archetype-name">The Controller</span>
+          High restraint · suppressed desire
+        </button>
+        <button class="archetype-btn" onclick="loadArchetype('unguarded')">
+          <span class="archetype-name">The Unguarded</span>
+          Low restraint · explosive want
+        </button>
+        <button class="archetype-btn" onclick="loadArchetype('conflicted')">
+          <span class="archetype-name">The Conflicted</span>
+          Balanced · wave tension
+        </button>
+        <button class="archetype-btn" onclick="loadArchetype('observer')">
+          <span class="archetype-name">The Observer</span>
+          High awareness · low expression
+        </button>
+      </div>
+
+      <div class="section-title">Variables (0 – 10)</div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <div>
+            <div class="slider-label">Desire / Drive</div>
+            <div class="slider-desc">How badly does the character want something?</div>
+          </div>
+          <div class="slider-value" id="val-desire">5</div>
+        </div>
+        <input type="range" min="0" max="10" value="5" id="desire" oninput="update('desire')">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <div>
+            <div class="slider-label">Restraint / Control</div>
+            <div class="slider-desc">Ability to suppress impulse or delay expression</div>
+          </div>
+          <div class="slider-value" id="val-restraint">5</div>
+        </div>
+        <input type="range" min="0" max="10" value="5" id="restraint" oninput="update('restraint')">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <div>
+            <div class="slider-label">Risk / Danger</div>
+            <div class="slider-desc">Consequences if feeling is revealed or acted upon</div>
+          </div>
+          <div class="slider-value" id="val-risk">5</div>
+        </div>
+        <input type="range" min="0" max="10" value="5" id="risk" oninput="update('risk')">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <div>
+            <div class="slider-label">Power Imbalance</div>
+            <div class="slider-desc">Difference in control, leverage, or authority</div>
+          </div>
+          <div class="slider-value" id="val-power">5</div>
+        </div>
+        <input type="range" min="0" max="10" value="5" id="power" oninput="update('power')">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <div>
+            <div class="slider-label">Information Gap</div>
+            <div class="slider-desc">What one party knows that the other doesn't</div>
+          </div>
+          <div class="slider-value" id="val-info">5</div>
+        </div>
+        <input type="range" min="0" max="10" value="5" id="info" oninput="update('info')">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <div>
+            <div class="slider-label">Distance</div>
+            <div class="slider-desc">Physical or emotional proximity (10 = very close)</div>
+          </div>
+          <div class="slider-value" id="val-distance">5</div>
+        </div>
+        <input type="range" min="0" max="10" value="5" id="distance" oninput="update('distance')">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <div>
+            <div class="slider-label">Irreversibility</div>
+            <div class="slider-desc">How permanent are the consequences?</div>
+          </div>
+          <div class="slider-value" id="val-irreversibility">5</div>
+        </div>
+        <input type="range" min="0" max="10" value="5" id="irreversibility" oninput="update('irreversibility')">
+      </div>
+
+      <button class="run-btn" onclick="runEngine()">Analyze Tension →</button>
+    </div>
+
+    <!-- Output Panel -->
+    <div class="panel">
+      <div class="panel-label">Tension Report</div>
+
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon">◈</div>
+        <div>Set your variables and<br>analyze the tension.</div>
+      </div>
+
+      <div class="gate-result" id="result">
+
+        <div class="score-display">
+          <div class="score-number" id="score-number">—</div>
+          <div><span class="score-label" id="score-label">—</span></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:8px" id="rel-name-display"></div>
+        </div>
+
+        <div class="result-section">
+          <div class="result-label">Pacing Profile</div>
+          <div class="pacing-badge" id="pacing-badge">—</div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6" id="pacing-desc"></div>
+        </div>
+
+        <div class="result-section">
+          <div class="result-label">Derived Metrics</div>
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-name">Conflict Intensity</div>
+              <div class="metric-value" id="m-conflict">—</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-name">Climax Potential</div>
+              <div class="metric-value" id="m-climax">—</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-name">Micro Tension</div>
+              <div class="metric-value" id="m-micro">—</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-name">Release Delay</div>
+              <div class="metric-value" id="m-delay">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="result-section">
+          <div class="result-label">Main Drivers</div>
+          <div id="drivers"></div>
+        </div>
+
+        <div class="result-section">
+          <div class="result-label">Weaknesses</div>
+          <div id="weaknesses"></div>
+        </div>
+
+        <div class="result-section">
+          <div class="result-label">Suggestions</div>
+          <ul class="suggestion-list" id="suggestions"></ul>
+        </div>
+
+        <div class="result-section">
+          <div class="result-label">Recommended Triggers</div>
+          <div id="triggers"></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <span>SenuxTech · Narrative Tension Engine · <a href="https://github.com/serenaw951-ai998/orientation-gate" target="_blank">GitHub</a></span>
+    <span>v0.1 · Story design tool</span>
+  </footer>
+
+</div>
+
+<script>
+function update(id) {
+  const val = document.getElementById(id).value;
+  document.getElementById('val-' + id).textContent = val;
+}
+
+function getVals() {
+  return {
+    desire: +document.getElementById('desire').value,
+    restraint: +document.getElementById('restraint').value,
+    risk: +document.getElementById('risk').value,
+    power: +document.getElementById('power').value,
+    info: +document.getElementById('info').value,
+    distance: +document.getElementById('distance').value,
+    irreversibility: +document.getElementById('irreversibility').value
+  };
+}
+
+function calcMetrics(v) {
+  const tension = ((v.desire * 0.25) + (v.restraint * 0.25) + (v.risk * 0.20) + (v.power * 0.15) + (v.info * 0.15)) / 10 * 10;
+  const conflict = (v.desire * 0.4) + (v.risk * 0.3) + (v.power * 0.3);
+  const climax = (v.desire * 0.3) + (v.irreversibility * 0.4) + (v.power * 0.3);
+  const micro = (v.info * 0.4) + (v.distance * 0.3) + (v.restraint * 0.3);
+  const delay = (v.restraint * 0.5) + ((10 - v.desire) * 0.25) + (v.irreversibility * 0.25);
+  return { tension, conflict, climax, micro, delay };
+}
+
+function getPacing(v, metrics) {
+  if (v.restraint >= 7 && v.desire >= 6 && metrics.conflict <= 5) return 'slow_burn';
+  if (v.restraint <= 4 && v.desire >= 8 && metrics.conflict >= 7) return 'explosive';
+  if (v.restraint >= 8 && v.desire >= 7 && v.power >= 5) return 'suppressed_pressure';
+  if (v.restraint >= 5 && v.restraint <= 8 && v.desire >= 6 && v.info >= 5) return 'wave_pattern';
+  return 'mixed';
+}
+
+const PACING_INFO = {
+  slow_burn: { label: 'Slow Burn', desc: 'Tension builds gradually. Long emotional suppression, small explosive moments. Climax arrives suddenly after a long wait.' },
+  explosive: { label: 'Explosive', desc: 'Tension is immediate and visceral. No patience for restraint. Constant micro-explosions. Climax comes fast and hard.' },
+  suppressed_pressure: { label: 'Suppressed Pressure', desc: 'Barely contained. Psychological pressure dominates. Tiny cracks in facade. When it breaks, it shatters.' },
+  wave_pattern: { label: 'Wave Pattern', desc: 'Tension peaks multiple times. Alternating release and build. Each peak higher than last. Sustained emotional oscillation.' },
+  mixed: { label: 'Mixed', desc: 'No dominant pacing pattern. Consider sharpening one dimension to lock in a clearer tension style.' }
+};
+
+function getLevel(score) {
+  if (score < 3) return 'Low';
+  if (score < 6) return 'Moderate';
+  if (score < 8) return 'High';
+  return 'Intense';
+}
+
+function getDrivers(v) {
+  const items = [
+    { key: 'Desire', val: v.desire },
+    { key: 'Restraint', val: v.restraint },
+    { key: 'Risk', val: v.risk },
+    { key: 'Power Imbalance', val: v.power },
+    { key: 'Information Gap', val: v.info },
+    { key: 'Distance', val: v.distance },
+    { key: 'Irreversibility', val: v.irreversibility }
+  ];
+  return items.filter(i => i.val >= 7).sort((a,b) => b.val - a.val).slice(0,3);
+}
+
+function getWeaknesses(v) {
+  const items = [
+    { key: 'Desire', val: v.desire, tip: 'Raise motivation — what does the character desperately want?' },
+    { key: 'Restraint', val: v.restraint, tip: 'Add reasons for control — stakes, fear, social constraint' },
+    { key: 'Risk', val: v.risk, tip: 'Raise the stakes — what happens if feelings are revealed?' },
+    { key: 'Power Imbalance', val: v.power, tip: 'Add structural asymmetry — who holds more control?' },
+    { key: 'Information Gap', val: v.info, tip: 'Introduce a secret one party doesn\'t know' },
+    { key: 'Irreversibility', val: v.irreversibility, tip: 'Add a point of no return — what cannot be undone?' }
+  ];
+  return items.filter(i => i.val <= 3);
+}
+
+function getSuggestions(v, level) {
+  const sugs = [];
+  if (v.desire < 6) sugs.push('Clarify what the character wants most — ambiguous desire weakens tension.');
+  if (v.restraint < 4) sugs.push('Add reasons for restraint — unchecked desire collapses slow burn potential.');
+  if (v.risk < 5) sugs.push('Raise the stakes — what would be lost if the feeling were revealed?');
+  if (v.power < 4) sugs.push('Introduce power asymmetry — structural imbalance creates natural pressure.');
+  if (v.info < 4) sugs.push('Add an information gap — secrets sustain micro-tension across scenes.');
+  if (v.irreversibility < 4) sugs.push('Add a point of no return — irreversible moments accelerate climax.');
+  if (level === 'Low') sugs.push('Consider rewriting the scene with at least one variable above 7.');
+  if (sugs.length === 0) sugs.push('Strong tension profile. Focus on pacing and scene rhythm next.');
+  return sugs.slice(0, 4);
+}
+
+const TRIGGERS = [
+  { name: 'Proximity Breakthrough', desc: 'Characters get physically closer despite trying not to', threshold: v => v.restraint >= 6 && v.desire >= 6 },
+  { name: 'Information Leak', desc: 'Secret is partially revealed or almost exposed', threshold: v => v.info >= 5 },
+  { name: 'Forced Vulnerability', desc: 'Character must reveal weakness or need', threshold: v => v.restraint >= 6 },
+  { name: 'Power Reversal', desc: 'Asymmetry flips — the powerful suddenly becomes weak', threshold: v => v.power >= 5 },
+  { name: 'Time Pressure', desc: 'A window of opportunity is closing fast', threshold: v => v.irreversibility >= 5 },
+  { name: 'Rival Appearance', desc: 'Third party threatens or destabilizes the dynamic', threshold: v => v.info >= 4 && v.power >= 4 }
+];
+
+function runEngine() {
+  const v = getVals();
+  const m = calcMetrics(v);
+  const pacing = getPacing(v, m);
+  const level = getLevel(m.tension);
+  const drivers = getDrivers(v);
+  const weaknesses = getWeaknesses(v);
+  const suggestions = getSuggestions(v, level);
+  const relName = document.getElementById('rel-name').value || 'Unnamed Relationship';
+
+  document.getElementById('empty-state').style.display = 'none';
+
+  document.getElementById('score-number').textContent = m.tension.toFixed(1);
+  document.getElementById('score-number').style.color = level === 'Intense' ? 'var(--intense)' : level === 'High' ? 'var(--high)' : level === 'Moderate' ? 'var(--gold)' : 'var(--muted)';
+
+  const lbl = document.getElementById('score-label');
+  lbl.textContent = level;
+  lbl.className = 'score-label ' + level;
+
+  document.getElementById('rel-name-display').textContent = relName;
+
+  const pi = PACING_INFO[pacing];
+  document.getElementById('pacing-badge').textContent = pi.label;
+  document.getElementById('pacing-desc').textContent = pi.desc;
+
+  document.getElementById('m-conflict').textContent = m.conflict.toFixed(1);
+  document.getElementById('m-climax').textContent = m.climax.toFixed(1);
+  document.getElementById('m-micro').textContent = m.micro.toFixed(1);
+  document.getElementById('m-delay').textContent = m.delay.toFixed(1);
+
+  document.getElementById('drivers').innerHTML = drivers.length
+    ? drivers.map(d => `<span class="driver-tag">${d.key} (${d.val})</span>`).join('')
+    : '<span style="color:var(--muted);font-size:12px">No dominant drivers — raise at least one variable above 7.</span>';
+
+  document.getElementById('weaknesses').innerHTML = weaknesses.length
+    ? weaknesses.map(w => `<span class="weakness-tag">${w.key} (${w.val})</span>`).join('')
+    : '<span style="color:var(--green);font-size:12px">No critical weaknesses detected.</span>';
+
+  document.getElementById('suggestions').innerHTML = suggestions
+    .map(s => `<li>${s}</li>`).join('');
+
+  const activeTriggers = TRIGGERS.filter(t => t.threshold(v));
+  document.getElementById('triggers').innerHTML = activeTriggers.length
+    ? activeTriggers.map(t => `<div class="trigger-item"><span class="trigger-name">${t.name}</span> — ${t.desc}</div>`).join('')
+    : '<div style="color:var(--muted);font-size:12px">Raise variables to unlock scene triggers.</div>';
+
+  const result = document.getElementById('result');
+  result.style.display = 'block';
+  result.classList.add('visible');
+}
+
+function loadArchetype(type) {
+  const archetypes = {
+    controller: { desire: 7, restraint: 9, risk: 8, power: 7, info: 5, distance: 4, irreversibility: 6 },
+    unguarded:  { desire: 8, restraint: 2, risk: 6, power: 4, info: 3, distance: 8, irreversibility: 5 },
+    conflicted: { desire: 6, restraint: 6, risk: 7, power: 5, info: 5, distance: 5, irreversibility: 6 },
+    observer:   { desire: 5, restraint: 7, risk: 8, power: 6, info: 8, distance: 6, irreversibility: 4 }
+  };
+  const a = archetypes[type];
+  if (!a) return;
+  Object.entries(a).forEach(([key, val]) => {
+    document.getElementById(key).value = val;
+    document.getElementById('val-' + key).textContent = val;
+  });
+}
+</script>
+</body>
+</html>
