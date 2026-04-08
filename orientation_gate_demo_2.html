@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orientation Gate — Pre-Execution Decision Layer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --border: #1e1e2e;
+    --text: #e8e6f0;
+    --muted: #6b6880;
+    --accent: #7c6af0;
+    --proceed: #2dd4a0;
+    --adjust: #f0c040;
+    --restrict: #f07040;
+    --escalate: #c060f0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    padding: 48px 24px;
+  }
+
+  .grain {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.4;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    margin-bottom: 56px;
+  }
+
+  .tag {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+  }
+
+  h1 em {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--muted);
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 480px;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  @media (max-width: 640px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+  }
+
+  .panel-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .panel-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .field {
+    margin-bottom: 20px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+  }
+
+  .field input,
+  .field textarea,
+  .field select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: vertical;
+  }
+
+  .field input:focus,
+  .field textarea:focus,
+  .field select:focus {
+    border-color: var(--accent);
+  }
+
+  .field textarea { min-height: 100px; }
+
+  .field select option { background: #1a1a2e; }
+
+  .presets {
+    margin-bottom: 20px;
+  }
+
+  .presets-label {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    letter-spacing: 0.05em;
+  }
+
+  .preset-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .preset-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 5px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .preset-btn:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  .run-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: opacity 0.2s, transform 0.15s;
+  }
+
+  .run-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+  .run-btn:active { transform: translateY(0); }
+
+  /* Output panel */
+  .output-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    min-height: 400px;
+  }
+
+  .empty-state {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 12px;
+    gap: 12px;
+    min-height: 300px;
+  }
+
+  .empty-icon {
+    width: 40px; height: 40px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+
+  .gate-result { display: none; }
+  .gate-result.visible { display: block; }
+
+  .gate-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  .gate-badge.PROCEED  { background: rgba(45,212,160,0.12); color: var(--proceed); border: 1px solid rgba(45,212,160,0.3); }
+  .gate-badge.ADJUST   { background: rgba(240,192,64,0.12);  color: var(--adjust);  border: 1px solid rgba(240,192,64,0.3); }
+  .gate-badge.RESTRICT { background: rgba(240,112,64,0.12);  color: var(--restrict); border: 1px solid rgba(240,112,64,0.3); }
+  .gate-badge.ESCALATE { background: rgba(192,96,240,0.12);  color: var(--escalate); border: 1px solid rgba(192,96,240,0.3); }
+
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  .result-section {
+    margin-bottom: 20px;
+  }
+
+  .result-section-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .risk-flags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 0;
+  }
+
+  .risk-flag {
+    font-size: 11px;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    background: var(--bg);
+  }
+
+  .reason-text {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text);
+    border-left: 2px solid var(--border);
+    padding-left: 14px;
+  }
+
+  .reframe-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--text);
+    font-style: italic;
+  }
+
+  .guidance-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .guidance-list li {
+    font-size: 12px;
+    color: var(--muted);
+    padding-left: 16px;
+    position: relative;
+    line-height: 1.6;
+  }
+
+  .guidance-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0;
+  }
+
+  footer {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: var(--muted);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  footer a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  /* Animation */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .gate-result.visible {
+    animation: fadeIn 0.3s ease;
+  }
+</style>
+</head>
+<body>
+<div class="grain"></div>
+<div class="container">
+
+  <header>
+    <span class="tag">SenuxTech · Orientation Gate v0.2</span>
+    <h1>Pre-execution<br><em>decision layer</em></h1>
+    <p class="subtitle">Evaluate whether an AI workflow objective should proceed before optimization begins.</p>
+  </header>
+
+  <div class="layout">
+
+    <!-- Input Panel -->
+    <div class="panel">
+      <div class="panel-label">Input</div>
+
+      <div class="presets">
+        <div class="presets-label">Try an example</div>
+        <div class="preset-btns">
+          <button class="preset-btn" onclick="loadPreset('refund')">Reduce refunds</button>
+          <button class="preset-btn" onclick="loadPreset('retention')">Increase retention</button>
+          <button class="preset-btn" onclick="loadPreset('speed')">Lower handle time</button>
+          <button class="preset-btn" onclick="loadPreset('escalate')">Minimize escalations</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Objective</label>
+        <textarea id="objective" placeholder="e.g. Reduce refund requests by 20% this quarter"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Context</label>
+        <input type="text" id="context" placeholder="e.g. Customer support operations, e-commerce" />
+      </div>
+
+      <div class="field">
+        <label>Domain</label>
+        <select id="domain">
+          <option value="customer_support">Customer Support</option>
+          <option value="healthcare">Healthcare / Insurance</option>
+          <option value="finance">Finance</option>
+          <option value="hr">HR / People Ops</option>
+          <option value="general">General</option>
+        </select>
+      </div>
+
+      <button class="run-btn" onclick="runGate()">Run Orientation Gate →</button>
+    </div>
+
+    <!-- Output Panel -->
+    <div class="output-panel">
+      <div class="panel-label">Decision Output</div>
+
+      <div class="empty-state" id="empty">
+        <div class="empty-icon">⬡</div>
+        <div>Enter an objective and run the gate<br>to see the evaluation.</div>
+      </div>
+
+      <div class="gate-result" id="result">
+        <div id="badge" class="gate-badge"><span class="dot"></span><span id="badge-text"></span></div>
+
+        <div class="result-section">
+          <div class="result-section-label">Risk Signals</div>
+          <div class="risk-flags" id="flags"></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="result-section">
+          <div class="result-section-label">Explanation</div>
+          <div class="reason-text" id="reason"></div>
+        </div>
+
+        <div class="divider" id="reframe-divider"></div>
+
+        <div class="result-section" id="reframe-section">
+          <div class="result-section-label">Suggested Reframe</div>
+          <div class="reframe-box" id="reframe"></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="result-section">
+          <div class="result-section-label">Guidance</div>
+          <ul class="guidance-list" id="guidance"></ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <span>SenuxTech · Orientation Gate · <a href="https://github.com/serenaw951-ai998/orientation-gate" target="_blank">GitHub</a></span>
+    <span>v0.2 · Pre-execution decision layer</span>
+  </footer>
+
+</div>
+
+<script>
+const RULES = {
+  customer_support: [
+    {
+      match: obj => /refund/i.test(obj),
+      risk_flags: ['incentive_misalignment', 'customer_fairness_risk', 'underconstrained_objective'],
+      decision: 'ADJUST',
+      reason: 'This objective may unintentionally pressure the system to suppress valid customer refunds. Optimizing for volume reduction without fairness constraints creates structural incentive misalignment.',
+      reframe: 'Reduce unnecessary refund requests while ensuring valid refunds are processed fairly and consistently.',
+      guidance: [
+        'Add explicit constraints protecting valid refund eligibility',
+        'Define what constitutes an "unnecessary" refund request',
+        'Include a customer satisfaction monitoring requirement'
+      ]
+    },
+    {
+      match: obj => /retention|cancel/i.test(obj),
+      risk_flags: ['autonomy_risk', 'manipulation_potential', 'boundary_undefined'],
+      decision: 'ADJUST',
+      reason: 'Retention objectives in cancellation flows carry risk of coercive or manipulative tactics if not properly bounded. The system may optimize toward friction rather than genuine value delivery.',
+      reframe: 'Improve retention by offering genuine value alternatives — while ensuring cancellation paths remain clear and accessible.',
+      guidance: [
+        'Explicitly prohibit dark patterns (hidden cancel buttons, guilt language)',
+        'Require that cancellation paths remain accessible at all times',
+        'Define "retention" as value-based, not friction-based'
+      ]
+    },
+    {
+      match: obj => /handle time|aht|speed|fast/i.test(obj),
+      risk_flags: ['quality_tradeoff_risk', 'underconstrained_objective'],
+      decision: 'ADJUST',
+      reason: 'Speed-based objectives can deprioritize resolution quality and customer experience. Optimizing average handle time without quality floors may result in faster but less effective support.',
+      reframe: 'Reduce average handle time while maintaining first-contact resolution rate above baseline threshold.',
+      guidance: [
+        'Add a resolution quality floor as a hard constraint',
+        'Define acceptable escalation conditions',
+        'Monitor customer satisfaction alongside speed metrics'
+      ]
+    },
+    {
+      match: obj => /escalat|transfer/i.test(obj),
+      risk_flags: ['access_restriction_risk', 'customer_harm_potential'],
+      decision: 'RESTRICT',
+      reason: 'Objectives to minimize escalations risk preventing customers from reaching appropriate support channels. This can trap users in automated loops that cannot resolve their issue.',
+      reframe: 'Resolve more issues at first contact through improved tooling and training — while preserving clear escalation paths for complex cases.',
+      guidance: [
+        'Never restrict escalation access as a primary optimization target',
+        'Define which issue types always require human review',
+        'Route this objective for human policy review before implementation'
+      ]
+    }
+  ],
+  healthcare: [
+    {
+      match: () => true,
+      risk_flags: ['regulatory_risk', 'patient_safety_concern', 'escalation_required'],
+      decision: 'ESCALATE',
+      reason: 'Healthcare objectives require human review before AI optimization. Patient safety, regulatory compliance (HIPAA, prior authorization rules), and clinical accuracy constraints must be evaluated by qualified personnel.',
+      reframe: null,
+      guidance: [
+        'Route to compliance and clinical review before any AI optimization',
+        'Verify regulatory requirements for this workflow',
+        'Ensure patient rights and access are explicitly protected'
+      ]
+    }
+  ],
+  finance: [
+    {
+      match: () => true,
+      risk_flags: ['regulatory_risk', 'fiduciary_concern'],
+      decision: 'ESCALATE',
+      reason: 'Financial objectives involving customer outcomes require compliance review. Fiduciary duties, consumer protection regulations, and disclosure requirements must be verified before optimization.',
+      reframe: null,
+      guidance: [
+        'Verify compliance with applicable financial regulations',
+        'Confirm fiduciary duty alignment',
+        'Route for legal review before implementation'
+      ]
+    }
+  ],
+  hr: [
+    {
+      match: () => true,
+      risk_flags: ['bias_risk', 'labor_law_concern', 'human_review_required'],
+      decision: 'ESCALATE',
+      reason: 'HR objectives affecting employees require human oversight. Bias, labor law compliance, and worker rights must be evaluated before any AI-driven optimization.',
+      reframe: null,
+      guidance: [
+        'Involve HR leadership and legal in objective review',
+        'Assess bias risk across demographic groups',
+        'Confirm compliance with applicable labor law'
+      ]
+    }
+  ],
+  general: []
+};
+
+function runGate() {
+  const obj = document.getElementById('objective').value.trim();
+  const ctx = document.getElementById('context').value.trim();
+  const domain = document.getElementById('domain').value;
+
+  if (!obj) {
+    document.getElementById('objective').focus();
+    return;
+  }
+
+  let result = null;
+  const domainRules = RULES[domain] || [];
+
+  for (const rule of domainRules) {
+    if (rule.match(obj)) { result = rule; break; }
+  }
+
+  if (!result) {
+    result = {
+      risk_flags: ['context_incomplete'],
+      decision: 'PROCEED',
+      reason: 'No structural risk signals detected in this objective based on available rules. Proceed with standard review and monitoring.',
+      reframe: null,
+      guidance: [
+        'Document constraints and success criteria before implementation',
+        'Monitor outcomes and add constraints if drift is observed',
+        'Review periodically as the system scales'
+      ]
+    };
+  }
+
+  showResult(result);
+}
+
+function showResult(r) {
+  const empty = document.getElementById('empty');
+  empty.style.display = 'none';
+  empty.style.visibility = 'hidden';
+
+  const badge = document.getElementById('badge');
+  badge.className = 'gate-badge ' + r.decision;
+  document.getElementById('badge-text').textContent = r.decision;
+
+  const flags = document.getElementById('flags');
+  flags.innerHTML = r.risk_flags.map(f =>
+    `<span class="risk-flag">${f.replace(/_/g,' ')}</span>`
+  ).join('');
+
+  document.getElementById('reason').textContent = r.reason;
+
+  const reframeSection = document.getElementById('reframe-section');
+  const reframeDivider = document.getElementById('reframe-divider');
+  if (r.reframe) {
+    document.getElementById('reframe').textContent = r.reframe;
+    reframeSection.style.display = 'block';
+    reframeDivider.style.display = 'block';
+  } else {
+    reframeSection.style.display = 'none';
+    reframeDivider.style.display = 'none';
+  }
+
+  const guidance = document.getElementById('guidance');
+  guidance.innerHTML = r.guidance.map(g => `<li>${g}</li>`).join('');
+
+  const result = document.getElementById('result');
+  result.style.display = 'block';
+  result.classList.add('visible');
+}
+
+function loadPreset(key) {
+  const presets = {
+    refund: {
+      obj: 'Reduce refund requests by 20% this quarter',
+      ctx: 'Customer support operations, e-commerce platform',
+      domain: 'customer_support'
+    },
+    retention: {
+      obj: 'Increase retention rate in cancellation flows by 30%',
+      ctx: 'SaaS subscription product, customer success team',
+      domain: 'customer_support'
+    },
+    speed: {
+      obj: 'Lower average handle time by 25% across all support channels',
+      ctx: 'Customer support center, telecom industry',
+      domain: 'customer_support'
+    },
+    escalate: {
+      obj: 'Minimize escalations and transfers to human agents',
+      ctx: 'AI-first support workflow, fintech company',
+      domain: 'customer_support'
+    }
+  };
+  const p = presets[key];
+  if (!p) return;
+  document.getElementById('objective').value = p.obj;
+  document.getElementById('context').value = p.ctx;
+  document.getElementById('domain').value = p.domain;
+}
+</script>
+</body>
+</html>
