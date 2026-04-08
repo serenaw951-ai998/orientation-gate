@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>叙事张力引擎 · Narrative Tension Engine</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600&family=DM+Mono:wght@300;400&display=swap');
+
+  :root {
+    --bg: #fdf8f4;
+    --surface: #ffffff;
+    --surface2: #fef3f0;
+    --border: #f0ddd6;
+    --border2: #e8cfc6;
+    --text: #2d1f1a;
+    --muted: #9e7a72;
+    --accent: #d4547a;
+    --accent2: #e8a0b4;
+    --gold: #c89060;
+    --blue: #6090c8;
+    --green: #60a880;
+    --purple: #9070c0;
+    --low: #90a8c0;
+    --moderate: #c0a060;
+    --high: #d4547a;
+    --intense: #a030a0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Serif SC', serif;
+    min-height: 100vh;
+    padding: 48px 24px 80px;
+    background-image:
+      radial-gradient(circle at 10% 20%, rgba(212,84,122,0.06) 0%, transparent 50%),
+      radial-gradient(circle at 90% 80%, rgba(96,144,200,0.06) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(200,144,96,0.04) 0%, transparent 60%);
+  }
+
+  .container { max-width: 980px; margin: 0 auto; }
+
+  header {
+    text-align: center;
+    margin-bottom: 56px;
+    position: relative;
+  }
+
+  .header-deco {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 20px;
+    display: block;
+  }
+
+  h1 {
+    font-size: clamp(36px, 6vw, 64px);
+    font-weight: 300;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+
+  h1 strong {
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.8;
+    margin-top: 12px;
+    font-weight: 300;
+  }
+
+  .header-line {
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent2), transparent);
+    margin: 20px auto 0;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  @media (max-width: 720px) { .layout { grid-template-columns: 1fr; } }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: 0 4px 24px rgba(212,84,122,0.06), 0 1px 4px rgba(0,0,0,0.04);
+  }
+
+  .panel-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .panel-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .field { margin-bottom: 20px; }
+
+  .field input[type="text"] {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Noto Serif SC', serif;
+    font-size: 13px;
+    padding: 11px 16px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .field input[type="text"]:focus {
+    border-color: var(--accent2);
+    box-shadow: 0 0 0 3px rgba(212,84,122,0.08);
+  }
+
+  .section-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 24px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .archetype-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .archetype-btn {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface2);
+    color: var(--muted);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+    line-height: 1.5;
+  }
+
+  .archetype-btn:hover {
+    border-color: var(--accent2);
+    color: var(--text);
+    background: #fff0f4;
+    box-shadow: 0 2px 8px rgba(212,84,122,0.1);
+  }
+
+  .archetype-name {
+    font-weight: 600;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 2px;
+    font-size: 13px;
+  }
+
+  .slider-group { margin-bottom: 20px; }
+
+  .slider-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+
+  .slider-label { font-size: 13px; color: var(--text); font-weight: 400; }
+  .slider-desc { font-size: 11px; color: var(--muted); margin-top: 2px; font-weight: 300; }
+
+  .slider-value {
+    font-family: 'DM Mono', monospace;
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--accent);
+    min-width: 28px;
+    text-align: right;
+    margin-top: 2px;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    height: 3px;
+    -webkit-appearance: none;
+    background: linear-gradient(90deg, var(--accent2), var(--border));
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 2px solid var(--accent);
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(212,84,122,0.2);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 3px 10px rgba(212,84,122,0.3);
+  }
+
+  .run-btn {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, var(--accent), #b03060);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 14px;
+    font-weight: 400;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+    margin-top: 8px;
+    box-shadow: 0 4px 16px rgba(212,84,122,0.25);
+  }
+
+  .run-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(212,84,122,0.35);
+  }
+
+  /* Output */
+  .score-display {
+    text-align: center;
+    padding: 32px 0 24px;
+    margin-bottom: 24px;
+    position: relative;
+  }
+
+  .score-display::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 20%;
+    right: 20%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border2), transparent);
+  }
+
+  .score-number {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 72px;
+    font-weight: 300;
+    line-height: 1;
+    margin-bottom: 10px;
+    letter-spacing: -0.02em;
+  }
+
+  .score-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 5px 18px;
+    border-radius: 100px;
+    display: inline-block;
+  }
+
+  .score-label.低    { background: rgba(144,168,192,0.15); color: var(--low); border: 1px solid rgba(144,168,192,0.4); }
+  .score-label.中等  { background: rgba(192,160,96,0.15); color: var(--moderate); border: 1px solid rgba(192,160,96,0.4); }
+  .score-label.高    { background: rgba(212,84,122,0.12); color: var(--high); border: 1px solid rgba(212,84,122,0.3); }
+  .score-label.强烈  { background: rgba(160,48,160,0.12); color: var(--intense); border: 1px solid rgba(160,48,160,0.3); }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+
+  .metric-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+
+  .metric-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    letter-spacing: 0.05em;
+  }
+
+  .metric-value {
+    font-family: 'Noto Serif SC', serif;
+    font-size: 22px;
+    font-weight: 300;
+    color: var(--accent);
+  }
+
+  .pacing-card {
+    background: linear-gradient(135deg, #fff0f4, #f8f0ff);
+    border: 1px solid var(--accent2);
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+  }
+
+  .pacing-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  .pacing-desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.8;
+    font-weight: 300;
+  }
+
+  .result-section { margin-bottom: 20px; }
+
+  .result-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .tag-row { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .driver-tag {
+    font-size: 12px;
+    padding: 5px 12px;
+    border: 1px solid rgba(212,84,122,0.3);
+    border-radius: 100px;
+    color: var(--accent);
+    background: rgba(212,84,122,0.06);
+    font-weight: 400;
+  }
+
+  .weakness-tag {
+    font-size: 12px;
+    padding: 5px 12px;
+    border: 1px solid rgba(96,144,200,0.3);
+    border-radius: 100px;
+    color: var(--blue);
+    background: rgba(96,144,200,0.06);
+  }
+
+  .suggestion-list { list-style: none; }
+
+  .suggestion-list li {
+    font-size: 13px;
+    color: var(--text);
+    padding: 10px 0 10px 20px;
+    position: relative;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  .suggestion-list li:last-child { border-bottom: none; }
+
+  .suggestion-list li::before {
+    content: '◦';
+    position: absolute;
+    left: 4px;
+    color: var(--accent2);
+    font-size: 14px;
+  }
+
+  .trigger-item {
+    font-size: 12px;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 7px;
+    line-height: 1.6;
+    color: var(--text);
+    font-weight: 300;
+  }
+
+  .trigger-name {
+    font-weight: 600;
+    color: var(--gold);
+    display: inline;
+  }
+
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 64px 20px;
+    color: var(--muted);
+    gap: 16px;
+  }
+
+  .empty-deco {
+    font-size: 40px;
+    color: var(--accent2);
+    opacity: 0.4;
+    font-weight: 300;
+  }
+
+  .empty-text {
+    font-size: 13px;
+    line-height: 1.8;
+    font-weight: 300;
+  }
+
+  .gate-result { display: none; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .gate-result.visible {
+    display: block;
+    animation: fadeIn 0.4s ease;
+  }
+
+  footer {
+    margin-top: 56px;
+    text-align: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  footer a { color: var(--accent2); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <span class="header-deco">SenuxTech · Narrative Tension Engine v0.1</span>
+    <h1>叙事<strong>张力</strong>引擎</h1>
+    <p class="subtitle">为短剧与网文作者设计 · 建模、诊断并迭代人物关系张力</p>
+    <div class="header-line"></div>
+  </header>
+
+  <div class="layout">
+
+    <!-- 输入面板 -->
+    <div class="panel">
+      <div class="panel-label">角色与场景设置</div>
+
+      <div class="field">
+        <input type="text" id="rel-name" placeholder="关系描述（例：冷漠总裁 × 不甘认输的秘书）" />
+      </div>
+
+      <div class="section-title">快速加载角色原型</div>
+      <div class="archetype-grid">
+        <button class="archetype-btn" onclick="loadArchetype('controller')">
+          <span class="archetype-name">掌控者</span>
+          高克制 · 压抑欲望
+        </button>
+        <button class="archetype-btn" onclick="loadArchetype('unguarded')">
+          <span class="archetype-name">无防备者</span>
+          低克制 · 直接表达
+        </button>
+        <button class="archetype-btn" onclick="loadArchetype('conflicted')">
+          <span class="archetype-name">矛盾者</span>
+          内心拉扯 · 波动张力
+        </button>
+        <button class="archetype-btn" onclick="loadArchetype('observer')">
+          <span class="archetype-name">旁观者</span>
+          高察觉 · 低表达
+        </button>
+      </div>
+
+      <div class="section-title">张力变量（0 – 10）</div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <div>
+            <div class="slider-label">欲望强度</div>
+            <div class="slider-desc">角色有多渴望得到某人或某事？</div>
+          </div>
+          <div class="slider-value" id="val-desire">5</div>
+        </div>
+        <input type="range" min="0" max="10" value="5" id="desire" oninput="update('desire')">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <div>
+            <div class="slider-label">克制程度</div>
+            <div class="slider-desc">压抑冲动、延迟表达的能力</div>
+          </div>
+          <div class="slider-value" id="val-restraint">5</div>
+        </div>
+        <input type="range" min="0" max="10" value="5" id="restraint" oninput="update('restraint')">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <div>
+            <div class="slider-label">风险与危险</div>
+            <div class="slider-desc">若情感暴露或行动，后果有多严重？</div>
+          </div>
+          <div class="slider-value" id="val-risk">5</div>
+        </div>
+        <input type="range" min="0" max="10" value="5" id="risk" oninput="update('risk')">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <div>
+            <div class="slider-label">权力不对等</div>
+            <div class="slider-desc">两人在地位、控制权或话语权上的差距</div>
+          </div>
+          <div class="slider-value" id="val-power">5</div>
+        </div>
+        <input type="range" min="0" max="10" value="5" id="power" oninput="update('power')">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <div>
+            <div class="slider-label">信息差</div>
+            <div class="slider-desc">一方知道而另一方不知道的秘密程度</div>
+          </div>
+          <div class="slider-value" id="val-info">5</div>
+        </div>
+        <input type="range" min="0" max="10" value="5" id="info" oninput="update('info')">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <div>
+            <div class="slider-label">物理/心理距离</div>
+            <div class="slider-desc">两人的靠近程度（10 = 极近距离）</div>
+          </div>
+          <div class="slider-value" id="val-distance">5</div>
+        </div>
+        <input type="range" min="0" max="10" value="5" id="distance" oninput="update('distance')">
+      </div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <div>
+            <div class="slider-label">不可逆程度</div>
+            <div class="slider-desc">一旦发生，是否无法挽回？</div>
+          </div>
+          <div class="slider-value" id="val-irreversibility">5</div>
+        </div>
+        <input type="range" min="0" max="10" value="5" id="irreversibility" oninput="update('irreversibility')">
+      </div>
+
+      <button class="run-btn" onclick="runEngine()">分析张力 →</button>
+    </div>
+
+    <!-- 输出面板 -->
+    <div class="panel">
+      <div class="panel-label">张力诊断报告</div>
+
+      <div class="empty-state" id="empty-state">
+        <div class="empty-deco">◈</div>
+        <div class="empty-text">调整左侧变量<br>点击分析，查看张力报告</div>
+      </div>
+
+      <div class="gate-result" id="result">
+
+        <div class="score-display">
+          <div class="score-number" id="score-number">—</div>
+          <div><span class="score-label" id="score-label">—</span></div>
+          <div style="font-size:12px;color:var(--muted);margin-top:10px;font-weight:300" id="rel-name-display"></div>
+        </div>
+
+        <div class="section-title" style="margin-top:0">节奏类型</div>
+        <div class="pacing-card">
+          <div class="pacing-name" id="pacing-name">—</div>
+          <div class="pacing-desc" id="pacing-desc">—</div>
+        </div>
+
+        <div class="section-title">量化指标</div>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-name">冲突强度</div>
+            <div class="metric-value" id="m-conflict">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-name">高潮潜力</div>
+            <div class="metric-value" id="m-climax">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-name">微张力密度</div>
+            <div class="metric-value" id="m-micro">—</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-name">张力延迟质量</div>
+            <div class="metric-value" id="m-delay">—</div>
+          </div>
+        </div>
+
+        <div class="result-section">
+          <div class="result-label">主要驱动因素</div>
+          <div class="tag-row" id="drivers"></div>
+        </div>
+
+        <div class="result-section">
+          <div class="result-label">薄弱环节</div>
+          <div class="tag-row" id="weaknesses"></div>
+        </div>
+
+        <div class="result-section">
+          <div class="result-label">写作建议</div>
+          <ul class="suggestion-list" id="suggestions"></ul>
+        </div>
+
+        <div class="result-section">
+          <div class="result-label">推荐场景触发器</div>
+          <div id="triggers"></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <a href="https://www.senuxtech.com" target="_blank">SenuxTech</a> · 叙事张力引擎 v0.1 · 为短剧与网文创作者设计
+  </footer>
+
+</div>
+
+<script>
+function update(id) {
+  const val = document.getElementById(id).value;
+  document.getElementById('val-' + id).textContent = val;
+}
+
+function getVals() {
+  return {
+    desire: +document.getElementById('desire').value,
+    restraint: +document.getElementById('restraint').value,
+    risk: +document.getElementById('risk').value,
+    power: +document.getElementById('power').value,
+    info: +document.getElementById('info').value,
+    distance: +document.getElementById('distance').value,
+    irreversibility: +document.getElementById('irreversibility').value
+  };
+}
+
+function calcMetrics(v) {
+  const tension = ((v.desire*0.25)+(v.restraint*0.25)+(v.risk*0.20)+(v.power*0.15)+(v.info*0.15));
+  const conflict = (v.desire*0.4)+(v.risk*0.3)+(v.power*0.3);
+  const climax = (v.desire*0.3)+(v.irreversibility*0.4)+(v.power*0.3);
+  const micro = (v.info*0.4)+(v.distance*0.3)+(v.restraint*0.3);
+  const delay = (v.restraint*0.5)+((10-v.desire)*0.25)+(v.irreversibility*0.25);
+  return { tension, conflict, climax, micro, delay };
+}
+
+function getPacing(v, m) {
+  if (v.restraint>=7 && v.desire>=6 && m.conflict<=5) return 'slow_burn';
+  if (v.restraint<=4 && v.desire>=8 && m.conflict>=7) return 'explosive';
+  if (v.restraint>=8 && v.desire>=7 && v.power>=5) return 'suppressed';
+  if (v.restraint>=5 && v.restraint<=8 && v.desire>=6 && v.info>=5) return 'wave';
+  return 'mixed';
+}
+
+const PACING = {
+  slow_burn: { name: '慢燃型', desc: '张力缓慢积累，情感长期压抑，偶有小爆发。高潮在长时间等待后突然到来。适合克制欲望、高风险场景。' },
+  explosive: { name: '爆炸型', desc: '张力直接而强烈，无需克制铺垫。持续微爆发，高潮来得快、冲击力强。适合冲突性强的场景。' },
+  suppressed: { name: '压抑型', desc: '几乎无法控制的内在压力，表面裂缝细微。一旦崩溃，彻底碎裂。适合权力不对等、高克制场景。' },
+  wave: { name: '波浪型', desc: '张力多次达到峰值，释放与积累交替出现。每次峰值比上次更高。适合长篇叙事与多章节结构。' },
+  mixed: { name: '混合型', desc: '没有明显的节奏主轴。建议强化某一核心维度，锁定更清晰的张力风格。' }
+};
+
+function getLevel(score) {
+  if (score < 3) return '低';
+  if (score < 6) return '中等';
+  if (score < 8) return '高';
+  return '强烈';
+}
+
+const VAR_NAMES = {
+  desire: '欲望强度', restraint: '克制程度', risk: '风险等级',
+  power: '权力不对等', info: '信息差', distance: '距离', irreversibility: '不可逆程度'
+};
+
+function getDrivers(v) {
+  return Object.entries(v)
+    .filter(([,val]) => val >= 7)
+    .sort((a,b) => b[1]-a[1])
+    .slice(0,3)
+    .map(([key,val]) => ({ name: VAR_NAMES[key], val }));
+}
+
+function getWeaknesses(v) {
+  return Object.entries(v)
+    .filter(([,val]) => val <= 3)
+    .map(([key,val]) => ({ name: VAR_NAMES[key], val }));
+}
+
+function getSuggestions(v, level) {
+  const s = [];
+  if (v.desire < 6) s.push('明确角色最渴望的是什么——模糊的欲望会削弱张力根基。');
+  if (v.restraint < 4) s.push('为克制添加理由——无缘由的压抑缺乏说服力，也无法形成慢燃张力。');
+  if (v.risk < 5) s.push('提高风险砝码——感情一旦暴露，会失去什么？代价越大，张力越强。');
+  if (v.power < 4) s.push('引入权力不对等——地位、资源或情感的结构性差距是天然张力源。');
+  if (v.info < 4) s.push('设计信息差——秘密是维系场景微张力最有效的工具之一。');
+  if (v.irreversibility < 4) s.push('加入不可逆时刻——某些事一旦发生便无法撤回，能快速推动高潮。');
+  if (level === '低') s.push('当前张力偏低，建议至少将一个变量调至7以上，再观察节奏变化。');
+  if (s.length === 0) s.push('张力结构良好。下一步可以关注场景节奏与情感释放时机的把控。');
+  return s.slice(0,4);
+}
+
+const TRIGGERS = [
+  { name: '意外接近', desc: '两人试图保持距离，却不得不靠近彼此', check: v => v.restraint>=6 && v.desire>=6 },
+  { name: '秘密泄漏', desc: '某个秘密被部分揭露，或险些曝光', check: v => v.info>=5 },
+  { name: '被迫示弱', desc: '角色不得不暴露自己的脆弱或需求', check: v => v.restraint>=6 },
+  { name: '权力翻转', desc: '强者突然落入弱势，原有秩序被打破', check: v => v.power>=5 },
+  { name: '时间压力', desc: '机会窗口正在关闭，必须立即做出决定', check: v => v.irreversibility>=5 },
+  { name: '第三者出现', desc: '新角色的加入威胁或动摇现有关系', check: v => v.info>=4 && v.power>=4 }
+];
+
+function runEngine() {
+  const v = getVals();
+  const m = calcMetrics(v);
+  const pacing = getPacing(v, m);
+  const level = getLevel(m.tension);
+  const drivers = getDrivers(v);
+  const weaknesses = getWeaknesses(v);
+  const suggestions = getSuggestions(v, level);
+  const relName = document.getElementById('rel-name').value || '未命名关系';
+
+  document.getElementById('empty-state').style.display = 'none';
+
+  const scoreEl = document.getElementById('score-number');
+  scoreEl.textContent = m.tension.toFixed(1);
+  scoreEl.style.color = level==='强烈'?'var(--intense)':level==='高'?'var(--high)':level==='中等'?'var(--gold)':'var(--low)';
+
+  const lbl = document.getElementById('score-label');
+  lbl.textContent = level;
+  lbl.className = 'score-label ' + level;
+
+  document.getElementById('rel-name-display').textContent = relName;
+
+  const pi = PACING[pacing];
+  document.getElementById('pacing-name').textContent = pi.name;
+  document.getElementById('pacing-desc').textContent = pi.desc;
+
+  document.getElementById('m-conflict').textContent = m.conflict.toFixed(1);
+  document.getElementById('m-climax').textContent = m.climax.toFixed(1);
+  document.getElementById('m-micro').textContent = m.micro.toFixed(1);
+  document.getElementById('m-delay').textContent = m.delay.toFixed(1);
+
+  document.getElementById('drivers').innerHTML = drivers.length
+    ? drivers.map(d=>`<span class="driver-tag">${d.name}（${d.val}）</span>`).join('')
+    : '<span style="color:var(--muted);font-size:12px">暂无显著驱动因素，建议将至少一项调至7以上</span>';
+
+  document.getElementById('weaknesses').innerHTML = weaknesses.length
+    ? weaknesses.map(w=>`<span class="weakness-tag">${w.name}（${w.val}）</span>`).join('')
+    : '<span style="color:var(--green);font-size:12px">未发现明显薄弱环节</span>';
+
+  document.getElementById('suggestions').innerHTML = suggestions.map(s=>`<li>${s}</li>`).join('');
+
+  const active = TRIGGERS.filter(t=>t.check(v));
+  document.getElementById('triggers').innerHTML = active.length
+    ? active.map(t=>`<div class="trigger-item"><span class="trigger-name">【${t.name}】</span> ${t.desc}</div>`).join('')
+    : '<div style="color:var(--muted);font-size:12px">提高变量数值以解锁场景触发器</div>';
+
+  const result = document.getElementById('result');
+  result.style.display = 'block';
+  result.classList.add('visible');
+}
+
+function loadArchetype(type) {
+  const a = {
+    controller: {desire:7,restraint:9,risk:8,power:7,info:5,distance:4,irreversibility:6},
+    unguarded:  {desire:8,restraint:2,risk:6,power:4,info:3,distance:8,irreversibility:5},
+    conflicted: {desire:6,restraint:6,risk:7,power:5,info:5,distance:5,irreversibility:6},
+    observer:   {desire:5,restraint:7,risk:8,power:6,info:8,distance:6,irreversibility:4}
+  }[type];
+  if (!a) return;
+  Object.entries(a).forEach(([k,v])=>{
+    document.getElementById(k).value=v;
+    document.getElementById('val-'+k).textContent=v;
+  });
+}
+</script>
+</body>
+</html>
