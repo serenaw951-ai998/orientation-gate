@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music Prompt Engine · SenuxTech</title>
+<meta name="description" content="Dial in your emotion parameters → generate a music prompt → paste into any AI music tool">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f7f6f3; --surface: #ffffff; --surface2: #f0ede8;
+  --border: rgba(0,0,0,0.10); --border-strong: rgba(0,0,0,0.20);
+  --text: #1a1917; --text-muted: #6b6860; --text-hint: #9b9890;
+  --radius: 10px; --radius-sm: 6px;
+  --tag-active-bg: #1a1917; --tag-active-text: #f7f6f3;
+  --inst-active-bg: #1a1917; --inst-active-text: #f7f6f3;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141412; --surface: #1e1d1b; --surface2: #272522;
+    --border: rgba(255,255,255,0.09); --border-strong: rgba(255,255,255,0.18);
+    --text: #f0ede8; --text-muted: #9b9890; --text-hint: #6b6860;
+    --tag-active-bg: #f0ede8; --tag-active-text: #1a1917;
+    --inst-active-bg: #f0ede8; --inst-active-text: #1a1917;
+  }
+}
+body { background: var(--bg); color: var(--text); font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; min-height: 100vh; }
+.page { max-width: 720px; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
+header { margin-bottom: 3rem; }
+.logo { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-hint); margin-bottom: 1rem; }
+h1 { font-size: 28px; font-weight: 600; line-height: 1.2; color: var(--text); margin-bottom: 0.5rem; }
+.tagline { font-size: 15px; color: var(--text-muted); line-height: 1.5; }
+.section { margin-bottom: 2.5rem; }
+.section-header { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-hint); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 0.5px solid var(--border); }
+
+/* Sliders */
+.slider-row { display: grid; grid-template-columns: 110px 1fr 80px; align-items: center; gap: 14px; margin-bottom: 12px; }
+.slider-label-wrap { position: relative; }
+.slider-label { font-size: 13px; color: var(--text); cursor: help; border-bottom: 1px dashed var(--border-strong); display: inline-block; }
+.slider-hint { font-size: 10px; color: var(--text-hint); margin-top: 2px; line-height: 1.3; }
+.slider-poles { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-hint); margin-top: 3px; }
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 3px; border-radius: 2px; background: var(--border-strong); outline: none; cursor: pointer; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--text); cursor: pointer; transition: transform 0.1s; }
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--text); border: none; cursor: pointer; }
+.slider-val { font-size: 11px; color: var(--text-muted); text-align: right; white-space: nowrap; }
+.slider-num { font-size: 10px; color: var(--text-hint); margin-left: 3px; }
+
+/* Tags */
+.tag-group { display: flex; flex-wrap: wrap; gap: 7px; }
+.tag { font-size: 12px; padding: 6px 13px; border-radius: 20px; border: 0.5px solid var(--border-strong); background: var(--surface); color: var(--text-muted); cursor: pointer; transition: all 0.12s; user-select: none; line-height: 1; }
+.tag:hover { color: var(--text); border-color: var(--text); }
+.tag.active { background: var(--tag-active-bg); color: var(--tag-active-text); border-color: var(--tag-active-bg); }
+
+/* Preset combos */
+.preset-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; align-items: center; }
+.preset-label { font-size: 10px; color: var(--text-hint); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin-right: 2px; }
+.preset-btn { font-size: 11px; padding: 4px 10px; border-radius: 20px; border: 0.5px solid var(--border-strong); background: var(--surface); color: var(--text-muted); cursor: pointer; transition: all 0.12s; user-select: none; }
+.preset-btn:hover { color: var(--text); border-color: var(--text); background: var(--surface2); }
+
+/* Instruments */
+.cat-label { font-size: 11px; color: var(--text-hint); margin: 14px 0 7px; font-weight: 500; }
+.cat-label:first-child { margin-top: 0; }
+.inst-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 7px; }
+.inst-card { border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 9px 12px; cursor: pointer; user-select: none; transition: all 0.12s; background: var(--surface); }
+.inst-card:hover { border-color: var(--border-strong); }
+.inst-card.active { background: var(--inst-active-bg); border-color: var(--inst-active-bg); }
+.inst-card.active .inst-name { color: var(--inst-active-text); }
+.inst-card.active .inst-meta { color: rgba(247,246,243,0.45); }
+@media (prefers-color-scheme: dark) { .inst-card.active .inst-meta { color: rgba(20,20,18,0.5); } }
+.inst-name { font-size: 13px; color: var(--text); margin-bottom: 2px; font-weight: 500; }
+.inst-meta { font-size: 11px; color: var(--text-hint); }
+
+/* Arc */
+.arc-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.arc-card { border: 0.5px solid var(--border-strong); border-radius: var(--radius-sm); padding: 12px 14px; cursor: pointer; user-select: none; transition: all 0.15s; background: var(--surface); }
+.arc-card:hover { border-color: var(--text); }
+.arc-card.active { background: var(--tag-active-bg); border-color: var(--tag-active-bg); }
+.arc-card.active .arc-name { color: var(--tag-active-text); }
+.arc-card.active .arc-desc { color: rgba(247,246,243,0.55); }
+.arc-card.active .arc-svg path { stroke: rgba(247,246,243,0.85); }
+@media (prefers-color-scheme: dark) {
+  .arc-card.active .arc-desc { color: rgba(20,20,18,0.55); }
+  .arc-card.active .arc-svg path { stroke: rgba(20,20,18,0.85); }
+}
+.arc-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.arc-desc { font-size: 11px; color: var(--text-hint); margin-bottom: 8px; line-height: 1.4; }
+.arc-svg { width: 100%; height: 34px; display: block; }
+.arc-svg path { stroke: var(--text-muted); stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Advanced */
+.adv-toggle-row { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 8px 0; user-select: none; }
+.adv-toggle-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-hint); }
+.adv-toggle-line { flex: 1; height: 0.5px; background: var(--border); }
+.adv-toggle-arrow { font-size: 9px; color: var(--text-hint); transition: transform 0.2s; }
+.adv-toggle-row.open .adv-toggle-arrow { transform: rotate(180deg); }
+.adv-panel { display: none; padding-top: 16px; }
+.adv-panel.open { display: block; }
+.adv-row { display: grid; grid-template-columns: 100px 1fr; align-items: start; gap: 14px; margin-bottom: 14px; }
+.adv-label { font-size: 13px; color: var(--text); }
+.adv-sublabel { font-size: 10px; color: var(--text-hint); margin-top: 2px; }
+.select-wrap { position: relative; }
+.select-wrap::after { content: '▾'; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 10px; color: var(--text-hint); pointer-events: none; }
+select.sel { width: 100%; padding: 7px 28px 7px 10px; font-size: 13px; color: var(--text); background: var(--surface); border: 0.5px solid var(--border-strong); border-radius: var(--radius-sm); outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; }
+select.sel:focus { border-color: var(--text); }
+
+/* Output */
+.divider { height: 0.5px; background: var(--border); margin: 2.5rem 0; }
+.radar-wrap { display: flex; flex-direction: column; align-items: center; margin-bottom: 2rem; padding: 1.5rem 1rem; background: var(--surface); border-radius: var(--radius); border: 0.5px solid var(--border); }
+.radar-title { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-hint); margin-bottom: 1rem; align-self: flex-start; }
+#radar-canvas { width: 280px; height: 280px; max-width: 100%; }
+.emotion-summary { margin-top: 1rem; font-size: 13px; color: var(--text-muted); text-align: center; line-height: 1.6; }
+
+.output-block { background: var(--surface2); border-radius: var(--radius); border: 0.5px solid var(--border); margin-bottom: 10px; overflow: hidden; }
+.output-block-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px 8px; border-bottom: 0.5px solid var(--border); }
+.output-block-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-hint); }
+.output-block-meta { display: flex; align-items: center; gap: 10px; }
+.char-count { font-size: 10px; color: var(--text-hint); font-variant-numeric: tabular-nums; }
+.copy-btn-sm { font-size: 11px; padding: 3px 10px; border-radius: 4px; border: 0.5px solid var(--border-strong); background: transparent; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
+.copy-btn-sm:hover { background: var(--surface); color: var(--text); }
+.output-body { padding: 12px 14px; min-height: 52px; }
+.output-text { font-size: 13px; color: var(--text); line-height: 1.75; font-family: 'SF Mono', 'Fira Code', monospace; word-break: break-word; }
+.output-text.placeholder { color: var(--text-hint); font-family: inherit; font-size: 14px; }
+
+.btn-row { display: flex; gap: 8px; margin-bottom: 0; }
+.btn-gen { flex: 1; padding: 13px; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: var(--radius); background: var(--text); color: var(--bg); border: none; transition: opacity 0.12s; }
+.btn-gen:hover { opacity: 0.85; }
+.btn-gen:active { opacity: 0.7; transform: scale(0.99); }
+.hint { font-size: 12px; color: var(--text-hint); margin-top: 8px; min-height: 18px; }
+footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 0.5px solid var(--border); font-size: 12px; color: var(--text-hint); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+
+@media (max-width: 480px) {
+  .page { padding: 2rem 1rem 4rem; }
+  h1 { font-size: 22px; }
+  .slider-row { grid-template-columns: 90px 1fr 64px; gap: 10px; }
+  .inst-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+  #radar-canvas { width: 240px; height: 240px; }
+  .adv-row { grid-template-columns: 80px 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+<header>
+  <div class="logo">SenuxTech · Music Prompt Engine</div>
+  <h1>Music Prompt Engine</h1>
+  <p class="tagline">Dial your emotion · select instruments → generate a prompt → paste into any AI music tool</p>
+</header>
+
+<div class="section">
+  <div class="section-header">Emotion Dimensions</div>
+
+  <div class="slider-row">
+    <div class="slider-label-wrap">
+      <div class="slider-label">Temperature</div>
+      <div class="slider-hint">Cold = restrained · Warm = intimate</div>
+      <div class="slider-poles"><span>Cold</span><span>Warm</span></div>
+    </div>
+    <input type="range" min="1" max="10" value="5" id="temp" step="1">
+    <div class="slider-val" id="temp-out">Neutral <span class="slider-num">5</span></div>
+  </div>
+
+  <div class="slider-row">
+    <div class="slider-label-wrap">
+      <div class="slider-label">Tension</div>
+      <div class="slider-hint">Harmonic & rhythmic suspense</div>
+      <div class="slider-poles"><span>Calm</span><span>Intense</span></div>
+    </div>
+    <input type="range" min="1" max="10" value="5" id="tension" step="1">
+    <div class="slider-val" id="tension-out">Moderate <span class="slider-num">5</span></div>
+  </div>
+
+  <div class="slider-row">
+    <div class="slider-label-wrap">
+      <div class="slider-label">Brightness</div>
+      <div class="slider-hint">Dark = minor · Bright = major</div>
+      <div class="slider-poles"><span>Dark</span><span>Bright</span></div>
+    </div>
+    <input type="range" min="1" max="10" value="5" id="brightness" step="1">
+    <div class="slider-val" id="brightness-out">Neutral <span class="slider-num">5</span></div>
+  </div>
+
+  <div class="slider-row">
+    <div class="slider-label-wrap">
+      <div class="slider-label">Space</div>
+      <div class="slider-hint">Intimate = dry/close · Vast = reverb/wide</div>
+      <div class="slider-poles"><span>Intimate</span><span>Vast</span></div>
+    </div>
+    <input type="range" min="1" max="10" value="5" id="space" step="1">
+    <div class="slider-val" id="space-out">Balanced <span class="slider-num">5</span></div>
+  </div>
+
+  <div class="slider-row">
+    <div class="slider-label-wrap">
+      <div class="slider-label">Structure</div>
+      <div class="slider-hint">Fragmented = experimental · Ordered = pop</div>
+      <div class="slider-poles"><span>Fragmented</span><span>Ordered</span></div>
+    </div>
+    <input type="range" min="1" max="10" value="5" id="symmetry" step="1">
+    <div class="slider-val" id="symmetry-out">Balanced <span class="slider-num">5</span></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-header">Emotion Arc (optional)</div>
+  <div class="arc-grid" id="arc-grid">
+    <div class="arc-card" data-arc="steady">
+      <div class="arc-name">Steady Flow</div>
+      <div class="arc-desc">Consistent energy throughout</div>
+      <svg class="arc-svg" viewBox="0 0 120 36" preserveAspectRatio="none">
+        <path d="M6,18 C40,18 80,18 114,18"/>
+      </svg>
+    </div>
+    <div class="arc-card" data-arc="rise">
+      <div class="arc-name">Slow Rise</div>
+      <div class="arc-desc">Quiet start, builds to peak</div>
+      <svg class="arc-svg" viewBox="0 0 120 36" preserveAspectRatio="none">
+        <path d="M6,30 C40,28 80,14 114,4"/>
+      </svg>
+    </div>
+    <div class="arc-card" data-arc="climax">
+      <div class="arc-name">Build &amp; Release</div>
+      <div class="arc-desc">Low → peak → resolution</div>
+      <svg class="arc-svg" viewBox="0 0 120 36" preserveAspectRatio="none">
+        <path d="M6,30 C30,28 52,4 60,4 C68,4 90,28 114,30"/>
+      </svg>
+    </div>
+    <div class="arc-card" data-arc="wave">
+      <div class="arc-name">Wave</div>
+      <div class="arc-desc">Multiple rises and falls</div>
+      <svg class="arc-svg" viewBox="0 0 120 36" preserveAspectRatio="none">
+        <path d="M6,18 C20,4 36,32 60,18 C84,4 100,32 114,18"/>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-header">Instrumentation (multi-select)</div>
+  <div class="cat-label">Strings</div>
+  <div class="inst-grid">
+    <div class="inst-card" data-en="lush strings"><div class="inst-name">String Orchestra</div><div class="inst-meta">Warm · Epic</div></div>
+    <div class="inst-card" data-en="solo violin"><div class="inst-name">Solo Violin</div><div class="inst-meta">Delicate · Sorrowful</div></div>
+    <div class="inst-card" data-en="solo cello"><div class="inst-name">Cello</div><div class="inst-meta">Deep · Resonant</div></div>
+    <div class="inst-card" data-en="pizzicato strings"><div class="inst-name">Pizzicato</div><div class="inst-meta">Light · Playful</div></div>
+  </div>
+  <div class="cat-label">Keys</div>
+  <div class="inst-grid">
+    <div class="inst-card" data-en="acoustic piano"><div class="inst-name">Acoustic Piano</div><div class="inst-meta">Versatile · Neutral</div></div>
+    <div class="inst-card" data-en="electric piano"><div class="inst-name">Electric Piano</div><div class="inst-meta">Warm · Retro</div></div>
+    <div class="inst-card" data-en="soft synth pads"><div class="inst-name">Synth Pads</div><div class="inst-meta">Cold · Atmospheric</div></div>
+    <div class="inst-card" data-en="church organ"><div class="inst-name">Organ</div><div class="inst-meta">Grand · Solemn</div></div>
+  </div>
+  <div class="cat-label">Plucked</div>
+  <div class="inst-grid">
+    <div class="inst-card" data-en="acoustic guitar"><div class="inst-name">Acoustic Guitar</div><div class="inst-meta">Natural · Intimate</div></div>
+    <div class="inst-card" data-en="electric guitar"><div class="inst-name">Electric Guitar</div><div class="inst-meta">Power · Rock</div></div>
+    <div class="inst-card" data-en="guqin"><div class="inst-name">Guqin</div><div class="inst-meta">Ancient · Meditative</div></div>
+    <div class="inst-card" data-en="pipa"><div class="inst-name">Pipa</div><div class="inst-meta">Chinese · Dramatic</div></div>
+    <div class="inst-card" data-en="guzheng"><div class="inst-name">Guzheng</div><div class="inst-meta">Flowing · Elegant</div></div>
+  </div>
+  <div class="cat-label">Wind / Vocals</div>
+  <div class="inst-grid">
+    <div class="inst-card" data-en="flute"><div class="inst-name">Flute</div><div class="inst-meta">Airy · Ethereal</div></div>
+    <div class="inst-card" data-en="erhu"><div class="inst-name">Erhu</div><div class="inst-meta">Mournful · Human</div></div>
+    <div class="inst-card" data-en="brass section"><div class="inst-name">Brass Section</div><div class="inst-meta">Heroic · Majestic</div></div>
+    <div class="inst-card" data-en="choir vocals"><div class="inst-name">Choir</div><div class="inst-meta">Sacred · Grand</div></div>
+    <div class="inst-card" data-en="breathy female vocals"><div class="inst-name">Breathy Vocals</div><div class="inst-meta">Soft · Intimate</div></div>
+  </div>
+  <div class="cat-label">Rhythm / Percussion</div>
+  <div class="inst-grid">
+    <div class="inst-card" data-en="live drums"><div class="inst-name">Live Drums</div><div class="inst-meta">Powerful · Real</div></div>
+    <div class="inst-card" data-en="electronic beats"><div class="inst-name">Electronic Beats</div><div class="inst-meta">Modern · Groove</div></div>
+    <div class="inst-card" data-en="taiko drums"><div class="inst-name">Taiko Drums</div><div class="inst-meta">Epic · Impact</div></div>
+    <div class="inst-card" data-en="no drums, percussion-free"><div class="inst-name">No Percussion</div><div class="inst-meta">Pure · Sparse</div></div>
+  </div>
+  <div class="cat-label">Electronic</div>
+  <div class="inst-grid">
+    <div class="inst-card" data-en="deep bass synth"><div class="inst-name">Bass Synth</div><div class="inst-meta">Heavy · Foundation</div></div>
+    <div class="inst-card" data-en="arpeggiated synth"><div class="inst-name">Arp Synth</div><div class="inst-meta">Flowing · Futuristic</div></div>
+    <div class="inst-card" data-en="ambient texture layers"><div class="inst-name">Ambient Texture</div><div class="inst-meta">Floating · Meditative</div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-header">Style / Context (single select)</div>
+  <div class="tag-group" id="genre-tags">
+    <span class="tag" data-val="short drama">Short Drama</span>
+    <span class="tag" data-val="cinematic">Cinematic</span>
+    <span class="tag" data-val="lo-fi">Lo-fi</span>
+    <span class="tag" data-val="ambient">Ambient</span>
+    <span class="tag" data-val="pop">Pop</span>
+    <span class="tag" data-val="electronic">Electronic</span>
+    <span class="tag" data-val="traditional Chinese">Traditional Chinese</span>
+    <span class="tag" data-val="game OST">Game OST</span>
+    <span class="tag" data-val="web novel">Web Novel</span>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-header">Emotion Keywords (multi-select)</div>
+  <div class="preset-row">
+    <span class="preset-label">Presets:</span>
+    <button class="preset-btn" onclick="applyPreset(['hope','determination','tenderness'])">Hope + Strength</button>
+    <button class="preset-btn" onclick="applyPreset(['heartbreak','numbness','melancholy'])">Heartbreak</button>
+    <button class="preset-btn" onclick="applyPreset(['longing','nostalgia','tenderness'])">Longing</button>
+    <button class="preset-btn" onclick="applyPreset(['rage','dread','resilience'])">Dark Fight</button>
+  </div>
+  <div class="tag-group" id="mood-tags">
+    <span class="tag" data-val="longing">Longing</span>
+    <span class="tag" data-val="heartbreak">Heartbreak</span>
+    <span class="tag" data-val="resilience">Resilience</span>
+    <span class="tag" data-val="hope">Hope</span>
+    <span class="tag" data-val="rage">Rage</span>
+    <span class="tag" data-val="melancholy">Melancholy</span>
+    <span class="tag" data-val="euphoria">Euphoria</span>
+    <span class="tag" data-val="numbness">Numbness</span>
+    <span class="tag" data-val="tenderness">Tenderness</span>
+    <span class="tag" data-val="dread">Dread</span>
+    <span class="tag" data-val="nostalgia">Nostalgia</span>
+    <span class="tag" data-val="determination">Determination</span>
+  </div>
+</div>
+
+<div class="section" style="margin-bottom: 1rem;">
+  <div class="adv-toggle-row" id="adv-toggle" onclick="toggleAdv()">
+    <div class="adv-toggle-label">Advanced Settings</div>
+    <div class="adv-toggle-line"></div>
+    <div class="adv-toggle-arrow">▾</div>
+  </div>
+  <div class="adv-panel" id="adv-panel">
+    <div class="adv-row">
+      <div><div class="adv-label">Tempo</div><div class="adv-sublabel">BPM</div></div>
+      <div class="select-wrap">
+        <select class="sel" id="adv-bpm">
+          <option value="">Auto — let AI decide</option>
+          <option value="60 BPM, very slow tempo">60 BPM — Very slow</option>
+          <option value="75 BPM, slow ballad tempo">75 BPM — Slow ballad</option>
+          <option value="90 BPM, relaxed tempo">90 BPM — Relaxed</option>
+          <option value="110 BPM, walking pace">110 BPM — Walking pace</option>
+          <option value="120 BPM, moderate tempo">120 BPM — Moderate</option>
+          <option value="130 BPM, energetic tempo">130 BPM — Energetic</option>
+          <option value="140 BPM, dance tempo">140 BPM — Dance</option>
+          <option value="150 BPM, fast tempo">150 BPM — Fast</option>
+          <option value="170 BPM, very fast tempo">170 BPM — Very fast</option>
+        </select>
+      </div>
+    </div>
+    <div class="adv-row">
+      <div><div class="adv-label">Key</div><div class="adv-sublabel">Major = bright · Minor = dark · Dorian = hopeful-neutral</div></div>
+      <div class="select-wrap">
+        <select class="sel" id="adv-key">
+          <option value="">Auto</option>
+          <option value="C major">C major — bright, neutral</option>
+          <option value="G major">G major — warm, pastoral</option>
+          <option value="D major">D major — triumphant</option>
+          <option value="A major">A major — radiant</option>
+          <option value="A minor">A minor — melancholic</option>
+          <option value="D minor">D minor — dark, serious</option>
+          <option value="E minor">E minor — lonely, searching</option>
+          <option value="B minor">B minor — brooding</option>
+          <option value="D Dorian mode">D Dorian — hopeful, neutral</option>
+          <option value="A Phrygian mode">A Phrygian — tense, Eastern</option>
+        </select>
+      </div>
+    </div>
+    <div class="adv-row">
+      <div><div class="adv-label">Rhythm</div><div class="adv-sublabel">Beat pattern</div></div>
+      <div class="select-wrap">
+        <select class="sel" id="adv-rhythm">
+          <option value="">Auto</option>
+          <option value="4/4 time, kick on 1 and 3, snare on 2 and 4">4/4 standard — kick 1&3, snare 2&4</option>
+          <option value="half-time feel, kick on beat 1, snare on beat 3">Half-time — heavy, slow feel</option>
+          <option value="2-step groove, sparse kick, snare on 3">2-step — floating, groove</option>
+          <option value="3/4 waltz time">3/4 waltz — circular, flowing</option>
+          <option value="syncopated rhythm, offbeat accents">Syncopated — groovy, unpredictable</option>
+          <option value="no drums, percussion-free">No drums — pure, sparse</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="radar-wrap">
+  <div class="radar-title">Emotion Portrait</div>
+  <canvas id="radar-canvas" width="280" height="280"></canvas>
+  <div class="emotion-summary" id="emotion-summary">Adjust parameters and generate your emotion portrait</div>
+</div>
+
+<!-- Output: two blocks -->
+<div class="output-block">
+  <div class="output-block-header">
+    <div class="output-block-label">Style Tags <span style="font-weight:400;opacity:0.6">— paste into Suno Style box</span></div>
+    <div class="output-block-meta">
+      <span class="char-count" id="style-chars"></span>
+      <button class="copy-btn-sm" onclick="copyBlock('style-output','style-hint')">Copy</button>
+    </div>
+  </div>
+  <div class="output-body">
+    <div class="output-text placeholder" id="style-output">Generate to see style tags →</div>
+  </div>
+</div>
+<div class="hint" id="style-hint"></div>
+
+<div class="output-block" style="margin-top:8px;">
+  <div class="output-block-header">
+    <div class="output-block-label">Mood &amp; Structure <span style="font-weight:400;opacity:0.6">— paste into Suno Lyrics / description</span></div>
+    <div class="output-block-meta">
+      <span class="char-count" id="mood-chars"></span>
+      <button class="copy-btn-sm" onclick="copyBlock('mood-output','mood-hint')">Copy</button>
+    </div>
+  </div>
+  <div class="output-body">
+    <div class="output-text placeholder" id="mood-output">Generate to see mood &amp; structure →</div>
+  </div>
+</div>
+<div class="hint" id="mood-hint"></div>
+
+<div class="btn-row" style="margin-top:12px;">
+  <button class="btn-gen" onclick="generate()">Generate Prompt + Emotion Portrait</button>
+</div>
+<div class="hint" id="hint"></div>
+
+<footer>
+  <span>Music Prompt Engine · SenuxTech</span>
+  <span>Free to use · share freely</span>
+</footer>
+</div>
+
+<script>
+const tempLabels = ['Icy','Very cold','Cold','Slightly cold','Neutral','Slightly warm','Warm','Very warm','Hot','Blazing'];
+const tensionLabels = ['Still','Very calm','Calm','Gentle','Moderate','Rising','Forceful','Intense','Dramatic','Explosive'];
+const brightLabels = ['Pitch dark','Very dark','Dark','Dim','Neutral','Soft light','Bright','Very bright','Radiant','Blinding'];
+const spaceLabels = ['Suffocating','Very tight','Tight','Close','Balanced','Open','Spacious','Vast','Enormous','Infinite'];
+const symLabels = ['Chaotic','Very fragmented','Fragmented','Unstable','Balanced','Stable','Ordered','Structured','Very ordered','Rigid'];
+
+function bindSlider(id, labels, outId) {
+  const el = document.getElementById(id);
+  const out = document.getElementById(outId);
+  const render = () => {
+    const v = parseInt(el.value);
+    out.innerHTML = labels[v-1] + ' <span class="slider-num">' + v + '</span>';
+  };
+  el.addEventListener('input', render);
+  render();
+}
+bindSlider('temp', tempLabels, 'temp-out');
+bindSlider('tension', tensionLabels, 'tension-out');
+bindSlider('brightness', brightLabels, 'brightness-out');
+bindSlider('space', spaceLabels, 'space-out');
+bindSlider('symmetry', symLabels, 'symmetry-out');
+
+document.querySelectorAll('.inst-card').forEach(c => c.addEventListener('click', () => c.classList.toggle('active')));
+
+function setupTags(groupId, multi) {
+  document.getElementById(groupId).querySelectorAll('.tag').forEach(t => {
+    t.addEventListener('click', () => {
+      if (!multi) document.getElementById(groupId).querySelectorAll('.tag').forEach(x => x.classList.remove('active'));
+      t.classList.toggle('active');
+    });
+  });
+}
+setupTags('genre-tags', false);
+setupTags('mood-tags', true);
+
+function applyPreset(vals) {
+  document.querySelectorAll('#mood-tags .tag').forEach(t => {
+    t.classList.toggle('active', vals.includes(t.dataset.val));
+  });
+}
+
+let activeArc = null;
+document.querySelectorAll('.arc-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const key = card.dataset.arc;
+    if (activeArc === key) {
+      card.classList.remove('active');
+      activeArc = null;
+    } else {
+      document.querySelectorAll('.arc-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      activeArc = key;
+    }
+  });
+});
+
+const arcPrompts = {
+  steady: 'consistent energy throughout, even dynamics, no dramatic peaks',
+  rise: 'starts quietly, builds gradually, verse subdued, chorus lifts, final section at full intensity',
+  climax: 'verse low and restrained, pre-chorus builds tension, chorus peaks but does not explode, bridge drops back, final chorus highest point',
+  wave: 'alternating energy, first chorus lifts, bridge drops, final chorus surges, wave-like emotional arc'
+};
+
+function toggleAdv() {
+  document.getElementById('adv-toggle').classList.toggle('open');
+  document.getElementById('adv-panel').classList.toggle('open');
+}
+
+function getActiveInst() { return [...document.querySelectorAll('.inst-card.active')].map(c => c.dataset.en); }
+function getActive(groupId) { return [...document.getElementById(groupId).querySelectorAll('.tag.active')].map(t => t.dataset.val); }
+
+function drawRadar(values) {
+  const canvas = document.getElementById('radar-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2, R = Math.min(W,H)*0.38, N = 5;
+  const labels = ['Temperature','Tension','Brightness','Space','Structure'];
+  const angles = labels.map((_,i) => Math.PI*2*i/N - Math.PI/2);
+  ctx.clearRect(0,0,W,H);
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const gridC = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)';
+  const labelC = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.40)';
+  for (let ring=1; ring<=5; ring++) {
+    const r = R*ring/5;
+    ctx.beginPath();
+    angles.forEach((a,i) => { const x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+    ctx.closePath(); ctx.strokeStyle=gridC; ctx.lineWidth=1; ctx.stroke();
+  }
+  angles.forEach(a => { ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R); ctx.strokeStyle=gridC; ctx.lineWidth=1; ctx.stroke(); });
+  const pts = values.map((v,i) => ({ x: cx+Math.cos(angles[i])*(R*v/10), y: cy+Math.sin(angles[i])*(R*v/10) }));
+  const t = values[0]/10, hue = 210+(340-210)*t, sat = 60+t*20, lit = isDark?55:50;
+  const grad = ctx.createRadialGradient(cx,cy,0,cx,cy,R);
+  grad.addColorStop(0,`hsla(${hue},${sat}%,${lit}%,0.55)`);
+  grad.addColorStop(0.6,`hsla(${hue},${sat}%,${lit}%,0.30)`);
+  grad.addColorStop(1,`hsla(${hue},${sat}%,${lit}%,0.05)`);
+  const drawShape = () => {
+    ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+    for (let i=0;i<pts.length;i++) { const c=pts[i],n=pts[(i+1)%pts.length],mx=(c.x+n.x)/2,my=(c.y+n.y)/2; ctx.quadraticCurveTo(c.x,c.y,mx,my); }
+    ctx.closePath();
+  };
+  drawShape(); ctx.fillStyle=grad; ctx.fill();
+  drawShape(); ctx.strokeStyle=`hsla(${hue},${sat}%,${lit}%,0.9)`; ctx.lineWidth=2; ctx.stroke();
+  pts.forEach(p => {
+    ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2); ctx.fillStyle=`hsla(${hue},${sat}%,${lit}%,1)`; ctx.fill();
+    ctx.beginPath(); ctx.arc(p.x,p.y,2,0,Math.PI*2); ctx.fillStyle=isDark?'#141412':'#ffffff'; ctx.fill();
+  });
+  ctx.font='11px -apple-system,Helvetica Neue,sans-serif'; ctx.fillStyle=labelC; ctx.textAlign='center'; ctx.textBaseline='middle';
+  angles.forEach((a,i) => { ctx.fillText(labels[i], cx+Math.cos(a)*(R+22), cy+Math.sin(a)*(R+22)); });
+}
+
+function getEmotionSummary(values) {
+  const [temp,tension,brightness,space,symmetry] = values;
+  const parts = [];
+  if (temp<=3) parts.push('icy'); else if (temp>=8) parts.push('blazing warm');
+  if (tension<=3) parts.push('still'); else if (tension>=7) parts.push('intense');
+  if (brightness<=3) parts.push('dark'); else if (brightness>=7) parts.push('radiant');
+  if (space>=7) parts.push('vast'); else if (space<=3) parts.push('intimate');
+  if (symmetry<=3) parts.push('fragmented'); else if (symmetry>=8) parts.push('structured');
+  return parts.length ? `Emotion portrait: ${parts.join(' · ')}` : 'A balanced, fluid emotional landscape';
+}
+
+function setCharCount(elId, text) {
+  const el = document.getElementById(elId);
+  if (el) el.textContent = text.length > 0 ? `${text.length} chars` : '';
+}
+
+function generate() {
+  const temp=parseInt(document.getElementById('temp').value);
+  const tension=parseInt(document.getElementById('tension').value);
+  const brightness=parseInt(document.getElementById('brightness').value);
+  const space=parseInt(document.getElementById('space').value);
+  const symmetry=parseInt(document.getElementById('symmetry').value);
+  const genres=getActive('genre-tags');
+  const moods=getActive('mood-tags');
+  const instruments=getActiveInst();
+  const bpm=document.getElementById('adv-bpm').value;
+  const key=document.getElementById('adv-key').value;
+  const rhythm=document.getElementById('adv-rhythm').value;
+
+  // ── Style Tags (Suno Style box) ──
+  // genre, instruments, bpm, key, rhythm — keywords Suno reads structurally
+  let styleParts = [];
+  if (genres.length) styleParts.push(genres.join(', '));
+  if (instruments.length) styleParts.push(instruments.join(', '));
+  else {
+    if (temp<=3) styleParts.push('cold synth pads, sparse piano');
+    else if (temp<=6) styleParts.push('acoustic piano, soft strings');
+    else styleParts.push('warm strings, rich brass');
+  }
+  if (bpm) styleParts.push(bpm);
+  if (key) styleParts.push(key);
+  if (rhythm) styleParts.push(rhythm);
+
+  // ── Mood & Structure (Suno description / lyrics) ──
+  // emotion words, slider-derived descriptors, arc
+  let moodParts = [];
+  if (moods.length) moodParts.push(moods.join(', '));
+
+  if (tension<=3) moodParts.push('slow tempo, quiet, minimal');
+  else if (tension<=5) moodParts.push('moderate tempo, mid dynamics');
+  else if (tension<=7) moodParts.push('building intensity, dynamic arrangement');
+  else moodParts.push('high energy, dramatic peaks, intense');
+
+  if (brightness<=3) moodParts.push('minor key, dark, heavy reverb');
+  else if (brightness<=6) moodParts.push('neutral tonality, slight minor');
+  else moodParts.push('bright major key, uplifting, clear mix');
+
+  if (space<=3) moodParts.push('dry intimate mix');
+  else if (space<=6) moodParts.push('moderate reverb, balanced space');
+  else moodParts.push('vast reverb, wide stereo, cinematic space');
+
+  if (symmetry<=3) moodParts.push('fragmented, irregular phrases');
+  else if (symmetry<=6) moodParts.push('loose structure, natural flow');
+  else moodParts.push('clear structure, steady rhythm');
+
+  if (activeArc && arcPrompts[activeArc]) moodParts.push(arcPrompts[activeArc]);
+
+  const styleText = styleParts.join(', ');
+  const moodText = moodParts.join(', ');
+
+  const styleEl = document.getElementById('style-output');
+  const moodEl = document.getElementById('mood-output');
+
+  styleEl.textContent = styleText || '(no style tags selected)';
+  styleEl.classList.remove('placeholder');
+  moodEl.textContent = moodText;
+  moodEl.classList.remove('placeholder');
+
+  setCharCount('style-chars', styleText);
+  setCharCount('mood-chars', moodText);
+
+  drawRadar([temp,tension,brightness,space,symmetry]);
+  document.getElementById('emotion-summary').textContent = getEmotionSummary([temp,tension,brightness,space,symmetry]);
+}
+
+function copyBlock(outputId, hintId) {
+  const el = document.getElementById(outputId);
+  if (el.classList.contains('placeholder')) return;
+  const text = el.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    document.getElementById(hintId).textContent = 'Copied ✓';
+    setTimeout(() => document.getElementById(hintId).textContent = '', 2500);
+  }).catch(() => {
+    const range = document.createRange(); range.selectNode(el);
+    window.getSelection().removeAllRanges(); window.getSelection().addRange(range);
+    document.getElementById(hintId).textContent = 'Please copy manually with Ctrl+C';
+  });
+}
+
+drawRadar([5,5,5,5,5]);
+</script>
+</body>
+</html>
