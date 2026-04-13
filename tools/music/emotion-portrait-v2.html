@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>情绪画像 · SenuxTech</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400&family=Noto+Sans+SC:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f5f2ed;
+  --surface: rgba(255,255,255,0.82);
+  --surface-strong: rgba(255,255,255,0.94);
+  --border: rgba(200,188,174,0.55);
+  --border-mid: rgba(180,166,150,0.7);
+  --text: #2d2821;
+  --muted: #6e6459;
+  --hint: #a89d92;
+  --sage: #6b8c72;
+  --sage-light: rgba(107,140,114,0.10);
+  --sage-mid: rgba(107,140,114,0.22);
+  --warm-dark: #3d342c;
+  --radius: 18px;
+  --radius-sm: 12px;
+  --shadow: 0 8px 28px rgba(79,60,42,0.07);
+}
+html { scroll-behavior: smooth; }
+body {
+  background: linear-gradient(160deg, #f7f4ef 0%, #f0ebe2 100%);
+  color: var(--text);
+  font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-weight: 300;
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+.page { max-width: 680px; margin: 0 auto; padding: 0 1.25rem 5rem; }
+
+/* ── HERO ── */
+.hero { text-align: center; padding: 3rem 1rem 2rem; }
+.eyebrow {
+  display: inline-block; padding: 5px 14px; border-radius: 999px;
+  background: rgba(107,140,114,0.12); color: var(--sage);
+  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  margin-bottom: 1.2rem;
+}
+.hero-title {
+  font-family: 'Noto Serif SC', serif;
+  font-size: clamp(1.75rem, 5vw, 2.6rem);
+  font-weight: 300; line-height: 1.3;
+  color: var(--text); margin-bottom: 0.8rem;
+}
+.hero-sub { color: var(--muted); font-size: 15px; line-height: 1.8; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.6rem 1.5rem;
+  margin-bottom: 1.2rem;
+}
+.card-title { font-size: 17px; font-weight: 400; color: var(--text); margin-bottom: 0.4rem; }
+.card-desc { color: var(--muted); font-size: 13.5px; margin-bottom: 1.2rem; }
+
+/* ── SCENE GRID ── */
+.scene-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1rem; }
+.scene-btn {
+  padding: 12px 13px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); font-size: 13.5px;
+  color: var(--muted); cursor: pointer; transition: all 0.16s;
+  background: var(--surface-strong); text-align: left;
+  font-family: inherit; font-weight: 300; line-height: 1.45;
+}
+.scene-btn:hover { border-color: var(--sage); color: var(--text); background: var(--sage-light); transform: translateY(-1px); }
+.scene-btn.active { border-color: var(--sage); background: var(--sage-light); color: var(--text); }
+
+textarea {
+  width: 100%; min-height: 80px; resize: vertical;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 12px 14px; font-size: 14px; color: var(--text);
+  background: var(--surface-strong); outline: none;
+  font-family: inherit; font-weight: 300; transition: border-color 0.14s;
+  line-height: 1.7;
+}
+textarea:focus { border-color: var(--sage); box-shadow: 0 0 0 3px var(--sage-mid); }
+textarea::placeholder { color: var(--hint); }
+
+/* ── DIMENSIONS ── */
+.dim-group { display: flex; flex-direction: column; gap: 16px; margin-top: 1.2rem; }
+.dim {
+  padding: 14px 16px; border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.65); border: 1px solid var(--border);
+}
+.dim-label { font-size: 14px; font-weight: 400; color: var(--text); margin-bottom: 8px; }
+.dim-hint { font-size: 11.5px; color: var(--hint); margin-bottom: 8px; line-height: 1.5; }
+input[type=range] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 3px; border-radius: 2px; outline: none; cursor: pointer;
+  background: linear-gradient(to right, var(--sage) 50%, var(--border-mid) 50%);
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+  background: white; border: 2px solid var(--sage); cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12); transition: transform 0.1s;
+}
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+input[type=range]::-moz-range-thumb {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: white; border: 2px solid var(--sage); cursor: pointer;
+}
+.dim-ends { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--hint); margin-top: 6px; }
+
+/* ── CONFLICT ── */
+.conflict-q { font-size: 14px; color: var(--text); margin-bottom: 0.8rem; font-weight: 400; }
+.conflict-hint { font-size: 12px; color: var(--hint); margin-bottom: 1rem; }
+.conflict-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.conflict-btn {
+  padding: 11px 12px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); font-size: 13px;
+  color: var(--muted); cursor: pointer; transition: all 0.15s;
+  background: var(--surface-strong); text-align: left;
+  font-family: inherit; font-weight: 300; line-height: 1.5;
+}
+.conflict-btn:hover { border-color: var(--sage); color: var(--text); background: var(--sage-light); }
+.conflict-btn.active { border-color: var(--sage); background: var(--sage-light); color: var(--text); font-weight: 400; }
+.conflict-none { font-size: 12px; color: var(--hint); margin-top: 8px; cursor: pointer; display: inline-block; transition: color 0.12s; }
+.conflict-none:hover { color: var(--muted); }
+
+
+.btn-main {
+  display: block; width: 100%; padding: 14px;
+  background: var(--warm-dark); color: white;
+  border: none; border-radius: 999px; font-size: 15px;
+  font-weight: 400; cursor: pointer; transition: opacity 0.14s, transform 0.14s;
+  font-family: inherit; letter-spacing: 0.04em; margin-top: 1.4rem;
+  box-shadow: 0 8px 20px rgba(61,52,44,0.16);
+}
+.btn-main:hover { opacity: 0.88; transform: translateY(-1px); }
+
+/* ── OUTPUT ── */
+.output { display: none; margin-top: 0; }
+.output.show { display: block; }
+
+.out-label {
+  font-size: 10px; font-weight: 400; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--hint); margin-bottom: 0.6rem;
+}
+.out-text { font-size: 14px; color: var(--text); line-height: 1.95; }
+.out-text p { margin-bottom: 0.5rem; }
+.out-text p:last-child { margin-bottom: 0; }
+.out-list { padding-left: 0; list-style: none; }
+.out-list li { font-size: 14px; color: var(--text); line-height: 1.8; padding-left: 1.2rem; position: relative; }
+.out-list li::before { content: '·'; position: absolute; left: 0; color: var(--sage); }
+
+/* radar */
+.radar-wrap { display: flex; flex-direction: column; align-items: center; padding: 0.5rem 0 0.2rem; }
+#radar { width: 220px; height: 220px; max-width: 100%; }
+
+/* music card */
+.music-mode-btn {
+  padding: 6px 16px; border-radius: 999px; font-size: 12px;
+  cursor: pointer; transition: all 0.14s; font-family: inherit;
+  border: 1px solid var(--sage-mid); background: transparent; color: var(--sage);
+}
+.music-mode-btn.active { background: var(--sage); color: white; border-color: var(--sage); }
+.music-mode-desc { font-size: 12px; color: var(--hint); margin-bottom: 10px; line-height: 1.6; min-height: 32px; }
+.music-card {
+  background: rgba(107,140,114,0.07);
+  border: 1px solid var(--sage-mid);
+  border-radius: var(--radius); padding: 1.4rem 1.5rem;
+  margin-bottom: 1.2rem;
+}
+.music-title { font-size: 13px; color: var(--sage); letter-spacing: 0.06em; margin-bottom: 0.8rem; }
+.music-prompt-box {
+  background: var(--surface-strong); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 14px;
+  font-size: 13px; color: var(--text); line-height: 1.85;
+  margin-bottom: 10px;
+}
+.music-copy-row { display: flex; align-items: center; gap: 10px; }
+.music-copy-btn {
+  padding: 7px 16px; background: var(--sage); color: white;
+  border: none; border-radius: 999px; font-size: 12px;
+  cursor: pointer; transition: opacity 0.12s; font-family: inherit; white-space: nowrap;
+}
+.music-copy-btn:hover { opacity: 0.82; }
+.music-copy-hint { font-size: 11px; color: var(--sage); min-height: 14px; }
+
+/* restart */
+.restart-row { text-align: center; margin-top: 0.5rem; }
+.restart-btn {
+  font-size: 12px; color: var(--hint); cursor: pointer;
+  background: none; border: none; font-family: inherit;
+  letter-spacing: 0.04em; transition: color 0.12s;
+}
+.restart-btn:hover { color: var(--muted); }
+
+footer {
+  text-align: center; padding: 2rem 0 1rem;
+  font-size: 11.5px; color: var(--hint); line-height: 1.7;
+}
+
+@media (max-width: 480px) {
+  .scene-grid { grid-template-columns: 1fr; }
+  .hero-title { font-size: 1.6rem; }
+  .card { padding: 1.2rem 1.1rem; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="hero">
+  <div class="eyebrow">SenuxTech · 情绪画像</div>
+  <h1 class="hero-title">有时候我们有感觉，<br>但说不清。</h1>
+  <p class="hero-sub">不是帮你改变什么，<br>只是帮你看见自己一点点。</p>
+</header>
+
+<!-- INPUT CARD -->
+<div class="card">
+  <div class="card-title">选一个最像你的，或者写一句</div>
+  <div class="card-desc">没有对错。只要最接近你此刻的状态就好。</div>
+
+  <div class="scene-grid" id="scene-grid">
+    <button class="scene-btn" data-text="在路上，有点没醒">🚇 在路上，有点没醒</button>
+    <button class="scene-btn" data-text="回家的路上，有点累">🏠 回家的路上，有点累</button>
+    <button class="scene-btn" data-text="一个人走着，没有目的">🚶 一个人走，没有目的</button>
+    <button class="scene-btn" data-text="在车里，很安静">🚗 在车里，很安静</button>
+    <button class="scene-btn" data-text="吃着东西，慢慢的">🍜 吃着东西，慢慢的</button>
+    <button class="scene-btn" data-text="想专注，但思绪在飘">💻 想专注，思绪在飘</button>
+    <button class="scene-btn" data-text="躺着，还没睡着">🌙 躺着，还没睡着</button>
+    <button class="scene-btn" data-text="心里有点什么，说不清">💭 心里有点什么</button>
+  </div>
+
+  <textarea id="custom-input" placeholder="或者用自己的话写一句现在的感觉…" rows="3"></textarea>
+
+  <!-- Conflict recognition -->
+  <div style="margin-top:1.2rem; padding-top:1.2rem; border-top:1px solid var(--border);">
+    <div class="conflict-q">有没有两种感觉同时存在？</div>
+    <div class="conflict-hint">选一个最像的，或者跳过也可以。</div>
+    <div class="conflict-grid" id="conflict-grid">
+      <button class="conflict-btn" data-a="想靠近" data-b="又想一个人待着">想靠近<br><span style="color:var(--hint);font-size:11px">× 又想一个人待着</span></button>
+      <button class="conflict-btn" data-a="有点期待" data-b="又有点害怕">有点期待<br><span style="color:var(--hint);font-size:11px">× 又有点害怕</span></button>
+      <button class="conflict-btn" data-a="累了想停" data-b="又停不下来">累了想停<br><span style="color:var(--hint);font-size:11px">× 又停不下来</span></button>
+      <button class="conflict-btn" data-a="心里暖" data-b="但有点孤单">心里暖<br><span style="color:var(--hint);font-size:11px">× 但有点孤单</span></button>
+      <button class="conflict-btn" data-a="想说" data-b="又不知道怎么说">想说<br><span style="color:var(--hint);font-size:11px">× 又不知道怎么说</span></button>
+      <button class="conflict-btn" data-a="还好" data-b="但说不清哪里不对">还好<br><span style="color:var(--hint);font-size:11px">× 但说不清哪里不对</span></button>
+    </div>
+    <span class="conflict-none" id="conflict-none-btn" onclick="clearConflict()">↳ 没有，跳过这个</span>
+  </div>
+
+  <div class="dim-group">
+    <div class="dim">
+      <div class="dim-label">情绪温度</div>
+      <div class="dim-hint">是有点距离感，还是有点被包住的感觉？</div>
+      <input type="range" min="0" max="10" value="5" id="d-temp" oninput="updateSlider(this)">
+      <div class="dim-ends"><span>冷一些 · 收着</span><span>暖一些 · 柔和</span></div>
+    </div>
+    <div class="dim">
+      <div class="dim-label">内在状态</div>
+      <div class="dim-hint">内心是安静的，还是有什么悬在那里还没放下？</div>
+      <input type="range" min="0" max="10" value="5" id="d-tension" oninput="updateSlider(this)">
+      <div class="dim-ends"><span>平的 · 没波动</span><span>有点绷着 · 放不下</span></div>
+    </div>
+    <div class="dim">
+      <div class="dim-label">情绪颜色</div>
+      <div class="dim-hint">整体的情绪颜色——沉一点还是有一丝亮？</div>
+      <input type="range" min="0" max="10" value="5" id="d-bright" oninput="updateSlider(this)">
+      <div class="dim-ends"><span>偏暗 · 内收 · 有点沉</span><span>偏亮 · 轻一点 · 有希望</span></div>
+    </div>
+    <div class="dim">
+      <div class="dim-label">空间感觉</div>
+      <div class="dim-hint">这种感觉是很私密的，还是有点飘在外面？</div>
+      <input type="range" min="0" max="10" value="5" id="d-space" oninput="updateSlider(this)">
+      <div class="dim-ends"><span>贴近自己 · 私密</span><span>有一点距离 · 比较松</span></div>
+    </div>
+    <div class="dim">
+      <div class="dim-label">状态流动</div>
+      <div class="dim-hint">思绪是碎的还是有一点方向在流动？</div>
+      <input type="range" min="0" max="10" value="5" id="d-flow" oninput="updateSlider(this)">
+      <div class="dim-ends"><span>有点散 · 碎片感</span><span>给我方向 · 有方向</span></div>
+    </div>
+  </div>
+
+  <button class="btn-main" onclick="generate()">看看我现在的状态</button>
+</div>
+
+<!-- OUTPUT -->
+<div class="output" id="output">
+
+  <!-- Radar -->
+  <div class="card">
+    <div class="out-label">情绪轮廓</div>
+    <div class="radar-wrap">
+      <canvas id="radar" width="220" height="220"></canvas>
+    </div>
+  </div>
+
+  <!-- Portrait -->
+  <div class="card">
+    <div class="out-label">你的情绪画像</div>
+    <div class="out-text" id="out-portrait"></div>
+  </div>
+
+  <!-- Conflict (shown only if selected) -->
+  <div class="card" id="out-conflict-card" style="display:none;">
+    <div class="out-label">核心情绪冲突</div>
+    <div class="out-text" id="out-conflict"></div>
+  </div>
+
+  <!-- Interpretation -->
+  <div class="card">
+    <div class="out-label">这可能是一种什么感觉</div>
+    <div class="out-text" id="out-interp"></div>
+  </div>
+
+  <!-- Need -->
+  <div class="card">
+    <div class="out-label">你现在可能更需要</div>
+    <div class="out-text" id="out-need"></div>
+  </div>
+
+  <!-- Meditation -->
+  <div class="card">
+    <div class="out-label">如果想安静一下</div>
+    <div class="out-text" id="out-meditate"></div>
+  </div>
+
+  <!-- Actions -->
+  <div class="card">
+    <div class="out-label">可以先做一件很小的事</div>
+    <ul class="out-list" id="out-actions"></ul>
+  </div>
+
+  <!-- Music -->
+  <div class="music-card">
+    <div class="music-title">🎵 用音乐和这个状态在一起</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <button class="music-mode-btn active" id="mode-express" onclick="switchMode('express')">与我共鸣</button>
+      <button class="music-mode-btn" id="mode-flow" onclick="switchMode('flow')">给我方向</button>
+    </div>
+    <div class="music-mode-desc" id="music-mode-desc"></div>
+    <div class="music-prompt-box" id="out-music"></div>
+    <div class="music-copy-row">
+      <button class="music-copy-btn" onclick="copyMusic()">复制提示词</button>
+      <span class="music-copy-hint" id="music-copy-hint"></span>
+    </div>
+  </div>
+
+  <div class="restart-row">
+    <button class="restart-btn" onclick="restart()">重新来一次</button>
+  </div>
+</div>
+
+<footer>
+  情绪画像 · SenuxTech<br>
+  这不是诊断工具，不构成心理建议。<br>只是一个帮你停下来、看见自己一点点的界面。
+</footer>
+</div>
+
+<script>// ── Scene buttons ──
+document.querySelectorAll('.scene-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.scene-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('custom-input').value = btn.dataset.text;
+  });
+});
+document.getElementById('custom-input').addEventListener('input', function() {
+  if (this.value.trim()) document.querySelectorAll('.scene-btn').forEach(b => b.classList.remove('active'));
+});
+
+// ── Conflict buttons ──
+let conflict = { a: '', b: '' };
+document.querySelectorAll('.conflict-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const wasActive = btn.classList.contains('active');
+    document.querySelectorAll('.conflict-btn').forEach(b => b.classList.remove('active'));
+    if (!wasActive) { btn.classList.add('active'); conflict.a = btn.dataset.a; conflict.b = btn.dataset.b; }
+    else { conflict.a = ''; conflict.b = ''; }
+  });
+});
+function clearConflict() {
+  document.querySelectorAll('.conflict-btn').forEach(b => b.classList.remove('active'));
+  conflict.a = ''; conflict.b = '';
+}
+
+// ── Slider gradient ──
+function updateSlider(el) {
+  const pct = el.value / 10 * 100;
+  el.style.background = `linear-gradient(to right, var(--sage) 0%, var(--sage) ${pct}%, var(--border-mid) ${pct}%, var(--border-mid) 100%)`;
+}
+document.querySelectorAll('input[type=range]').forEach(el => updateSlider(el));
+
+// ── Helpers ──
+function pick(score, low, mid, high) {
+  if (score <= 3) return low;
+  if (score >= 7) return high;
+  return mid;
+}
+
+// ── Builders ──
+function buildPortrait(state, t, te, b, sp, fl) {
+  const warmth = pick(t, '情绪有一点收着，偏克制或疏离', '情绪温度居中，不特别热也不特别冷', '情绪是柔和的，有一点被包住的感觉');
+  const inner  = pick(te, '内心比较平，没有太多剧烈波动', '心里有一点起伏，但还在可以承受的范围', '有些地方还在绷着，不容易完全放下');
+  const color  = pick(b, '整体偏暗沉，情绪在往内走', '明暗参半，有点说不清楚往哪边', '里面还保留着一点点轻和亮');
+  const space  = pick(sp, '这种感觉很贴近你自己，比较私密', '它和你之间有一点空间，能被慢慢看见', '它没有紧贴着你，有一点松开的感觉');
+  const flow   = pick(fl, '思绪有点散，还没有完全连起来', '它在给我方向，还没有太明确的方向', '已经开始有一点方向在走，只是速度还很轻');
+  const prefix = state ? `在「${state.replace(/^[\u{1F300}-\u{1FAFF}\s]*/u, '').trim()}」这样的片刻里，` : '';
+  return `<p>${prefix}${warmth}。</p><p>${inner}。${color}。</p><p>${space}。${flow}。</p>`;
+}
+
+function buildConflict(a, b) {
+  const map = {
+    '想靠近|又想一个人待着': { desc: '你有一部分想要连接、想靠近某人或某件事；同时另一部分想要缩回来，需要独处和安静。', why: '这种拉扯通常出现在人既渴望被理解，又不确定靠近之后是否真的会被接住的时候。', tip: '不需要现在做决定。可以先给自己一点独处的空间，再看看靠近的感觉有没有自然地回来。' },
+    '有点期待|又有点害怕': { desc: '你对某件事有期待，感觉它可能带来好的东西；但同时有一种防御在工作，害怕失望或失控。', why: '期待和恐惧同时存在，通常是因为这件事对你来说真的重要——越重要，保护机制越容易启动。', tip: '先把期待的部分停留一下，不用急着让它变成计划。允许自己既期待，又害怕，这两个都是真实的。' },
+    '累了想停|又停不下来': { desc: '身体或心理已经发出了需要休息的信号；但有一个部分还在运转，停不下来——可能是责任感，可能是习惯，也可能是某种不安全感。', why: '这种冲突消耗的能量，有时比真正工作还多。它让你既没有休息到，又没有推进什么。', tip: '试着只停五分钟，不是为了恢复效率，而是就停着。给自己一个不需要产出的时间窗口。' },
+    '心里暖|但有点孤单': { desc: '你感受到了一些真实的温暖——来自某人、某事或某个时刻；但同时有一种孤单在旁边，像是这份暖还不够把某个地方填满。', why: '这种感觉常常出现在人感受到连接，但还没有被完全理解的时候。暖意是真的，孤单也是真的，它们不矛盾。', tip: '先让那份暖停留，不要急着分析孤单从哪里来。有时候只是需要多一点时间，让温度慢慢渗进去。' },
+    '想说|又不知道怎么说': { desc: '有一些东西在心里，感觉需要被表达出来；但语言不够用，或者不确定说了之后会发生什么。', why: '这种状态通常意味着情绪还没有被自己完全整理好，或者对方的回应让人感到不确定。想说，本身就是一种连接的渴望。', tip: '先不用对别人说。可以试着写下来，哪怕只是几个词，不用成句。写给自己看，不需要解释。' },
+    '还好|但说不清哪里不对': { desc: '表面上一切还在运转，没有明显的崩塌；但有一种模糊的不对劲在底下，说不清是什么，就是有一点不对。', why: '这种感觉有时是一种早期信号——身体或情绪在提示某件事还没被处理，但还没大到让人正视它。它不是没有原因的。', tip: '不用现在找到那个"哪里不对"。先承认它存在就好。有时候只是需要多睡一点，或者少做一点事，让那个模糊的部分慢慢浮出来。' }
+  };
+  const key = `${a}|${b}`;
+  const d = map[key];
+  if (!d) return '';
+  return `<p><strong style="font-weight:400;color:var(--sage)">「${a}」</strong>，同时又<strong style="font-weight:400;color:var(--sage)">「${b}」</strong>。</p><p style="margin-top:8px">${d.desc}</p><p style="margin-top:8px;color:var(--muted);font-size:13px">${d.why}</p><p style="margin-top:10px;padding:10px 12px;background:var(--sage-light);border-radius:8px;font-size:13px">${d.tip}</p>`;
+}
+
+function buildInterp(te, fl, b, hasConflict) {
+  if (hasConflict) return '<p>同时承载两种相反的感觉，本身就需要消耗很多能量。不是你不够好，而是这种状态本来就很重。</p>';
+  if (te >= 7) return '<p>这种感觉常常出现在人已经有点累了，但脑子和心还没完全停下来的时候。它不一定很大声，却会一直占着一点注意力。</p>';
+  if (fl <= 3) return '<p>这更像是一些零散的感受堆在一起，不一定需要立刻整理，只是还没有自然连成一条线。</p>';
+  if (b >= 7)  return '<p>这是一种虽然不算很轻松，但里面还留着一点希望和空间的状态，比较适合慢慢靠近自己。</p>';
+  return '<p>这更像是人从外面回到自己身上时会出现的一种中间状态：不需要马上解决，但值得被看见。</p>';
+}
+
+function buildNeed(t, te, sp, conflictKey) {
+  if (conflictKey === '累了想停|又停不下来') return '<p>你现在最需要的不是"想清楚"，而是先让系统停下来一点点。不需要解决什么，只需要暂停。</p>';
+  if (conflictKey === '想说|又不知道怎么说') return '<p>你现在需要的不是表达，而是一个先被自己听见的空间。不用急着说给任何人。</p>';
+  if (conflictKey === '心里暖|但有点孤单') return '<p>你现在需要的是让那份暖先停留，不要急着分析孤单。允许两种感觉同时存在。</p>';
+  if (te >= 7) return '<p>你现在可能更需要的是：先让自己慢一点，不被催，不被打断，也不用马上把什么都说清楚。</p>';
+  if (t <= 3 && sp <= 4) return '<p>你现在可能更需要的是：一点温度和一点空间，同时存在。</p>';
+  if (sp >= 7) return '<p>你现在可能更需要的是：先不要太靠近问题，让自己有一点呼吸的位置。</p>';
+  return '<p>你现在可能更需要的是：被安住一下，允许自己先这样待一会。</p>';
+}
+
+function buildMeditate(te, fl, conflictKey) {
+  if (conflictKey === '想靠近|又想一个人待着') return '<p>给自己五分钟完全独处的时间，不看手机，不做任何事。只是坐着，感受一下现在身体的重量。</p>';
+  if (conflictKey === '累了想停|又停不下来') return '<p>把手放在胸口，感受一下呼吸。不用让它变慢，只是感觉它进来、出去。允许自己什么都不做这几分钟。</p>';
+  if (conflictKey === '想说|又不知道怎么说') return '<p>找一张纸，把脑子里的任何词写下来，不用成句，不用解释。写完可以收起来，也可以丢掉。</p>';
+  if (te >= 7) return '<p>把注意力轻轻放到脚底或手心。不用深呼吸，只是感觉它们现在在哪里。</p>';
+  if (fl <= 3) return '<p>闭上眼睛，感受一下脚踩在地上的感觉，或者手放在腿上的重量。只是感受，不用想任何事。</p>';
+  return '<p>把注意力放在呼吸上，不需要让它变慢。走神了，再轻轻回来就好。没有对错。</p>';
+}
+
+function buildActions(te, b, fl, conflictKey) {
+  const map = {
+    '想靠近|又想一个人待着': ['给自己一段完整的独处时间，不带手机', '如果想靠近某人，可以先发一条简单的消息，不需要解释太多', '写下你想靠近的那个人或事，不用做任何决定'],
+    '有点期待|又有点害怕': ['把期待的部分写下来，不用管害怕的部分', '不要现在做任何大的决定，先让这两种感觉并存几天', '找一件和这件事无关的小事做，给自己喘口气'],
+    '累了想停|又停不下来': ['设一个15分钟的计时器，在这段时间里什么都不做', '把今天剩下必须做的事写下来，只留最重要的一件', '告诉自己：停下来不是放弃，是让系统喘息'],
+    '心里暖|但有点孤单': ['回忆一下那个让你感到暖的时刻，让它多停留一会儿', '给那个让你感到暖的人发一条消息，不需要很长', '不要现在分析孤单从哪里来，先让暖意存在'],
+    '想说|又不知道怎么说': ['先写给自己，不用给任何人看', '如果有很信任的人，可以说"我有点说不清，但想找你说说话"', '不需要说得完整，可以从一个词或一句话开始'],
+    '还好|但说不清哪里不对': ['不用现在找到答案，先承认"有一点不对"就够了', '今晚早一点睡，有时候模糊的感觉需要睡眠来整理', '减少一件今天原本要做的事，给自己多一点空间']
+  };
+  if (conflictKey && map[conflictKey]) return map[conflictKey];
+  const list = [];
+  if (te >= 7) list.push('先停下来，哪怕只有五分钟，什么都不做');
+  if (b <= 4)  list.push('去有自然光的地方待两分钟，换一下身体的感觉');
+  if (fl <= 4) list.push('把脑子里最占地方的一件事写下来，写完不用分析');
+  list.push('让手机离开手一会儿，给自己一段没有输入的时间');
+  list.push('今天不需要解决任何事，允许自己先这样就好');
+  return list.slice(0, 3);
+}
+
+// Music mode state
+let musicMode = 'express';
+let musicDims = { t:5, te:5, b:5, sp:5 };
+
+const modeDesc = {
+  express: '和你现在的状态同频共鸣。不是改变它，而是让这个情绪被充分感受和承接。',
+  flow: '轻轻往前一点点。不是催你走，只是在旁边给一个出口的方向。'
+};
+
+function switchMode(mode) {
+  musicMode = mode;
+  document.querySelectorAll('.music-mode-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('mode-' + mode).classList.add('active');
+  document.getElementById('music-mode-desc').textContent = modeDesc[mode];
+  document.getElementById('out-music').textContent = buildMusic(musicDims.t, musicDims.te, musicDims.b, musicDims.sp, mode);
+}
+
+function buildMusic(t, te, b, sp, mode) {
+  // For flow mode, nudge dims toward lighter/calmer
+  let rt = t, rte = te, rb = b, rsp = sp;
+  if (mode === 'flow') {
+    rte = Math.max(1, te - 2);
+    rb  = Math.min(10, b + 2);
+    rsp = Math.min(10, sp + 1);
+  }
+
+  const parts = [];
+  // Warmth / instruments
+  if (rt <= 4) parts.push('cold and restrained, sparse piano, ambient textures');
+  else if (rt >= 7) parts.push('warm and enveloping, acoustic piano, soft strings');
+  else parts.push('neutral warmth, soft piano, gentle ambient layers');
+
+  // Tension / energy
+  if (rte >= 7) parts.push('very low energy, minimal dynamics, much silence and space');
+  else if (rte <= 3) parts.push('calm and steady, even and quiet flow');
+  else parts.push('moderate tempo, mid dynamics, unhurried');
+
+  // Space
+  if (rsp >= 7) parts.push('wide reverb, spacious and open');
+  else parts.push('intimate mix, close and private');
+
+  // Brightness / key
+  if (rb <= 4) parts.push('minor key, introspective and quiet');
+  else if (rb >= 7) parts.push('soft major key, gently bright');
+  else parts.push('neutral tonality, neither bright nor dark');
+
+  // Flow direction
+  if (mode === 'flow') parts.push('gradually lifting, gentle forward movement, soft resolution');
+
+  parts.push('avoid real-world background noise or environmental sound effects');
+  return parts.join(', ');
+}
+
+function copyMusic() {
+  const el = document.getElementById('out-music');
+  const text = el.textContent;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    document.getElementById('music-copy-hint').textContent = '已复制 ✓';
+    setTimeout(() => document.getElementById('music-copy-hint').textContent = '', 2500);
+  }).catch(() => {
+    const range = document.createRange(); range.selectNode(el);
+    window.getSelection().removeAllRanges(); window.getSelection().addRange(range);
+    document.getElementById('music-copy-hint').textContent = '请手动 Ctrl+C 复制';
+  });
+}
+
+// ── Radar ──
+function drawRadar(vals) {
+  const canvas = document.getElementById('radar');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2, R = Math.min(W,H)*0.36, N = 5;
+  const labels = ['温度','紧张感','明暗','空间','流动'];
+  const angles = labels.map((_,i) => Math.PI*2*i/N - Math.PI/2);
+  ctx.clearRect(0,0,W,H);
+  const gridC = 'rgba(107,140,114,0.13)', labelC = 'rgba(45,40,33,0.38)';
+  for (let ring=1; ring<=5; ring++) {
+    const r = R*ring/5;
+    ctx.beginPath();
+    angles.forEach((a,i) => { const x=cx+Math.cos(a)*r, y=cy+Math.sin(a)*r; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+    ctx.closePath(); ctx.strokeStyle=gridC; ctx.lineWidth=1; ctx.stroke();
+  }
+  angles.forEach(a => { ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(a)*R, cy+Math.sin(a)*R); ctx.strokeStyle=gridC; ctx.lineWidth=1; ctx.stroke(); });
+  const pts = vals.map((v,i) => ({ x: cx+Math.cos(angles[i])*(R*v/10), y: cy+Math.sin(angles[i])*(R*v/10) }));
+  const grad = ctx.createRadialGradient(cx,cy,0,cx,cy,R);
+  grad.addColorStop(0,'rgba(107,140,114,0.38)'); grad.addColorStop(0.6,'rgba(107,140,114,0.18)'); grad.addColorStop(1,'rgba(107,140,114,0.02)');
+  const shape = () => {
+    ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i=0;i<pts.length;i++) { const c=pts[i], n=pts[(i+1)%pts.length], mx=(c.x+n.x)/2, my=(c.y+n.y)/2; ctx.quadraticCurveTo(c.x,c.y,mx,my); }
+    ctx.closePath();
+  };
+  shape(); ctx.fillStyle=grad; ctx.fill();
+  shape(); ctx.strokeStyle='rgba(107,140,114,0.65)'; ctx.lineWidth=1.8; ctx.stroke();
+  pts.forEach(p => {
+    ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2); ctx.fillStyle='rgba(107,140,114,0.85)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(p.x,p.y,2,0,Math.PI*2); ctx.fillStyle='white'; ctx.fill();
+  });
+  ctx.font='11px Noto Sans SC, PingFang SC, sans-serif'; ctx.fillStyle=labelC; ctx.textAlign='center'; ctx.textBaseline='middle';
+  angles.forEach((a,i) => { ctx.fillText(labels[i], cx+Math.cos(a)*(R+22), cy+Math.sin(a)*(R+22)); });
+}
+
+// ── Generate ──
+function generate() {
+  const state = document.getElementById('custom-input').value.trim();
+  const t  = Number(document.getElementById('d-temp').value);
+  const te = Number(document.getElementById('d-tension').value);
+  const b  = Number(document.getElementById('d-bright').value);
+  const sp = Number(document.getElementById('d-space').value);
+  const fl = Number(document.getElementById('d-flow').value);
+  const hasConflict = conflict.a !== '';
+  const conflictKey = hasConflict ? `${conflict.a}|${conflict.b}` : '';
+
+  drawRadar([t, te, b, sp, fl]);
+  document.getElementById('out-portrait').innerHTML = buildPortrait(state, t, te, b, sp, fl);
+
+  const conflictCard = document.getElementById('out-conflict-card');
+  if (hasConflict) {
+    document.getElementById('out-conflict').innerHTML = buildConflict(conflict.a, conflict.b);
+    conflictCard.style.display = 'block';
+  } else {
+    conflictCard.style.display = 'none';
+  }
+
+  document.getElementById('out-interp').innerHTML   = buildInterp(te, fl, b, hasConflict);
+  document.getElementById('out-need').innerHTML     = buildNeed(t, te, sp, conflictKey);
+  document.getElementById('out-meditate').innerHTML = buildMeditate(te, fl, conflictKey);
+  document.getElementById('out-actions').innerHTML  = buildActions(te, b, fl, conflictKey).map(a => `<li>${a}</li>`).join('');
+  musicDims = { t, te, b, sp };
+  musicMode = 'express';
+  document.querySelectorAll('.music-mode-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('mode-express').classList.add('active');
+  document.getElementById('music-mode-desc').textContent = modeDesc['express'];
+  document.getElementById('out-music').textContent = buildMusic(t, te, b, sp, 'express');
+  document.getElementById('music-copy-hint').textContent = '';
+
+  const out = document.getElementById('output');
+  out.classList.add('show');
+  setTimeout(() => out.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+}
+
+function restart() {
+  document.getElementById('output').classList.remove('show');
+  document.getElementById('custom-input').value = '';
+  document.querySelectorAll('.scene-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.conflict-btn').forEach(b => b.classList.remove('active'));
+  conflict.a = ''; conflict.b = '';
+  document.querySelectorAll('input[type=range]').forEach(el => { el.value = 5; updateSlider(el); });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
