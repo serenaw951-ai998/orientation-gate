@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>情绪画像 · SenuxTech</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400&family=Noto+Sans+SC:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f5f2ed;
+  --surface: rgba(255,255,255,0.82);
+  --surface-strong: rgba(255,255,255,0.94);
+  --border: rgba(200,188,174,0.55);
+  --border-mid: rgba(180,166,150,0.7);
+  --text: #2d2821;
+  --muted: #6e6459;
+  --hint: #a89d92;
+  --sage: #6b8c72;
+  --sage-light: rgba(107,140,114,0.10);
+  --sage-mid: rgba(107,140,114,0.22);
+  --warm-dark: #3d342c;
+  --radius: 18px;
+  --radius-sm: 12px;
+  --shadow: 0 8px 28px rgba(79,60,42,0.07);
+}
+html { scroll-behavior: smooth; }
+body {
+  background: linear-gradient(160deg, #f7f4ef 0%, #f0ebe2 100%);
+  color: var(--text);
+  font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-weight: 300;
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+.page { max-width: 680px; margin: 0 auto; padding: 0 1.25rem 5rem; }
+
+/* ── HERO ── */
+.hero { text-align: center; padding: 3rem 1rem 2rem; }
+.eyebrow {
+  display: inline-block; padding: 5px 14px; border-radius: 999px;
+  background: rgba(107,140,114,0.12); color: var(--sage);
+  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  margin-bottom: 1.2rem;
+}
+.hero-title {
+  font-family: 'Noto Serif SC', serif;
+  font-size: clamp(1.75rem, 5vw, 2.6rem);
+  font-weight: 300; line-height: 1.3;
+  color: var(--text); margin-bottom: 0.8rem;
+}
+.hero-sub { color: var(--muted); font-size: 15px; line-height: 1.8; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 1.6rem 1.5rem;
+  margin-bottom: 1.2rem;
+}
+.card-title { font-size: 17px; font-weight: 400; color: var(--text); margin-bottom: 0.4rem; }
+.card-desc { color: var(--muted); font-size: 13.5px; margin-bottom: 1.2rem; }
+
+/* ── SCENE GRID ── */
+.scene-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1rem; }
+.scene-btn {
+  padding: 12px 13px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); font-size: 13.5px;
+  color: var(--muted); cursor: pointer; transition: all 0.16s;
+  background: var(--surface-strong); text-align: left;
+  font-family: inherit; font-weight: 300; line-height: 1.45;
+}
+.scene-btn:hover { border-color: var(--sage); color: var(--text); background: var(--sage-light); transform: translateY(-1px); }
+.scene-btn.active { border-color: var(--sage); background: var(--sage-light); color: var(--text); }
+
+textarea {
+  width: 100%; min-height: 80px; resize: vertical;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 12px 14px; font-size: 14px; color: var(--text);
+  background: var(--surface-strong); outline: none;
+  font-family: inherit; font-weight: 300; transition: border-color 0.14s;
+  line-height: 1.7;
+}
+textarea:focus { border-color: var(--sage); box-shadow: 0 0 0 3px var(--sage-mid); }
+textarea::placeholder { color: var(--hint); }
+
+/* ── DIMENSIONS ── */
+.dim-group { display: flex; flex-direction: column; gap: 16px; margin-top: 1.2rem; }
+.dim {
+  padding: 14px 16px; border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.65); border: 1px solid var(--border);
+}
+.dim-label { font-size: 14px; font-weight: 400; color: var(--text); margin-bottom: 8px; }
+.dim-hint { font-size: 11.5px; color: var(--hint); margin-bottom: 8px; line-height: 1.5; }
+input[type=range] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 3px; border-radius: 2px; outline: none; cursor: pointer;
+  background: linear-gradient(to right, var(--sage) 50%, var(--border-mid) 50%);
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+  background: white; border: 2px solid var(--sage); cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12); transition: transform 0.1s;
+}
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+input[type=range]::-moz-range-thumb {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: white; border: 2px solid var(--sage); cursor: pointer;
+}
+.dim-ends { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--hint); margin-top: 6px; }
+
+/* ── CONFLICT ── */
+.conflict-q { font-size: 14px; color: var(--text); margin-bottom: 0.8rem; font-weight: 400; }
+.conflict-hint { font-size: 12px; color: var(--hint); margin-bottom: 1rem; }
+.conflict-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.conflict-btn {
+  padding: 11px 12px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); font-size: 13px;
+  color: var(--muted); cursor: pointer; transition: all 0.15s;
+  background: var(--surface-strong); text-align: left;
+  font-family: inherit; font-weight: 300; line-height: 1.5;
+}
+.conflict-btn:hover { border-color: var(--sage); color: var(--text); background: var(--sage-light); }
+.conflict-btn.active { border-color: var(--sage); background: var(--sage-light); color: var(--text); font-weight: 400; }
+.conflict-none { font-size: 12px; color: var(--hint); margin-top: 8px; cursor: pointer; display: inline-block; transition: color 0.12s; }
+.conflict-none:hover { color: var(--muted); }
+
+
+.btn-main {
+  display: block; width: 100%; padding: 14px;
+  background: var(--warm-dark); color: white;
+  border: none; border-radius: 999px; font-size: 15px;
+  font-weight: 400; cursor: pointer; transition: opacity 0.14s, transform 0.14s;
+  font-family: inherit; letter-spacing: 0.04em; margin-top: 1.4rem;
+  box-shadow: 0 8px 20px rgba(61,52,44,0.16);
+}
+.btn-main:hover { opacity: 0.88; transform: translateY(-1px); }
+
+/* ── OUTPUT ── */
+.output { display: none; margin-top: 0; }
+.output.show { display: block; }
+
+.out-label {
+  font-size: 10px; font-weight: 400; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--hint); margin-bottom: 0.6rem;
+}
+.out-text { font-size: 14px; color: var(--text); line-height: 1.95; }
+.out-text p { margin-bottom: 0.5rem; }
+.out-text p:last-child { margin-bottom: 0; }
+.out-list { padding-left: 0; list-style: none; }
+.out-list li { font-size: 14px; color: var(--text); line-height: 1.8; padding-left: 1.2rem; position: relative; }
+.out-list li::before { content: '·'; position: absolute; left: 0; color: var(--sage); }
+
+/* radar */
+.radar-wrap { display: flex; flex-direction: column; align-items: center; padding: 0.5rem 0 0.2rem; }
+#radar { width: 220px; height: 220px; max-width: 100%; }
+
+/* music card */
+.music-mode-btn {
+  padding: 6px 16px; border-radius: 999px; font-size: 12px;
+  cursor: pointer; transition: all 0.14s; font-family: inherit;
+  border: 1px solid var(--sage-mid); background: transparent; color: var(--sage);
+}
+.music-mode-btn.active { background: var(--sage); color: white; border-color: var(--sage); }
+.music-mode-desc { font-size: 12px; color: var(--hint); margin-bottom: 10px; line-height: 1.6; min-height: 32px; }
+.music-card {
+  background: rgba(107,140,114,0.07);
+  border: 1px solid var(--sage-mid);
+  border-radius: var(--radius); padding: 1.4rem 1.5rem;
+  margin-bottom: 1.2rem;
+}
+.music-title { font-size: 13px; color: var(--sage); letter-spacing: 0.06em; margin-bottom: 0.8rem; }
+.music-prompt-box {
+  background: var(--surface-strong); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 14px;
+  font-size: 13px; color: var(--text); line-height: 1.85;
+  margin-bottom: 10px;
+}
+.music-copy-row { display: flex; align-items: center; gap: 10px; }
+.music-copy-btn {
+  padding: 7px 16px; background: var(--sage); color: white;
+  border: none; border-radius: 999px; font-size: 12px;
+  cursor: pointer; transition: opacity 0.12s; font-family: inherit; white-space: nowrap;
+}
+.music-copy-btn:hover { opacity: 0.82; }
+.music-copy-hint { font-size: 11px; color: var(--sage); min-height: 14px; }
+
+/* restart */
+.restart-row { text-align: center; margin-top: 0.5rem; }
+.restart-btn {
+  font-size: 12px; color: var(--hint); cursor: pointer;
+  background: none; border: none; font-family: inherit;
+  letter-spacing: 0.04em; transition: color 0.12s;
+}
+.restart-btn:hover { color: var(--muted); }
+
+footer {
+  text-align: center; padding: 2rem 0 1rem;
+  font-size: 11.5px; color: var(--hint); line-height: 1.7;
+}
+
+@media (max-width: 480px) {
+  .scene-grid { grid-template-columns: 1fr; }
+  .hero-title { font-size: 1.6rem; }
+  .card { padding: 1.2rem 1.1rem; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="hero">
+  <div class="eyebrow">SenuxTech · 情绪画像</div>
+  <h1 class="hero-title">有时候我们有感觉，<br>但说不清。</h1>
+  <p class="hero-sub">不是帮你改变什么，<br>只是帮你看见自己一点点。</p>
+</header>
+
+<!-- INPUT CARD -->
+<div class="card">
+  <div class="card-title">选一个最像你的，或者写一句</div>
+  <div class="card-desc">没有对错。只要最接近你此刻的状态就好。</div>
+
+  <div class="scene-grid" id="scene-grid">
+    <button class="scene-btn" data-text="在路上，有点没醒">🚇 在路上，有点没醒</button>
+    <button class="scene-btn" data-text="回家的路上，有点累">🏠 回家的路上，有点累</button>
+    <button class="scene-btn" data-text="一个人走着，没有目的">🚶 一个人走，没有目的</button>
+    <button class="scene-btn" data-text="在车里，很安静">🚗 在车里，很安静</button>
+    <button class="scene-btn" data-text="吃着东西，慢慢的">🍜 吃着东西，慢慢的</button>
+    <button class="scene-btn" data-text="想专注，但思绪在飘">💻 想专注，思绪在飘</button>
+    <button class="scene-btn" data-text="躺着，还没睡着">🌙 躺着，还没睡着</button>
+    <button class="scene-btn" data-text="心里有点什么，说不清">💭 心里有点什么</button>
+  </div>
+
+  <textarea id="custom-input" placeholder="或者用自己的话写一句现在的感觉…" rows="3"></textarea>
+
+  <!-- Conflict recognition -->
+  <div style="margin-top:1.2rem; padding-top:1.2rem; border-top:1px solid var(--border);">
+    <div class="conflict-q">有没有两种感觉同时存在？</div>
+    <div class="conflict-hint">选一个最像的，或者跳过也可以。</div>
+    <div class="conflict-grid" id="conflict-grid">
+      <button class="conflict-btn" data-a="想靠近" data-b="又想一个人待着">想靠近<br><span style="color:var(--hint);font-size:11px">× 又想一个人待着</span></button>
+      <button class="conflict-btn" data-a="有点期待" data-b="又有点害怕">有点期待<br><span style="color:var(--hint);font-size:11px">× 又有点害怕</span></button>
+      <button class="conflict-btn" data-a="累了想停" data-b="又停不下来">累了想停<br><span style="color:var(--hint);font-size:11px">× 又停不下来</span></button>
+      <button class="conflict-btn" data-a="心里暖" data-b="但有点孤单">心里暖<br><span style="color:var(--hint);font-size:11px">× 但有点孤单</span></button>
+      <button class="conflict-btn" data-a="想说" data-b="又不知道怎么说">想说<br><span style="color:var(--hint);font-size:11px">× 又不知道怎么说</span></button>
+      <button class="conflict-btn" data-a="还好" data-b="但说不清哪里不对">还好<br><span style="color:var(--hint);font-size:11px">× 但说不清哪里不对</span></button>
+    </div>
+    <span class="conflict-none" id="conflict-none-btn" onclick="clearConflict()">↳ 没有，跳过这个</span>
+  </div>
+
+  <div class="dim-group">
+    <div class="dim">
+      <div class="dim-label">情绪温度</div>
+      <div class="dim-hint">是有点距离感，还是有点被包住的感觉？</div>
+      <input type="range" min="0" max="10" value="5" id="d-temp" oninput="updateSlider(this)">
+      <div class="dim-ends"><span>冷一些 · 收着</span><span>暖一些 · 柔和</span></div>
+    </div>
+    <div class="dim">
+      <div class="dim-label">内在状态</div>
+      <div class="dim-hint">内心是安静的，还是有什么悬在那里还没放下？</div>
+      <input type="range" min="0" max="10" value="5" id="d-tension" oninput="updateSlider(this)">
+      <div class="dim-ends"><span>平的 · 没波动</span><span>有点绷着 · 放不下</span></div>
+    </div>
+    <div class="dim">
+      <div class="dim-label">情绪颜色</div>
+      <div class="dim-hint">整体的情绪颜色——沉一点还是有一丝亮？</div>
+      <input type="range" min="0" max="10" value="5" id="d-bright" oninput="updateSlider(this)">
+      <div class="dim-ends"><span>偏暗 · 内收 · 有点沉</span><span>偏亮 · 轻一点 · 有希望</span></div>
+    </div>
+    <div class="dim">
+      <div class="dim-label">空间感觉</div>
+      <div class="dim-hint">这种感觉是很私密的，还是有点飘在外面？</div>
+      <input type="range" min="0" max="10" value="5" id="d-space" oninput="updateSlider(this)">
+      <div class="dim-ends"><span>贴近自己 · 私密</span><span>有一点距离 · 比较松</span></div>
+    </div>
+    <div class="dim">
+      <div class="dim-label">状态流动</div>
+      <div class="dim-hint">思绪是碎的还是有一点方向在流动？</div>
+      <input type="range" min="0" max="10" value="5" id="d-flow" oninput="updateSlider(this)">
+      <div class="dim-ends"><span>有点散 · 碎片感</span><span>给我方向 · 有方向</span></div>
+    </div>
+  </div>
+
+  <button class="btn-main" onclick="generate()">看看我现在的状态</button>
+</div>
+
+<!-- OUTPUT -->
+<div class="output" id="output">
+
+  <!-- Radar -->
+  <div class="card">
+    <div class="out-label">情绪轮廓</div>
+    <div class="radar-wrap">
+      <canvas id="radar" width="220" height="220"></canvas>
+    </div>
+  </div>
+
+  <!-- Portrait -->
+  <div class="card">
+    <div class="out-label">你的情绪画像</div>
+    <div class="out-text" id="out-portrait"></div>
+  </div>
+
+  <!-- Conflict (shown only if selected) -->
+  <div class="card" id="out-conflict-card" style="display:none;">
+    <div class="out-label">核心情绪冲突</div>
+    <div class="out-text" id="out-conflict"></div>
+  </div>
+
+  <!-- Interpretation -->
+  <div class="card">
+    <div class="out-label">这可能是一种什么感觉</div>
+    <div class="out-text" id="out-interp"></div>
+  </div>
+
+  <!-- Need -->
+  <div class="card">
+    <div class="out-label">你现在可能更需要</div>
+    <div class="out-text" id="out-need"></div>
+  </div>
+
+  <!-- Meditation -->
+  <div class="card">
+    <div class="out-label">如果想安静一下</div>
+    <div class="out-text" id="out-meditate"></div>
+  </div>
+
+  <!-- Actions -->
+  <div class="card">
+    <div class="out-label">可以先做一件很小的事</div>
+    <ul class="out-list" id="out-actions"></ul>
+  </div>
+
+  <!-- Music -->
+  <div class="music-card">
+    <div class="music-title">🎵 用音乐和这个状态在一起</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <button class="music-mode-btn active" id="mode-express" onclick="switchMode('express')">与我共鸣</button>
+      <button class="music-mode-btn" id="mode-flow" onclick="switchMode('flow')">给我方向</button>
+    </div>
+    <div class="music-mode-desc" id="music-mode-desc"></div>
+    <div class="music-prompt-box" id="out-music"></div>
+    <div class="music-copy-row">
+      <button class="music-copy-btn" onclick="copyMusic()">复制提示词</button>
+      <span class="music-copy-hint" id="music-copy-hint"></span>
+    </div>
+  </div>
+
+
+  <!-- Feedback -->
+  <div style="margin-top:0; padding:1.2rem 1.5rem; background:rgba(107,140,114,0.06); border:1px solid rgba(107,140,114,0.18); border-radius:14px; margin-bottom:1.2rem;">
+    <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#a89d92;margin-bottom:0.8rem;">Quick reaction · 1秒</div>
+    <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;">
+      <button onclick="sendReaction('有被说中')" style="padding:8px 14px;border:1px solid rgba(107,140,114,0.35);border-radius:999px;background:transparent;font-size:13px;cursor:pointer;font-family:inherit;color:#6e6459;transition:all 0.12s;" onmouseover="this.style.background='rgba(107,140,114,0.10)'" onmouseout="this.style.background='transparent'">😳 有被说中</button>
+      <button onclick="sendReaction('有点感觉')" style="padding:8px 14px;border:1px solid rgba(107,140,114,0.35);border-radius:999px;background:transparent;font-size:13px;cursor:pointer;font-family:inherit;color:#6e6459;transition:all 0.12s;" onmouseover="this.style.background='rgba(107,140,114,0.10)'" onmouseout="this.style.background='transparent'">🤔 有点感觉</button>
+      <button onclick="sendReaction('不太对')" style="padding:8px 14px;border:1px solid rgba(107,140,114,0.35);border-radius:999px;background:transparent;font-size:13px;cursor:pointer;font-family:inherit;color:#6e6459;transition:all 0.12s;" onmouseover="this.style.background='rgba(107,140,114,0.10)'" onmouseout="this.style.background='transparent'">❌ 不太对</button>
+    </div>
+    <p style="font-size:13px;color:#a89d92;margin-bottom:0.7rem;line-height:1.7;">有没有哪一句话让你停了一下？或者哪里感觉不对？</p>
+    <a href="https://docs.google.com/forms/d/e/1FAIpQLSfAHslUoAZYQtT85YX5MMQ5w2Z16ShoNyPBSPev3fxssdpjmg/viewform?usp=publish-editor" target="_blank" style="display:inline-block;font-size:12px;color:#6b8c72;text-decoration:none;border-bottom:0.5px solid rgba(107,140,114,0.35);transition:opacity 0.12s;" onmouseover="this.style.opacity=0.7" onmouseout="this.style.opacity=1">用一句话说说你的感觉 →</a>
+    <div id="reaction-thanks" style="display:none;font-size:12px;color:#6b8c72;margin-top:8px;">谢谢你的反应 ✓</div>
+  </div>
+
+  <div class="restart-row">
+    <button class="restart-btn" onclick="restart()">重新来一次</button>
+  </div>
+</div>
+
+<footer>
+  情绪画像 · SenuxTech<br>
+  这不是诊断工具，不构成心理建议。<br>只是一个帮你停下来、看见自己一点点的界面。
+</footer>
+</div>
+
+<script>// ── Scene buttons ──
+document.querySelectorAll('.scene-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.scene-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('custom-input').value = btn.dataset.text;
+  });
+});
+document.getElementById('custom-input').addEventListener('input', function() {
+  if (this.value.trim()) document.querySelectorAll('.scene-btn').forEach(b => b.classList.remove('active'));
+});
+
+// ── Conflict buttons ──
+let conflict = { a: '', b: '' };
+document.querySelectorAll('.conflict-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const wasActive = btn.classList.contains('active');
+    document.querySelectorAll('.conflict-btn').forEach(b => b.classList.remove('active'));
+    if (!wasActive) { btn.classList.add('active'); conflict.a = btn.dataset.a; conflict.b = btn.dataset.b; }
+    else { conflict.a = ''; conflict.b = ''; }
+  });
+});
+function clearConflict() {
+  document.querySelectorAll('.conflict-btn').forEach(b => b.classList.remove('active'));
+  conflict.a = ''; conflict.b = '';
+}
+
+// ── Slider gradient ──
+function updateSlider(el) {
+  const pct = el.value / 10 * 100;
+  el.style.background = `linear-gradient(to right, var(--sage) 0%, var(--sage) ${pct}%, var(--border-mid) ${pct}%, var(--border-mid) 100%)`;
+}
+document.querySelectorAll('input[type=range]').forEach(el => updateSlider(el));
+
+// ── Helpers ──
+function pick(score, low, mid, high) {
+  if (score <= 3) return low;
+  if (score >= 7) return high;
+  return mid;
+}
+
+// ── Builders ──
+// 随机变化
+function rnd(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function buildPortrait(state, t, te, b, sp, fl) {
+  let hitLine = '';
+
+  // 靠近 x 退缩
+  if (t <= 4 && sp <= 4 && te >= 5) {
+    hitLine = rnd([
+      '一边想靠近，一边又在往后退。',
+      '其实想说点什么，但还是咽回去了。',
+      '有点想被理解，但又不太敢开口。'
+    ]);
+  // 累 x 停不下来
+  } else if (te >= 7 && fl <= 5) {
+    hitLine = rnd([
+      '身体已经很累了，但就是停不下来。',
+      '明明该休息，却总觉得还不能停。',
+      '不是不想停，是停下来更不安心。'
+    ]);
+  // 在意 x 装没事
+  } else if (te >= 6 && b <= 5 && t <= 5) {
+    hitLine = rnd([
+      '其实挺在意的，但还是装作没事。',
+      '不是不在乎，是不想表现出来。',
+      '心里有波动，但表面还是很平。'
+    ]);
+  // 想放下 x 放不下
+  } else if (fl <= 4 && te >= 6) {
+    hitLine = rnd([
+      '说是要放下，但其实还在想。',
+      '以为已经过去了，但还是会想起。',
+      '不是放不下，是还没准备好放下。'
+    ]);
+  // 努力 x 无力
+  } else if (te >= 6 && b <= 4 && fl <= 5) {
+    hitLine = rnd([
+      '一直在努力，但有点不知道在撑什么。',
+      '不是不努力，是有点看不到结果。',
+      '做着该做的事，但心里没什么力气。'
+    ]);
+  // 孤单 x 被陪伴
+  } else if (t >= 6 && sp <= 4) {
+    hitLine = rnd([
+      '有人在，但还是有点孤单。',
+      '被关心了，但好像还是没被懂。',
+      '不是真的一个人，但感觉还是一个人。'
+    ]);
+  // 想前进 x 卡住
+  } else if (fl <= 4 && te <= 5) {
+    hitLine = rnd([
+      '想往前走，但就是迈不出去。',
+      '好像卡在这一步，怎么都动不了。',
+      '不是不想改变，是不知道从哪开始。'
+    ]);
+  // 平静 x 不对劲
+  } else if (te <= 5 && b <= 5 && fl <= 6) {
+    hitLine = rnd([
+      '没有特别难受，但就是不太对。',
+      '看起来都还好，但心里有点空。',
+      '说不上来哪里不好，但就是不太舒服。'
+    ]);
+  // 期待 x 害怕
+  } else if (b >= 6 && te >= 5) {
+    hitLine = rnd([
+      '有点期待，但又不敢太期待。',
+      '好像在等什么，又怕真的来了。',
+      '心里有一点亮，但不敢看太久。'
+    ]);
+  } else {
+    hitLine = rnd([
+      '说不上很好，也说不上不好。',
+      '中间那种状态，哪边都没到。',
+      '没有特别难受，但就是不太对。',
+      '就这样，平着。'
+    ]);
+  }
+
+  const prefix = state ? `「${state.replace(/^[\p{Emoji}\s]*/u, '').trim()}」的时候，` : '';
+
+  let extra = '';
+  if (te >= 7 && fl <= 4) extra = '有东西卡在那里，既放不下，也动不了。';
+  else if (t <= 3 && b <= 4) extra = '有点冷，有点暗，但不是崩的那种。';
+  else if (t >= 7 && te <= 3) extra = '暖的，而且不紧，难得。';
+  else if (sp <= 3 && fl <= 4) extra = '比较往自己里面走，不太想往外。';
+  else if (sp >= 7 && b >= 7) extra = '有点开，心里有空间。';
+
+  return `<p>${prefix}${hitLine}</p>${extra ? `<p style="margin-top:6px;color:var(--muted);font-size:13px">${extra}</p>` : ''}`;
+}
+
+function buildConflict(a, b) {
+  const map = {
+    '想靠近|又想一个人待着': { hit: rnd(['一边想靠近，一边又在往后退。', '其实想说点什么，但还是咽回去了。', '有点想被理解，但又不太敢开口。']), desc: '一边想靠近，一边又想一个人待着——两个都是真的，不是其中一个在骗你。', tip: '先待着也好。不用现在决定要不要靠近。' },
+    '有点期待|又有点害怕': { hit: rnd(['有点期待，但又不敢太期待。', '好像在等什么，又怕真的来了。', '心里有一点亮，但不敢看太久。']), desc: '越在意的事，保护机制越容易提前启动。期待和害怕同时出现，说明这件事对你真的重要。', tip: '不用现在解决这个矛盾。让两种感觉都存在着，看看它们自己往哪走。' },
+    '累了想停|又停不下来': { hit: rnd(['身体已经很累了，但就是停不下来。', '明明该休息，却总觉得还不能停。', '不是不想停，是停下来更不安心。']), desc: '这种拉扯消耗的能量，有时候比继续做事还多。不是你不努力，是真的撑太久了。', tip: '试着只停五分钟，不为了恢复，就是停。' },
+    '心里暖|但有点孤单': { hit: rnd(['有人在，但还是有点孤单。', '被关心了，但好像还是没被懂。', '不是真的一个人，但感觉还是一个人。']), desc: '暖意是真的，孤单也是真的，它们可以同时存在，不用选一个。', tip: '让那份暖先停留着，不用急着分析孤单从哪来。' },
+    '想说|又不知道怎么说': { hit: rnd(['有很多话，但就是不知道怎么说。', '不是没想法，是说出来好像不对。', '话在心里转了一圈，最后还是没说。']), desc: '想说这件事本身，就是一种想连接的信号。不一定要说得完整，才算说了。', tip: '先写给自己，哪怕只是几个词。不用给任何人看。' },
+    '还好|但说不清哪里不对': { hit: rnd(['没有特别难受，但就是不太对。', '看起来都还好，但心里有点空。', '说不上来哪里不好，但就是不太舒服。']), desc: '这种模糊的不对劲，有时候是身体在提示某件事还没被处理。不是你想太多。', tip: '不用现在找到那个"哪里不对"。先承认它存在就够了。' }
+  };
+  const key = `${a}|${b}`;
+  const d = map[key];
+  if (!d) return '';
+  const hitLine = d.hit || `「${a}」，同时又「${b}」。`;
+  return `<p style="font-size:15px;color:var(--text);margin-bottom:8px">${hitLine}</p><p style="color:var(--muted);font-size:13px;margin-bottom:10px">${d.desc}</p><p style="padding:10px 12px;background:var(--sage-light);border-radius:8px;font-size:13px">${d.tip}</p>`;
+}
+
+function buildInterp(te, fl, b, hasConflict) {
+  if (hasConflict) return '<p>' + rnd(['两种感觉同时存在，本来就很重，不是你撑不住。', '这种拉扯不是你的问题，是状态本身就比较复杂。', '同时承载两种相反的感觉，消耗的能量比看起来多很多。']) + '</p>';
+  if (te >= 7) return '<p>' + rnd(['脑子和心还没停下来，虽然人已经很累了。', '有东西还挂着，不是不想放，是还没到时候。', '绷着的感觉，通常出现在人已经撑了很久但还没被接住的时候。']) + '</p>';
+  if (fl <= 3) return '<p>' + rnd(['散掉的状态，不一定要现在拼起来。', '感受是碎的，先碎着也没关系。', '还没连成线，但每一块都是真的。']) + '</p>';
+  if (b >= 7)  return '<p>' + rnd(['里面还有一点亮，这挺难得的。', '有希望感在，虽然可能自己没意识到。', '不算轻松，但还有空间，可以慢慢靠近自己。']) + '</p>';
+  return '<p>' + rnd(['从外面回到自己身上的时候，经常是这种状态。', '不需要马上解决，但值得被看见。', '中间状态，哪边都没到，但这也是真实的一种存在。']) + '</p>';
+}
+
+function buildNeed(t, te, sp, conflictKey) {
+  if (conflictKey === '累了想停|又停不下来') return '<p>' + rnd(['不是想清楚，是先停一下。', '不需要解决，只需要暂停。', '让系统先喘口气，其他的之后再说。']) + '</p>';
+  if (conflictKey === '想说|又不知道怎么说') return '<p>' + rnd(['不是要表达，是先被自己听见。', '不用说给任何人，先写给自己。', '有话想说这件事本身，就已经是一种表达了。']) + '</p>';
+  if (conflictKey === '心里暖|但有点孤单') return '<p>' + rnd(['让那份暖先待着，孤单的事之后再说。', '允许两种感觉同时存在，不用选。', '暖意先停留，不用急着分析。']) + '</p>';
+  if (te >= 7) return '<p>' + rnd(['慢一点，不被催。', '不用马上说清楚，也不用马上解决。', '先让自己喘口气，就这个。']) + '</p>';
+  if (t <= 3 && sp <= 4) return '<p>' + rnd(['一点温度，和一点空间，同时。', '暖一点，但不要太近。', '被看见，但不被打扰。']) + '</p>';
+  if (sp >= 7) return '<p>' + rnd(['先不要太靠近问题，给自己一点距离。', '有一点呼吸的位置，不用挤着。', '远一点看，反而看得清楚一点。']) + '</p>';
+  return '<p>' + rnd(['先待着，不用急着变好。', '被安住一下，就这个。', '允许自己先这样，不需要马上做什么。']) + '</p>';
+}
+
+function buildMeditate(te, fl, conflictKey) {
+  if (conflictKey === '想靠近|又想一个人待着') return '<p>' + rnd(['给自己五分钟，不看手机，只是待着。', '完全独处五分钟，感受一下只有自己的感觉。', '坐着，不做任何事，感受身体的重量。']) + '</p>';
+  if (conflictKey === '累了想停|又停不下来') return '<p>' + rnd(['把手放在胸口，感受呼吸进来、出去，就这个。', '深呼吸一次，不用很深，感受空气进来。', '就坐着，什么都不做，允许自己停在这里。']) + '</p>';
+  if (conflictKey === '想说|又不知道怎么说') return '<p>' + rnd(['找张纸，把脑子里的词写下来，写完可以丢掉。', '先写给自己，哪怕只是三个词，不用给任何人看。', '写什么都行，写完就好了。']) + '</p>';
+  if (te >= 7) return '<p>' + rnd(['把注意力放到脚底，感觉脚踩在地上。', '手放在大腿上，感受一下手的重量。', '闭眼，感觉屁股坐在椅子上的感觉，就这个。']) + '</p>';
+  if (fl <= 3) return '<p>' + rnd(['闭眼，感受呼吸，进来、出去，不用管其他的。', '把注意力放到手心，感受一下温度。', '深呼吸一次，慢慢呼出去。']) + '</p>';
+  return '<p>' + rnd(['呼吸，不用控制节奏，走神了再回来就好。', '把注意力放在呼吸上，没有对错。', '就呼吸，进来、出去，其他先不管。']) + '</p>';
+}
+
+function buildActions(te, b, fl, conflictKey) {
+  const map = {
+    '想靠近|又想一个人待着': ['给自己一段完整的独处时间，不带手机', '如果想靠近某人，可以先发一条简单的消息，不需要解释太多', '写下你想靠近的那个人或事，不用做任何决定'],
+    '有点期待|又有点害怕': ['把期待的部分写下来，不用管害怕的部分', '不要现在做任何大的决定，先让这两种感觉并存几天', '找一件和这件事无关的小事做，给自己喘口气'],
+    '累了想停|又停不下来': ['设一个15分钟的计时器，在这段时间里什么都不做', '把今天剩下必须做的事写下来，只留最重要的一件', '告诉自己：停下来不是放弃，是让系统喘息'],
+    '心里暖|但有点孤单': ['回忆一下那个让你感到暖的时刻，让它多停留一会儿', '给那个让你感到暖的人发一条消息，不需要很长', '不要现在分析孤单从哪里来，先让暖意存在'],
+    '想说|又不知道怎么说': ['先写给自己，不用给任何人看', '如果有很信任的人，可以说"我有点说不清，但想找你说说话"', '不需要说得完整，可以从一个词或一句话开始'],
+    '还好|但说不清哪里不对': ['不用现在找到答案，先承认"有一点不对"就够了', '今晚早一点睡，有时候模糊的感觉需要睡眠来整理', '减少一件今天原本要做的事，给自己多一点空间']
+  };
+  if (conflictKey && map[conflictKey]) return map[conflictKey];
+  const list = [];
+  if (te >= 7) list.push('先停下来，哪怕只有五分钟，什么都不做');
+  if (b <= 4)  list.push('去有自然光的地方待两分钟，换一下身体的感觉');
+  if (fl <= 4) list.push('把脑子里最占地方的一件事写下来，写完不用分析');
+  list.push('让手机离开手一会儿，给自己一段没有输入的时间');
+  list.push('今天不需要解决任何事，允许自己先这样就好');
+  return list.slice(0, 3);
+}
+
+// Music mode state
+let musicMode = 'express';
+let musicDims = { t:5, te:5, b:5, sp:5 };
+
+const modeDesc = {
+  express: '和你现在的状态同频共鸣。不是改变它，而是让这个情绪被充分感受和承接。',
+  flow: '轻轻往前一点点。不是催你走，只是在旁边给一个出口的方向。'
+};
+
+function switchMode(mode) {
+  musicMode = mode;
+  document.querySelectorAll('.music-mode-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('mode-' + mode).classList.add('active');
+  document.getElementById('music-mode-desc').textContent = modeDesc[mode];
+  document.getElementById('out-music').textContent = buildMusic(musicDims.t, musicDims.te, musicDims.b, musicDims.sp, mode);
+}
+
+function buildMusic(t, te, b, sp, mode) {
+  // For flow mode, nudge dims toward lighter/calmer
+  let rt = t, rte = te, rb = b, rsp = sp;
+  if (mode === 'flow') {
+    rte = Math.max(1, te - 2);
+    rb  = Math.min(10, b + 2);
+    rsp = Math.min(10, sp + 1);
+  }
+
+  const parts = [];
+  // Warmth / instruments
+  if (rt <= 4) parts.push('cold and restrained, sparse piano, ambient textures');
+  else if (rt >= 7) parts.push('warm and enveloping, acoustic piano, soft strings');
+  else parts.push('neutral warmth, soft piano, gentle ambient layers');
+
+  // Tension / energy
+  if (rte >= 7) parts.push('very low energy, minimal dynamics, much silence and space');
+  else if (rte <= 3) parts.push('calm and steady, even and quiet flow');
+  else parts.push('moderate tempo, mid dynamics, unhurried');
+
+  // Space
+  if (rsp >= 7) parts.push('wide reverb, spacious and open');
+  else parts.push('intimate mix, close and private');
+
+  // Brightness / key
+  if (rb <= 4) parts.push('minor key, introspective and quiet');
+  else if (rb >= 7) parts.push('soft major key, gently bright');
+  else parts.push('neutral tonality, neither bright nor dark');
+
+  // Flow direction
+  if (mode === 'flow') parts.push('gradually lifting, gentle forward movement, soft resolution');
+
+  parts.push('avoid real-world background noise or environmental sound effects');
+  return parts.join(', ');
+}
+
+function copyMusic() {
+  const el = document.getElementById('out-music');
+  const text = el.textContent;
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(() => {
+    document.getElementById('music-copy-hint').textContent = '已复制 ✓';
+    setTimeout(() => document.getElementById('music-copy-hint').textContent = '', 2500);
+  }).catch(() => {
+    const range = document.createRange(); range.selectNode(el);
+    window.getSelection().removeAllRanges(); window.getSelection().addRange(range);
+    document.getElementById('music-copy-hint').textContent = '请手动 Ctrl+C 复制';
+  });
+}
+
+// ── Radar ──
+function drawRadar(vals) {
+  const canvas = document.getElementById('radar');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2, R = Math.min(W,H)*0.36, N = 5;
+  const labels = ['温度','紧张感','明暗','空间','流动'];
+  const angles = labels.map((_,i) => Math.PI*2*i/N - Math.PI/2);
+  ctx.clearRect(0,0,W,H);
+  const gridC = 'rgba(107,140,114,0.13)', labelC = 'rgba(45,40,33,0.38)';
+  for (let ring=1; ring<=5; ring++) {
+    const r = R*ring/5;
+    ctx.beginPath();
+    angles.forEach((a,i) => { const x=cx+Math.cos(a)*r, y=cy+Math.sin(a)*r; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+    ctx.closePath(); ctx.strokeStyle=gridC; ctx.lineWidth=1; ctx.stroke();
+  }
+  angles.forEach(a => { ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(a)*R, cy+Math.sin(a)*R); ctx.strokeStyle=gridC; ctx.lineWidth=1; ctx.stroke(); });
+  const pts = vals.map((v,i) => ({ x: cx+Math.cos(angles[i])*(R*v/10), y: cy+Math.sin(angles[i])*(R*v/10) }));
+  const grad = ctx.createRadialGradient(cx,cy,0,cx,cy,R);
+  grad.addColorStop(0,'rgba(107,140,114,0.38)'); grad.addColorStop(0.6,'rgba(107,140,114,0.18)'); grad.addColorStop(1,'rgba(107,140,114,0.02)');
+  const shape = () => {
+    ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i=0;i<pts.length;i++) { const c=pts[i], n=pts[(i+1)%pts.length], mx=(c.x+n.x)/2, my=(c.y+n.y)/2; ctx.quadraticCurveTo(c.x,c.y,mx,my); }
+    ctx.closePath();
+  };
+  shape(); ctx.fillStyle=grad; ctx.fill();
+  shape(); ctx.strokeStyle='rgba(107,140,114,0.65)'; ctx.lineWidth=1.8; ctx.stroke();
+  pts.forEach(p => {
+    ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2); ctx.fillStyle='rgba(107,140,114,0.85)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(p.x,p.y,2,0,Math.PI*2); ctx.fillStyle='white'; ctx.fill();
+  });
+  ctx.font='11px Noto Sans SC, PingFang SC, sans-serif'; ctx.fillStyle=labelC; ctx.textAlign='center'; ctx.textBaseline='middle';
+  angles.forEach((a,i) => { ctx.fillText(labels[i], cx+Math.cos(a)*(R+22), cy+Math.sin(a)*(R+22)); });
+}
+
+// ── Generate ──
+function generate() {
+  const state = document.getElementById('custom-input').value.trim();
+  const t  = Number(document.getElementById('d-temp').value);
+  const te = Number(document.getElementById('d-tension').value);
+  const b  = Number(document.getElementById('d-bright').value);
+  const sp = Number(document.getElementById('d-space').value);
+  const fl = Number(document.getElementById('d-flow').value);
+  const hasConflict = conflict.a !== '';
+  const conflictKey = hasConflict ? `${conflict.a}|${conflict.b}` : '';
+
+  drawRadar([t, te, b, sp, fl]);
+  document.getElementById('out-portrait').innerHTML = buildPortrait(state, t, te, b, sp, fl);
+
+  const conflictCard = document.getElementById('out-conflict-card');
+  if (hasConflict) {
+    document.getElementById('out-conflict').innerHTML = buildConflict(conflict.a, conflict.b);
+    conflictCard.style.display = 'block';
+  } else {
+    conflictCard.style.display = 'none';
+  }
+
+  document.getElementById('out-interp').innerHTML   = buildInterp(te, fl, b, hasConflict);
+  document.getElementById('out-need').innerHTML     = buildNeed(t, te, sp, conflictKey);
+  document.getElementById('out-meditate').innerHTML = buildMeditate(te, fl, conflictKey);
+  document.getElementById('out-actions').innerHTML  = buildActions(te, b, fl, conflictKey).map(a => `<li>${a}</li>`).join('');
+  musicDims = { t, te, b, sp };
+  musicMode = 'express';
+  document.querySelectorAll('.music-mode-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('mode-express').classList.add('active');
+  document.getElementById('music-mode-desc').textContent = modeDesc['express'];
+  document.getElementById('out-music').textContent = buildMusic(t, te, b, sp, 'express');
+  document.getElementById('music-copy-hint').textContent = '';
+
+  const out = document.getElementById('output');
+  out.classList.add('show');
+  setTimeout(() => out.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+}
+
+function sendReaction(val) {
+  // Record reaction via Google Form prefill
+  const base = 'https://docs.google.com/forms/d/e/1FAIpQLSfAHslUoAZYQtT85YX5MMQ5w2Z16ShoNyPBSPev3fxssdpjmg/viewform';
+  // Show thanks immediately, open form in background
+  document.getElementById('reaction-thanks').style.display = 'block';
+  // Open form with prefilled reaction after short delay
+  setTimeout(() => {
+    window.open(base + '?usp=pp_url', '_blank');
+  }, 400);
+}
+
+function restart() {
+  document.getElementById('output').classList.remove('show');
+  document.getElementById('custom-input').value = '';
+  document.querySelectorAll('.scene-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.conflict-btn').forEach(b => b.classList.remove('active'));
+  conflict.a = ''; conflict.b = '';
+  document.querySelectorAll('input[type=range]').forEach(el => { el.value = 5; updateSlider(el); });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
