@@ -45,7 +45,78 @@ graph TD
     G --> J[Reframe Goal]
     J --> I
 ```
+## Current Focus
 
+Orientation Gate is currently focused on:
+
+- pre-execution governance
+- objective evaluation before optimization
+- runtime governance positioning
+- structural risk classification
+- lightweight governance interfaces
+- scenario-based evaluation systems
+- orchestration-aware AI workflows
+
+Orientation Gate is designed as a pre-runtime governance layer that evaluates whether an AI objective should proceed before orchestration and optimization begin.
+
+---
+
+## Suggested Reading Path
+
+For readers exploring the Orientation framework:
+
+### 1. Orientation Architecture
+System-level overview of the Orientation Layer and pre-execution governance.
+
+`docs/orientation_architecture.md`
+
+---
+
+### 2. Runtime Governance
+How Orientation relates to runtime control, orchestration, guardrails, and agent execution systems.
+
+`docs/runtime_governance.md`
+
+---
+
+### 3. Orientation Schema
+Structured governance interface for objective evaluation, constraints, risk classification, and decision outputs.
+
+`docs/orientation_schema.md`
+
+---
+
+### 4. Risk Taxonomy
+Classification system for structural optimization risks, escalation risks, incentive distortion, and governance failures.
+
+`docs/risk_taxonomy.md`
+
+---
+
+### 5. Development Roadmap
+Current development direction and future governance system expansion plans.
+
+`docs/roadmap.md`
+
+---
+
+## Governance Stack Overview
+
+```text
+User Intent
+    ↓
+Goal Definition
+    ↓
+Orientation Layer
+    ↓
+Planning / Orchestration
+    ↓
+Runtime Execution
+    ↓
+Monitoring / Evaluation
+```
+
+Orientation Gate focuses on evaluating directional integrity before optimization pressure amplifies the objective.
 ---
 
 ## How It Works
