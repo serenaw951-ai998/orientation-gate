@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emotion Portrait · SenuxTech</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,300;0,400;1,300&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f5f2ed;
+  --surface: rgba(255,255,255,0.82);
+  --surface-strong: rgba(255,255,255,0.94);
+  --border: rgba(200,188,174,0.55);
+  --border-mid: rgba(180,166,150,0.7);
+  --text: #2d2821;
+  --muted: #6e6459;
+  --hint: #a89d92;
+  --sage: #6b8c72;
+  --sage-light: rgba(107,140,114,0.10);
+  --sage-mid: rgba(107,140,114,0.22);
+  --warm-dark: #3d342c;
+  --radius: 18px;
+  --radius-sm: 12px;
+  --shadow: 0 8px 28px rgba(79,60,42,0.07);
+}
+html { scroll-behavior: smooth; }
+body {
+  background: linear-gradient(160deg, #f7f4ef 0%, #f0ebe2 100%);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-weight: 300;
+  line-height: 1.7;
+  min-height: 100vh;
+}
+.page { max-width: 680px; margin: 0 auto; padding: 0 1.25rem 5rem; }
+
+/* HERO */
+.hero { text-align: center; padding: 3rem 1rem 2rem; }
+.eyebrow {
+  display: inline-block; padding: 5px 14px; border-radius: 999px;
+  background: rgba(107,140,114,0.12); color: var(--sage);
+  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 1.2rem;
+}
+.hero-title {
+  font-family: 'Lora', serif; font-size: clamp(1.75rem, 5vw, 2.6rem);
+  font-weight: 300; line-height: 1.3; color: var(--text); margin-bottom: 0.8rem;
+}
+.hero-sub { color: var(--muted); font-size: 15px; line-height: 1.8; }
+
+/* CARDS */
+.card {
+  background: var(--surface); backdrop-filter: blur(8px);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 1.6rem 1.5rem; margin-bottom: 1.2rem;
+}
+.card-title { font-size: 17px; font-weight: 400; color: var(--text); margin-bottom: 0.4rem; }
+.card-desc { color: var(--muted); font-size: 13.5px; margin-bottom: 1.2rem; }
+
+/* SCENE GRID */
+.scene-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 1rem; }
+.scene-btn {
+  padding: 12px 13px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 13.5px; color: var(--muted); cursor: pointer; transition: all 0.16s;
+  background: var(--surface-strong); text-align: left; font-family: inherit;
+  font-weight: 300; line-height: 1.45;
+}
+.scene-btn:hover { border-color: var(--sage); color: var(--text); background: var(--sage-light); transform: translateY(-1px); }
+.scene-btn.active { border-color: var(--sage); background: var(--sage-light); color: var(--text); }
+
+textarea {
+  width: 100%; min-height: 80px; resize: vertical;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 12px 14px; font-size: 14px; color: var(--text);
+  background: var(--surface-strong); outline: none;
+  font-family: inherit; font-weight: 300; transition: border-color 0.14s; line-height: 1.7;
+}
+textarea:focus { border-color: var(--sage); box-shadow: 0 0 0 3px var(--sage-mid); }
+textarea::placeholder { color: var(--hint); }
+
+/* DIMS */
+.dim-group { display: flex; flex-direction: column; gap: 16px; margin-top: 1.2rem; }
+.dim { padding: 14px 16px; border-radius: var(--radius-sm); background: rgba(255,255,255,0.65); border: 1px solid var(--border); }
+.dim-label { font-size: 14px; font-weight: 400; color: var(--text); margin-bottom: 8px; }
+.dim-hint { font-size: 11.5px; color: var(--hint); margin-bottom: 8px; line-height: 1.5; }
+input[type=range] {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 3px; border-radius: 2px; outline: none; cursor: pointer;
+  background: linear-gradient(to right, var(--sage) 50%, var(--border-mid) 50%);
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+  background: white; border: 2px solid var(--sage); cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12); transition: transform 0.1s;
+}
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+input[type=range]::-moz-range-thumb {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: white; border: 2px solid var(--sage); cursor: pointer;
+}
+.dim-ends { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--hint); margin-top: 6px; }
+
+/* CONFLICT */
+.conflict-q { font-size: 14px; color: var(--text); margin-bottom: 0.8rem; font-weight: 400; }
+.conflict-hint { font-size: 12px; color: var(--hint); margin-bottom: 1rem; }
+.conflict-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.conflict-btn {
+  padding: 11px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 13px; color: var(--muted); cursor: pointer; transition: all 0.15s;
+  background: var(--surface-strong); text-align: left; font-family: inherit;
+  font-weight: 300; line-height: 1.5;
+}
+.conflict-btn:hover { border-color: var(--sage); color: var(--text); background: var(--sage-light); }
+.conflict-btn.active { border-color: var(--sage); background: var(--sage-light); color: var(--text); font-weight: 400; }
+.conflict-none { font-size: 12px; color: var(--hint); margin-top: 8px; cursor: pointer; display: inline-block; transition: color 0.12s; }
+.conflict-none:hover { color: var(--muted); }
+
+/* BUTTON */
+.btn-main {
+  display: block; width: 100%; padding: 14px;
+  background: var(--warm-dark); color: white;
+  border: none; border-radius: 999px; font-size: 15px;
+  font-weight: 400; cursor: pointer; transition: opacity 0.14s, transform 0.14s;
+  font-family: inherit; letter-spacing: 0.04em; margin-top: 1.4rem;
+  box-shadow: 0 8px 20px rgba(61,52,44,0.16);
+}
+.btn-main:hover { opacity: 0.88; transform: translateY(-1px); }
+
+/* OUTPUT */
+.output { display: none; margin-top: 0; }
+.output.show { display: block; }
+
+/* View toggle */
+.view-mode-row { display: flex; gap: 8px; margin-bottom: 1.2rem; }
+.view-mode-btn {
+  padding: 7px 18px; border-radius: 999px; font-size: 12.5px;
+  cursor: pointer; transition: all 0.14s; font-family: inherit;
+  border: 1px solid var(--border-mid); background: transparent; color: var(--muted);
+}
+.view-mode-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+/* Radar */
+.radar-wrap { display: flex; flex-direction: column; align-items: center; padding: 0.5rem 0 0.2rem; }
+#radar { width: 220px; height: 220px; max-width: 100%; }
+
+/* MERGED OUTPUT CARD */
+.portrait-card {
+  background: var(--surface); backdrop-filter: blur(8px);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow); margin-bottom: 1.2rem; overflow: hidden;
+}
+.portrait-section {
+  padding: 1.2rem 1.5rem;
+  border-bottom: 0.5px solid var(--border);
+}
+.portrait-section:last-child { border-bottom: none; }
+.portrait-label {
+  font-size: 10px; font-weight: 400; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--hint); margin-bottom: 0.6rem;
+}
+.portrait-text { font-size: 14px; color: var(--text); line-height: 1.95; }
+.portrait-text p { margin-bottom: 0.5rem; }
+.portrait-text p:last-child { margin-bottom: 0; }
+.portrait-list { padding-left: 0; list-style: none; }
+.portrait-list li { font-size: 14px; color: var(--text); line-height: 1.8; padding-left: 1.2rem; position: relative; }
+.portrait-list li::before { content: '·'; position: absolute; left: 0; color: var(--sage); }
+
+/* Companion card */
+.companion-section {
+  padding: 1.2rem 1.5rem;
+  background: rgba(107,140,114,0.04);
+}
+.companion-label {
+  font-size: 10px; font-weight: 400; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--sage); margin-bottom: 0.6rem; opacity: 0.8;
+}
+.companion-text {
+  font-size: 14px; color: var(--text); line-height: 1.9;
+  font-style: italic;
+}
+
+/* Conflict card */
+.conflict-out-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 1.25rem 1.5rem; margin-bottom: 1.2rem; display: none;
+}
+.out-label {
+  font-size: 10px; font-weight: 400; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--hint); margin-bottom: 0.6rem;
+}
+.out-text { font-size: 14px; color: var(--text); line-height: 1.95; }
+.out-text p { margin-bottom: 0.5rem; }
+
+/* Rational */
+.rational-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.25rem 1.4rem; margin-bottom: 12px;
+}
+.rational-bar-wrap { margin: 1rem 0 0.5rem; }
+.rational-bar-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--hint); margin-bottom: 4px; }
+.rational-bar { height: 4px; background: var(--border-mid); border-radius: 2px; overflow: hidden; }
+.rational-bar-fill { height: 100%; background: var(--sage); border-radius: 2px; transition: width 0.4s ease; }
+.rational-section-label { font-size: 10px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hint); margin-bottom: 0.6rem; }
+.rational-key { font-size: 12px; color: var(--muted); }
+.rational-analysis { font-size: 13px; color: var(--text); line-height: 1.85; }
+.rational-analysis p { margin-bottom: 0.4rem; }
+
+/* Music */
+.music-mode-btn {
+  padding: 6px 16px; border-radius: 999px; font-size: 12px;
+  cursor: pointer; transition: all 0.14s; font-family: inherit;
+  border: 1px solid var(--sage-mid); background: transparent; color: var(--sage);
+}
+.music-mode-btn.active { background: var(--sage); color: white; border-color: var(--sage); }
+.music-mode-desc { font-size: 12px; color: var(--hint); margin-bottom: 10px; line-height: 1.6; min-height: 32px; }
+.music-card {
+  background: rgba(107,140,114,0.07); border: 1px solid var(--sage-mid);
+  border-radius: var(--radius); padding: 1.4rem 1.5rem; margin-bottom: 1.2rem;
+}
+.music-title { font-size: 13px; color: var(--sage); letter-spacing: 0.06em; margin-bottom: 0.8rem; }
+.music-prompt-box {
+  background: var(--surface-strong); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 12px 14px;
+  font-size: 13px; color: var(--text); line-height: 1.85; margin-bottom: 10px;
+}
+.music-copy-row { display: flex; align-items: center; gap: 10px; }
+.music-copy-btn {
+  padding: 7px 16px; background: var(--sage); color: white;
+  border: none; border-radius: 999px; font-size: 12px;
+  cursor: pointer; transition: opacity 0.12s; font-family: inherit; white-space: nowrap;
+}
+.music-copy-btn:hover { opacity: 0.82; }
+.music-copy-hint { font-size: 11px; color: var(--sage); min-height: 14px; }
+
+/* Entry mode */
+.entry-mode-screen {
+  min-height: 100vh; display: flex; flex-direction: column;
+  justify-content: center; padding: 3rem 0 5rem;
+  animation: fadeIn 0.4s ease both;
+}
+@keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+.entry-hero { text-align: center; margin-bottom: 2.5rem; }
+.entry-title { font-family: 'Lora', serif; font-size: clamp(1.6rem, 4.5vw, 2.2rem); font-weight: 300; line-height: 1.4; color: var(--text); margin-bottom: 0.7rem; }
+.entry-sub { font-size: 14px; color: var(--muted); line-height: 1.8; }
+.entry-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.entry-card {
+  border: 1px solid var(--border-mid); border-radius: var(--radius);
+  padding: 1.6rem 1.4rem; cursor: pointer; transition: all 0.18s;
+  background: var(--surface); text-align: center;
+}
+.entry-card:hover { border-color: var(--sage); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
+.entry-card-emoji { font-size: 2rem; margin-bottom: 0.8rem; display: block; }
+.entry-card-title { font-family: 'Lora', serif; font-size: 16px; font-weight: 300; color: var(--text); margin-bottom: 0.5rem; }
+.entry-card-desc { font-size: 12px; color: var(--hint); line-height: 1.6; }
+
+/* restart */
+.restart-row { text-align: center; margin-top: 0.5rem; }
+.restart-btn { font-size: 12px; color: var(--hint); cursor: pointer; background: none; border: none; font-family: inherit; letter-spacing: 0.04em; transition: color 0.12s; }
+.restart-btn:hover { color: var(--muted); }
+
+footer { text-align: center; padding: 2rem 0 1rem; font-size: 11.5px; color: var(--hint); line-height: 1.7; }
+
+@media (max-width: 480px) {
+  .scene-grid, .entry-cards { grid-template-columns: 1fr; }
+  .hero-title, .entry-title { font-size: 1.6rem; }
+  .card { padding: 1.2rem 1.1rem; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="hero">
+  <div class="eyebrow">SenuxTech · Emotion Portrait</div>
+  <h1 class="hero-title">Sometimes we feel something,<br>but can't put it into words.</h1>
+  <p class="hero-sub">Not here to change you.<br>Just to help you see yourself, a little.</p>
+</header>
+
+<!-- ENTRY MODE -->
+<div class="entry-mode-screen" id="entry-select">
+  <div class="entry-hero">
+    <div class="entry-title">How do you want to look at yourself today?</div>
+    <div class="entry-sub">Choose a way. We'll go at your pace.</div>
+  </div>
+  <div class="entry-cards">
+    <div class="entry-card" onclick="selectMode('gentle')">
+      <span class="entry-card-emoji">🌿</span>
+      <div class="entry-card-title">Feel it out</div>
+      <div class="entry-card-desc">Let feelings speak<br>No analysis, just recognition</div>
+    </div>
+    <div class="entry-card" onclick="selectMode('rational')">
+      <span class="entry-card-emoji">🔍</span>
+      <div class="entry-card-title">Think it through</div>
+      <div class="entry-card-desc">Let structure speak<br>Data-driven, clear-eyed</div>
+    </div>
+  </div>
+</div>
+
+<!-- INPUT CARD -->
+<div class="card" id="input-card" style="display:none;">
+  <div class="card-title" id="input-card-title">Pick one that feels like you, or write a sentence</div>
+  <div class="card-desc" id="input-card-desc">No right or wrong. Just whatever feels closest to where you are right now.</div>
+
+  <div class="scene-grid" id="scene-grid"></div>
+
+  <textarea id="custom-input" placeholder="Or describe your moment in your own words…" rows="3"></textarea>
+
+  <!-- Conflict -->
+  <div style="margin-top:1.2rem; padding-top:1.2rem; border-top:1px solid var(--border);">
+    <div class="conflict-q">Are two feelings happening at the same time?</div>
+    <div class="conflict-hint">Pick the closest one, or skip — totally optional.</div>
+    <div class="conflict-grid" id="conflict-grid">
+      <button class="conflict-btn" data-a="wanting to connect" data-b="wanting to be alone">Wanting to connect<br><span style="color:var(--hint);font-size:11px">× but wanting to be alone</span></button>
+      <button class="conflict-btn" data-a="a little hopeful" data-b="a little afraid">A little hopeful<br><span style="color:var(--hint);font-size:11px">× but a little afraid</span></button>
+      <button class="conflict-btn" data-a="exhausted and wanting to stop" data-b="unable to stop">Exhausted, wanting to stop<br><span style="color:var(--hint);font-size:11px">× but unable to stop</span></button>
+      <button class="conflict-btn" data-a="warmth inside" data-b="a little lonely">Warmth inside<br><span style="color:var(--hint);font-size:11px">× but a little lonely</span></button>
+      <button class="conflict-btn" data-a="wanting to say something" data-b="not knowing how">Wanting to say something<br><span style="color:var(--hint);font-size:11px">× but not knowing how</span></button>
+      <button class="conflict-btn" data-a="fine on the surface" data-b="something feels off">Fine on the surface<br><span style="color:var(--hint);font-size:11px">× but something feels off</span></button>
+    </div>
+    <span class="conflict-none" onclick="clearConflict()">↳ Neither — skip this</span>
+  </div>
+
+  <div class="dim-group">
+    <div class="dim">
+      <div class="dim-label" id="label-temp">Emotional Temperature</div>
+      <div class="dim-hint" id="hint-temp">Does it feel more distant and contained, or warm and close?</div>
+      <input type="range" min="0" max="10" value="5" id="d-temp" oninput="updateSlider(this)">
+      <div class="dim-ends"><span>Cool · held back</span><span>Warm · soft</span></div>
+    </div>
+    <div class="dim">
+      <div class="dim-label" id="label-tension">Inner State</div>
+      <div class="dim-hint" id="hint-tension">Is there something quietly suspended, or does it feel more settled?</div>
+      <input type="range" min="0" max="10" value="5" id="d-tension" oninput="updateSlider(this)">
+      <div class="dim-ends"><span>Still · no waves</span><span>Tense · holding on</span></div>
+    </div>
+    <div class="dim">
+      <div class="dim-label" id="label-bright">Emotional Tone</div>
+      <div class="dim-hint" id="hint-bright">Does the overall feeling lean darker, or is there a trace of lightness?</div>
+      <input type="range" min="0" max="10" value="5" id="d-bright" oninput="updateSlider(this)">
+      <div class="dim-ends"><span>Dark · turned inward</span><span>Bright · a little hope</span></div>
+    </div>
+    <div class="dim">
+      <div class="dim-label" id="label-space">Sense of Space</div>
+      <div class="dim-hint" id="hint-space">Does this feeling sit very close and private, or more at a distance?</div>
+      <input type="range" min="0" max="10" value="5" id="d-space" oninput="updateSlider(this)">
+      <div class="dim-ends"><span>Close · private</span><span>Open · a little room</span></div>
+    </div>
+    <div class="dim">
+      <div class="dim-label" id="label-flow">State of Flow</div>
+      <div class="dim-hint" id="hint-flow">Are thoughts scattered, or is there a slow thread of direction?</div>
+      <input type="range" min="0" max="10" value="5" id="d-flow" oninput="updateSlider(this)">
+      <div class="dim-ends"><span>Scattered · fragmented</span><span>Moving · some direction</span></div>
+    </div>
+  </div>
+
+  <button class="btn-main" id="gen-btn" onclick="generate()">See where I am right now</button>
+</div>
+
+<!-- OUTPUT -->
+<div class="output" id="output">
+
+  <div class="view-mode-row">
+    <button class="view-mode-btn active" id="btn-gentle" onclick="switchView('gentle')">Feel it out</button>
+    <button class="view-mode-btn" id="btn-rational" onclick="switchView('rational')">Think it through</button>
+  </div>
+
+  <!-- GENTLE VIEW -->
+  <div id="view-gentle">
+
+    <!-- Radar -->
+    <div class="card">
+      <div class="out-label">Emotion Outline</div>
+      <div class="radar-wrap">
+        <canvas id="radar" width="220" height="220"></canvas>
+      </div>
+    </div>
+
+    <!-- Conflict (conditional) -->
+    <div class="conflict-out-card" id="out-conflict-card">
+      <div class="out-label">Core Emotional Tension</div>
+      <div class="out-text" id="out-conflict"></div>
+    </div>
+
+    <!-- MERGED OUTPUT CARD -->
+    <div class="portrait-card">
+
+      <div class="portrait-section">
+        <div class="portrait-label">Your Emotion Portrait</div>
+        <div class="portrait-text" id="out-portrait"></div>
+      </div>
+
+      <div class="portrait-section">
+        <div class="portrait-label">What this might feel like</div>
+        <div class="portrait-text" id="out-interp"></div>
+      </div>
+
+      <div class="portrait-section">
+        <div class="portrait-label">What you might need right now</div>
+        <div class="portrait-text" id="out-need"></div>
+      </div>
+
+      <div class="portrait-section">
+        <div class="portrait-label">If you want a quiet moment</div>
+        <div class="portrait-text" id="out-meditate"></div>
+      </div>
+
+      <div class="portrait-section">
+        <div class="portrait-label">One small thing you could do</div>
+        <ul class="portrait-list" id="out-actions"></ul>
+      </div>
+
+      <div class="companion-section">
+        <div class="companion-label">Who you might want to talk to right now</div>
+        <div class="companion-text" id="out-companion"></div>
+      </div>
+
+    </div>
+
+  </div><!-- end view-gentle -->
+
+  <!-- RATIONAL VIEW -->
+  <div id="view-rational" style="display:none;">
+    <div class="rational-card">
+      <div class="rational-section-label">Dimension Values</div>
+      <div id="rational-dims"></div>
+    </div>
+    <div class="rational-card">
+      <div class="rational-section-label">State Analysis</div>
+      <div class="rational-analysis" id="rational-analysis"></div>
+    </div>
+    <div class="rational-card">
+      <div class="rational-section-label">Possible Reasons</div>
+      <div class="rational-analysis" id="rational-reason"></div>
+    </div>
+    <div class="rational-card">
+      <div class="rational-section-label">Suggested Direction</div>
+      <div class="rational-analysis" id="rational-suggest"></div>
+    </div>
+  </div>
+
+  <!-- Music -->
+  <div class="music-card">
+    <div class="music-title">🎵 Let music sit with this feeling</div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <button class="music-mode-btn active" id="mode-express" onclick="switchMode('express')">Resonate with me</button>
+      <button class="music-mode-btn" id="mode-flow" onclick="switchMode('flow')">Give me direction</button>
+    </div>
+    <div class="music-mode-desc" id="music-mode-desc"></div>
+    <div class="music-prompt-box" id="out-music"></div>
+    <div class="music-copy-row">
+      <button class="music-copy-btn" onclick="copyMusic()">Copy prompt</button>
+      <span class="music-copy-hint" id="music-copy-hint"></span>
+    </div>
+  </div>
+
+  <!-- Feedback -->
+  <div style="padding:1.2rem 1.5rem; background:rgba(107,140,114,0.06); border:1px solid rgba(107,140,114,0.18); border-radius:14px; margin-bottom:1.2rem;">
+    <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:#a89d92;margin-bottom:0.8rem;">Quick reaction · 1 sec</div>
+    <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;">
+      <button onclick="sendReaction('that hit')" style="padding:8px 14px;border:1px solid rgba(107,140,114,0.35);border-radius:999px;background:transparent;font-size:13px;cursor:pointer;font-family:inherit;color:#6e6459;transition:all 0.12s;" onmouseover="this.style.background='rgba(107,140,114,0.10)'" onmouseout="this.style.background='transparent'">😳 That hit</button>
+      <button onclick="sendReaction('somewhat')" style="padding:8px 14px;border:1px solid rgba(107,140,114,0.35);border-radius:999px;background:transparent;font-size:13px;cursor:pointer;font-family:inherit;color:#6e6459;transition:all 0.12s;" onmouseover="this.style.background='rgba(107,140,114,0.10)'" onmouseout="this.style.background='transparent'">🤔 Somewhat</button>
+      <button onclick="sendReaction('not really')" style="padding:8px 14px;border:1px solid rgba(107,140,114,0.35);border-radius:999px;background:transparent;font-size:13px;cursor:pointer;font-family:inherit;color:#6e6459;transition:all 0.12s;" onmouseover="this.style.background='rgba(107,140,114,0.10)'" onmouseout="this.style.background='transparent'">❌ Not really</button>
+    </div>
+    <p style="font-size:13px;color:#a89d92;margin-bottom:0.7rem;line-height:1.7;">Did anything make you stop for a second? Or feel off?</p>
+    <a href="https://docs.google.com/forms/d/e/1FAIpQLSfAHslUoAZYQtT85YX5MMQ5w2Z16ShoNyPBSPev3fxssdpjmg/viewform?usp=publish-editor" target="_blank" style="display:inline-block;font-size:12px;color:#6b8c72;text-decoration:none;border-bottom:0.5px solid rgba(107,140,114,0.35);">Leave a sentence →</a>
+    <div id="reaction-thanks" style="display:none;font-size:12px;color:#6b8c72;margin-top:8px;">Thanks for the reaction ✓</div>
+  </div>
+
+  <div class="restart-row">
+    <button class="restart-btn" onclick="restart()">Start over</button>
+  </div>
+</div>
+
+<footer>
+  Emotion Portrait · SenuxTech<br>
+  Not a diagnostic tool. Not professional advice.<br>Just a space to pause and see yourself, a little.
+</footer>
+</div>
+
+<script>
+let appMode = 'gentle';
+
+const gentleScenes = [
+  { emoji: '🌧', text: 'Watching the window, quietly still inside', label: 'Watching the window, quietly still' },
+  { emoji: '🌃', text: 'Zoning out at night, not wanting to talk', label: 'Zoning out at night' },
+  { emoji: '🎧', text: 'Headphones in, tuned out from everything', label: 'Headphones in, tuned out' },
+  { emoji: '🕯', text: 'Alone, and actually feeling safe', label: 'Alone, feeling safe' },
+  { emoji: '🌀', text: 'Something tangled inside, hard to sort out', label: 'Something tangled inside' },
+  { emoji: '💔', text: 'A little hurt, not showing it', label: 'A little hurt, not showing it' },
+  { emoji: '🌫', text: 'Empty inside, low energy', label: 'Empty inside, low energy' },
+  { emoji: '✨', text: 'A little happy, light and gentle', label: 'A little happy, light' },
+  { emoji: '🌙', text: 'Lying down, not quite asleep', label: 'Lying down, not asleep' },
+  { emoji: '🏠', text: 'Home, quietly drifting', label: 'Home, quietly drifting' },
+  { emoji: '🛀', text: 'Just showered, whole body unwinding', label: 'Just showered, unwinding' },
+  { emoji: '🍵', text: 'Something warm to drink, slowly settling', label: 'Warm drink, slowly settling' },
+  { emoji: '🪟', text: 'Sitting by the window, mind somewhere else', label: 'By the window, mind elsewhere' },
+  { emoji: '🛋', text: 'Sinking into the couch, not wanting to move', label: 'On the couch, not moving' },
+  { emoji: '🧩', text: 'Doing small things, shifting attention', label: 'Small things, shifting attention' },
+  { emoji: '🌃', text: 'Alone at night, quietly calm', label: 'Alone at night, calm' },
+];
+
+const rationalScenes = [
+  { emoji: '🚇', text: 'Commuting, processing information', label: 'Commuting, processing' },
+  { emoji: '💻', text: 'Work break, attention drifting', label: 'Work break, drifting' },
+  { emoji: '🛌', text: 'Rest time, but unable to relax', label: 'Rest time, unable to relax' },
+  { emoji: '🤝', text: 'After socializing, need to recover alone', label: 'After socializing, recovering' },
+  { emoji: '📋', text: 'Tasks piling up, unclear priorities', label: 'Tasks piling up' },
+  { emoji: '⏰', text: 'Time pressure, feeling the strain', label: 'Time pressure' },
+  { emoji: '🔄', text: 'Repetitive routine, lacking variety', label: 'Repetitive routine' },
+  { emoji: '💬', text: 'Communication breakdown, feeling misread', label: 'Miscommunication' },
+];
+
+const gentleDims = {
+  temp:    { label: 'Emotional Temperature', hint: 'Does it feel more distant and contained, or warm and close?' },
+  tension: { label: 'Inner State', hint: 'Is there something quietly suspended, or does it feel more settled?' },
+  bright:  { label: 'Emotional Tone', hint: 'Does the overall feeling lean darker, or is there a trace of lightness?' },
+  space:   { label: 'Sense of Space', hint: 'Does this feeling sit very close and private, or more at a distance?' },
+  flow:    { label: 'State of Flow', hint: 'Are thoughts scattered, or is there a slow thread of direction?' },
+};
+
+const rationalDims = {
+  temp:    { label: 'Emotional Temperature Index', hint: 'Current emotional proximity / distance tendency' },
+  tension: { label: 'Internal Tension Index', hint: 'Current system tension level' },
+  bright:  { label: 'Emotional Valence', hint: 'Positive / negative emotional tendency' },
+  space:   { label: 'Boundary Index', hint: 'Openness / closedness of self-boundary' },
+  flow:    { label: 'Cognitive Fluency', hint: 'Coherence and direction of thought' },
+};
+
+function selectMode(mode) {
+  appMode = mode;
+  document.getElementById('entry-select').style.display = 'none';
+  document.getElementById('input-card').style.display = 'block';
+
+  const scenes = mode === 'gentle' ? gentleScenes : rationalScenes;
+  const dims = mode === 'gentle' ? gentleDims : rationalDims;
+
+  const grid = document.getElementById('scene-grid');
+  grid.innerHTML = scenes.map(s =>
+    `<button class="scene-btn" data-text="${s.text}">${s.emoji} ${s.label}</button>`
+  ).join('');
+  grid.querySelectorAll('.scene-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      grid.querySelectorAll('.scene-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('custom-input').value = btn.dataset.text;
+    });
+  });
+
+  Object.entries(dims).forEach(([key, d]) => {
+    const k = key === 'tension' ? 'tension' : key === 'bright' ? 'bright' : key === 'space' ? 'space' : key === 'flow' ? 'flow' : 'temp';
+    const labelEl = document.getElementById('label-' + k);
+    const hintEl = document.getElementById('hint-' + k);
+    if (labelEl) labelEl.textContent = d.label;
+    if (hintEl) hintEl.textContent = d.hint;
+  });
+
+  if (mode === 'gentle') {
+    document.getElementById('input-card-title').textContent = 'Pick one that feels like you, or write a sentence';
+    document.getElementById('input-card-desc').textContent = 'No right or wrong. Just whatever feels closest to where you are right now.';
+    document.getElementById('gen-btn').textContent = 'See where I am right now';
+  } else {
+    document.getElementById('input-card-title').textContent = 'Select your current situation';
+    document.getElementById('input-card-desc').textContent = 'Choose the closest option, or describe directly.';
+    document.getElementById('gen-btn').textContent = 'Generate state analysis';
+  }
+}
+
+document.getElementById('custom-input').addEventListener('input', function() {
+  if (this.value.trim()) document.querySelectorAll('.scene-btn').forEach(b => b.classList.remove('active'));
+});
+
+let conflict = { a: '', b: '' };
+document.querySelectorAll('.conflict-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const wasActive = btn.classList.contains('active');
+    document.querySelectorAll('.conflict-btn').forEach(b => b.classList.remove('active'));
+    if (!wasActive) { btn.classList.add('active'); conflict.a = btn.dataset.a; conflict.b = btn.dataset.b; }
+    else { conflict.a = ''; conflict.b = ''; }
+  });
+});
+function clearConflict() {
+  document.querySelectorAll('.conflict-btn').forEach(b => b.classList.remove('active'));
+  conflict.a = ''; conflict.b = '';
+}
+
+function updateSlider(el) {
+  const pct = el.value / 10 * 100;
+  el.style.background = `linear-gradient(to right, var(--sage) 0%, var(--sage) ${pct}%, var(--border-mid) ${pct}%, var(--border-mid) 100%)`;
+}
+document.querySelectorAll('input[type=range]').forEach(el => updateSlider(el));
+
+function pick(score, low, mid, high) {
+  if (score <= 3) return low;
+  if (score >= 7) return high;
+  return mid;
+}
+function rnd(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function buildPortrait(state, t, te, b, sp, fl) {
+  let hitLine = '';
+  if (t <= 4 && sp <= 4 && te >= 5) {
+    hitLine = rnd(['Wanting to get closer, but pulling back at the same time.', 'Something to say — but swallowed it anyway.', 'Wanting to be understood, but not quite daring to open up.']);
+  } else if (te >= 7 && fl <= 5) {
+    hitLine = rnd(['Body is exhausted, but cannot seem to stop.', 'Should be resting, but it does not feel like it is time.', 'Not that you don\'t want to stop — stopping just feels worse.']);
+  } else if (te >= 6 && b <= 5 && t <= 5) {
+    hitLine = rnd(['Actually minding it quite a bit — just not showing it.', 'Not indifferent. Just not willing to let it show.', 'There\'s something moving inside, but the surface stays flat.']);
+  } else if (fl <= 4 && te >= 6) {
+    hitLine = rnd(['Said "let it go" — but still thinking about it.', 'Thought it had passed. Then it came back.', 'Not that you can\'t let go. Just not ready yet.']);
+  } else if (te >= 6 && b <= 4 && fl <= 5) {
+    hitLine = rnd(['Kept at it — just not sure what you\'re holding on for.', 'Not giving up. Just not seeing the end of it.', 'Doing what needs to be done. Heart not really in it.']);
+  } else if (t >= 6 && sp <= 4) {
+    hitLine = rnd(['Someone\'s there — still a little lonely.', 'Felt cared for. Still did not quite feel understood.', 'Not actually alone. But it feels that way.']);
+  } else if (fl <= 4 && te <= 5) {
+    hitLine = rnd(['Wanting to move forward — just cannot seem to step out.', 'Stuck at this one step. Can\'t move either way.', 'Not unwilling to change. Just don\'t know where to start.']);
+  } else if (te <= 5 && b <= 5 && fl <= 6) {
+    hitLine = rnd(['Nothing clearly wrong — but something\'s off.', 'Looks fine from the outside. A little hollow inside.', 'Can\'t say what\'s not right. It just is not.']);
+  } else if (b >= 6 && te >= 5) {
+    hitLine = rnd(['A little hopeful — but not daring to hope too much.', 'Waiting for something. Scared it might actually come.', 'A small brightness in there — but not looking at it too long.']);
+  } else {
+    hitLine = rnd(['Not quite good, not quite bad.', 'Somewhere in the middle — not landed anywhere.', 'Nothing clearly wrong — just a little off.', 'Just here. Flat.']);
+  }
+
+  const prefix = state ? `When you\'re "${state.replace(/^[\p{Emoji}\s]*/u, '').trim()}" — ` : '';
+  let extra = '';
+  if (te >= 7 && fl <= 4) extra = 'Something stuck there. Can\'t put it down, can\'t push through.';
+  else if (t <= 3 && b <= 4) extra = 'A little cold, a little dim — but not falling apart.';
+  else if (t >= 7 && te <= 3) extra = 'Warm, and not tense. That is rare.';
+  else if (sp <= 3 && fl <= 4) extra = 'Turned inward. Not much space for outward right now.';
+  else if (sp >= 7 && b >= 7) extra = 'A little open. Some room inside.';
+
+  return `<p>${prefix}${hitLine}</p>${extra ? `<p style="margin-top:6px;color:var(--muted);font-size:13px">${extra}</p>` : ''}`;
+}
+
+function buildConflict(a, b) {
+  const map = {
+    'wanting to connect|wanting to be alone': {
+      hit: rnd(['Wanting to get closer — and wanting to be left alone. At the same time.', 'Part of you reaching out. Part of you stepping back.', 'The pull to connect, and the pull to disappear — both real.']),
+      desc: 'One part wanting to reach out, another part wanting space — both are true, neither is lying.',
+      tip: 'It\'s okay to stay in it. You do not have to decide right now.'
+    },
+    'a little hopeful|a little afraid': {
+      hit: rnd(['Hoping — and scared of hoping too much.', 'Something in you leaning forward, something holding you back.', 'A little light — and a hand over it, just in case.']),
+      desc: 'The more something matters, the earlier the guard goes up. Hope and fear together usually means it\'s real.',
+      tip: 'You do not have to resolve this. Let both stay for now.'
+    },
+    'exhausted and wanting to stop|unable to stop': {
+      hit: rnd(['Body saying stop — mind not listening.', 'Tired enough to drop. Still going.', 'Wanting to put it down. Hand will not let go.']),
+      desc: 'The tension between these two burns more energy than either alone. It\'s not weakness — it\'s been too long.',
+      tip: 'Try five minutes. Not to recover. Just to stop.'
+    },
+    'warmth inside|a little lonely': {
+      hit: rnd(['Something warm there — and still a little alone.', 'Felt cared for. Didn\'t quite feel seen.', 'Warmth is real. So is the gap.']),
+      desc: 'Warmth and loneliness can live in the same moment. You do not have to pick one.',
+      tip: 'Let the warmth stay. The loneliness can wait.'
+    },
+    'wanting to say something|not knowing how': {
+      hit: rnd(['Something to say — no way to say it.', 'The words are there. They just don\'t come out right.', 'Went around in your head all day. Stayed there.']),
+      desc: 'Wanting to say something is already a kind of reaching out. It does not have to be complete.',
+      tip: 'Write it for yourself first. Nobody else has to see it.'
+    },
+    'fine on the surface|something feels off': {
+      hit: rnd(['Everything looks okay. Something is not.', 'Functioning fine. Hollow underneath.', 'Can\'t point to it. It\'s just there.']),
+      desc: 'That quiet sense of "off" is sometimes an early signal — not nothing, even when it\'s hard to name.',
+      tip: 'You do not have to find it right now. Just let it be there.'
+    }
+  };
+  const key = `${a}|${b}`;
+  const d = map[key];
+  if (!d) return '';
+  return `<p style="font-size:15px;color:var(--text);margin-bottom:8px">${d.hit}</p><p style="color:var(--muted);font-size:13px;margin-bottom:10px">${d.desc}</p><p style="padding:10px 12px;background:var(--sage-light);border-radius:8px;font-size:13px">${d.tip}</p>`;
+}
+
+function buildInterp(te, fl, b, hasConflict) {
+  if (hasConflict) return '<p>' + rnd(['Holding two opposite feelings at once takes more than it looks.', 'This kind of tension is not a personal failing — it is just genuinely heavy.', 'Carrying both sides of something at the same time costs a lot.']) + '</p>';
+  if (te >= 7) return '<p>' + rnd(['Mind and body still running, even though you are already tired.', 'Something still hanging there — not ready to let go yet.', 'This kind of tension usually shows up when someone has been holding on for a long time without being caught.']) + '</p>';
+  if (fl <= 3) return '<p>' + rnd(['Scattered pieces — they do not have to connect right now.', 'Fragmented is okay. Each part is still real.', 'Not yet a line. That is alright.']) + '</p>';
+  if (b >= 7)  return '<p>' + rnd(['There is still a little light in there. That is not nothing.', 'Some hope present — maybe you have not noticed it.', 'Not easy, but there is room. Enough to move slowly.']) + '</p>';
+  return '<p>' + rnd(['This is the kind of place you arrive at when coming back to yourself — no urgency, just here.', 'Does not need solving. Worth being seen.', 'Somewhere in the middle. Neither edge. That is real too.']) + '</p>';
+}
+
+function buildNeed(t, te, sp, conflictKey) {
+  if (conflictKey === 'exhausted and wanting to stop|unable to stop') return '<p>' + rnd(['Not clarity — just a pause.', 'Nothing to solve. Just stop for a moment.', 'Let the engine breathe. Everything else can wait.']) + '</p>';
+  if (conflictKey === 'wanting to say something|not knowing how') return '<p>' + rnd(['Not expression — just being heard by yourself first.', 'No audience needed. Just get it out somewhere.', 'The wanting-to-say is already something.']) + '</p>';
+  if (conflictKey === 'warmth inside|a little lonely') return '<p>' + rnd(['Let the warmth stay. The lonely can wait.', 'Both feelings are allowed. You do not have to pick.', 'Hold the warmth a little longer before analyzing.']) + '</p>';
+  if (te >= 7) return '<p>' + rnd(['To slow down. Not be pushed.', 'No need to explain or resolve right now.', 'Just a breath. That\'s the whole ask.']) + '</p>';
+  if (t <= 3 && sp <= 4) return '<p>' + rnd(['A little warmth and a little room — at the same time.', 'Warmth, but not too close.', 'Seen, but not crowded.']) + '</p>';
+  if (sp >= 7) return '<p>' + rnd(['Some distance from the problem. Room to breathe.', 'A little space between you and it.', 'Stepping back might let you see more.']) + '</p>';
+  return '<p>' + rnd(['Just to stay here for a bit. No rush to feel better.', 'To be held in place for a moment. That is it.', 'Permission to be like this. Nothing more.']) + '</p>';
+}
+
+function buildMeditate(te, fl, conflictKey) {
+  if (conflictKey === 'wanting to connect|wanting to be alone') return '<p>' + rnd(['Five minutes completely to yourself. No phone. Just sitting.', 'Feel what alone actually feels like right now. No judgment.', 'Sit. Do nothing. Feel the weight of your own body.']) + '</p>';
+  if (conflictKey === 'exhausted and wanting to stop|unable to stop') return '<p>' + rnd(['One hand on your chest. Feel the breath come in and go out. That is it.', 'One slow breath. Not deep. Just there.', 'Sit. Permission to do absolutely nothing for these minutes.']) + '</p>';
+  if (conflictKey === 'wanting to say something|not knowing how') return '<p>' + rnd(['Write down any word in your head. It does not have to be a sentence. Then put it away.', 'For yourself only — any word. Three words. Done.', 'Write. Anything. It\'s okay if it makes no sense.']) + '</p>';
+  if (te >= 7) return '<p>' + rnd(['Attention to the soles of your feet. Feel the floor.', 'Hands on your thighs. Feel the weight of your hands.', 'Eyes closed. Feel the chair under you. Just that.']) + '</p>';
+  if (fl <= 3) return '<p>' + rnd(['Eyes closed. Breath in. Breath out. That\'s the only task.', 'Feel your palms. The temperature. Nothing else.', 'One slow exhale. Let it go.']) + '</p>';
+  return '<p>' + rnd(['Breathe. No need to control it. If you drift, just come back.', 'Attention on the breath. No right or wrong.', 'Just breathe. In, out. Everything else can wait.']) + '</p>';
+}
+
+function buildActions(te, b, fl, conflictKey) {
+  const map = {
+    'wanting to connect|wanting to be alone': ['Give yourself uninterrupted time alone — no phone', 'If you want to reach someone, one simple message is enough — no explanation needed', 'Write down who or what you\'re drawn toward. No decision required'],
+    'a little hopeful|a little afraid': ['Write the hopeful part down — ignore the fear part for now', 'Don\'t make any big decisions yet. Let both feelings coexist for a few days', 'Do one small thing unrelated to it — give yourself a breath'],
+    'exhausted and wanting to stop|unable to stop': ['Set a 15-minute timer. Do nothing. Literally nothing', 'Write down only the one most essential thing left today', 'Tell yourself: stopping is not giving up — it\'s letting things breathe'],
+    'warmth inside|a little lonely': ['Recall the moment of warmth. Let it stay a little longer', 'Send a short message to whoever gave you that warmth — does not have to be long', 'Don\'t analyze the loneliness yet. Let the warmth be real first'],
+    'wanting to say something|not knowing how': ['Write it for yourself first — no one needs to see it', 'If there\'s someone you trust: "I can\'t quite explain it, but I want to talk" is enough', 'One word or one sentence is fine. It does not have to be complete'],
+    'fine on the surface|something feels off': ['You don\'t need to find the answer — just acknowledge "something\'s off"', 'Sleep earlier tonight. Vague feelings sometimes need rest to surface', 'Drop one thing from today\'s list. Give yourself a little more space']
+  };
+  if (conflictKey && map[conflictKey]) return map[conflictKey];
+  const list = [];
+  if (te >= 7) list.push('Stop for five minutes — seriously, do nothing');
+  if (b <= 4)  list.push('Step somewhere with natural light for two minutes — just shift the body');
+  if (fl <= 4) list.push('Write down the one thing taking up the most space in your mind — then leave it');
+  list.push('Put the phone down for a bit — give yourself time without input');
+  list.push('Nothing needs to be solved today. You\'re allowed to just be like this.');
+  return list.slice(0, 3);
+}
+
+function buildCompanion(t, te, b, sp, fl, conflictKey) {
+  if (conflictKey === 'wanting to connect|wanting to be alone') {
+    return rnd([
+      'Right now you might do best with someone who doesn\'t ask too many questions — someone who can just be nearby without needing anything from you.',
+      'Someone who can sit in silence with you, without filling it up.',
+      'Not someone who wants to fix it. Someone who\'s okay with you being exactly like this.'
+    ]);
+  }
+  if (conflictKey === 'exhausted and wanting to stop|unable to stop') {
+    return rnd([
+      'Someone who will not tell you to "just rest" — but who will not push you either. Someone who can hold space without judgment.',
+      'Not a coach, not a problem-solver. Someone who can sit with the weight of it alongside you.',
+      'Someone calm. Who does not need you to explain or perform.'
+    ]);
+  }
+  if (conflictKey === 'wanting to say something|not knowing how') {
+    return rnd([
+      'Someone patient — who will not rush you to a point. Who can follow half-formed thoughts without needing them to land anywhere.',
+      'Someone who listens more than they talk. Who doesn\'t complete your sentences.',
+      'Not someone with answers. Someone who can sit with the unfinished.'
+    ]);
+  }
+  if (te >= 7 && b <= 4) {
+    return rnd([
+      'Someone steady — not high energy, not full of advice. Just someone whose presence slows things down.',
+      'Someone grounded. Who doesn\'t add to the noise.',
+      'A calm presence. Someone who does not need you to be okay right now.'
+    ]);
+  }
+  if (t <= 3 && sp <= 4) {
+    return rnd([
+      'Someone warm but not overwhelming. Who can offer closeness without crowding.',
+      'Someone who reaches in gently — no pressure, no performance required.',
+      'Someone with a quiet kind of warmth. Present, but not insistent.'
+    ]);
+  }
+  if (b >= 7 && te <= 4) {
+    return rnd([
+      'Someone who can share in a little lightness — not deep processing, just easy company.',
+      'A gentle, easygoing presence. Someone you do not have to explain anything to.',
+      'Someone comfortable. Who makes light feel natural, not forced.'
+    ]);
+  }
+  if (fl <= 3) {
+    return rnd([
+      'Someone who can hold scattered thoughts without needing them to make sense — who doesn\'t mind the fragments.',
+      'Not someone who wants to organize things. Someone who can just receive.',
+      'Someone who\'s okay with silence between the pieces.'
+    ]);
+  }
+  return rnd([
+    'Someone who can simply be with you — no agenda, no fixing. Just present.',
+    'A quiet companion. Someone comfortable with ordinary, unspectacular moments.',
+    'Not someone who needs you to perform or explain. Someone who takes you as you are, right now.'
+  ]);
+}
+
+let musicMode = 'express';
+let musicDims = { t:5, te:5, b:5, sp:5 };
+const modeDesc = {
+  express: 'In resonance with where you are. Not to change it — just to let the feeling be fully felt.',
+  flow: 'A gentle nudge forward. Not rushing you — just offering a direction.'
+};
+
+function switchMode(mode) {
+  musicMode = mode;
+  document.querySelectorAll('.music-mode-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('mode-' + mode).classList.add('active');
+  document.getElementById('music-mode-desc').textContent = modeDesc[mode];
+  document.getElementById('out-music').textContent = buildMusic(musicDims.t, musicDims.te, musicDims.b, musicDims.sp, mode);
+}
+
+function buildMusic(t, te, b, sp, mode) {
+  let rt = t, rte = te, rb = b, rsp = sp;
+  if (mode === 'flow') { rte = Math.max(1, te-2); rb = Math.min(10, b+2); rsp = Math.min(10, sp+1); }
+  const parts = [];
+  if (rt <= 4) parts.push('cold and restrained, sparse piano, ambient textures');
+  else if (rt >= 7) parts.push('warm and enveloping, acoustic piano, soft strings');
+  else parts.push('neutral warmth, soft piano, gentle ambient layers');
+  if (rte >= 7) parts.push('very low energy, minimal dynamics, much silence and space');
+  else if (rte <= 3) parts.push('calm and steady, even and quiet flow');
+  else parts.push('moderate tempo, mid dynamics, unhurried');
+  if (rsp >= 7) parts.push('wide reverb, spacious and open');
+  else parts.push('intimate mix, close and private');
+  if (rb <= 4) parts.push('minor key, introspective and quiet');
+  else if (rb >= 7) parts.push('soft major key, gently bright');
+  else parts.push('neutral tonality, neither bright nor dark');
+  if (mode === 'flow') parts.push('gradually lifting, gentle forward movement, soft resolution');
+  parts.push('avoid real-world background noise or environmental sound effects');
+  return parts.join(', ');
+}
+
+function copyMusic() {
+  const el = document.getElementById('out-music');
+  if (!el.textContent) return;
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    document.getElementById('music-copy-hint').textContent = 'Copied ✓';
+    setTimeout(() => document.getElementById('music-copy-hint').textContent = '', 2500);
+  }).catch(() => {
+    const range = document.createRange(); range.selectNode(el);
+    window.getSelection().removeAllRanges(); window.getSelection().addRange(range);
+    document.getElementById('music-copy-hint').textContent = 'Please copy manually with Ctrl+C';
+  });
+}
+
+function drawRadar(vals) {
+  const canvas = document.getElementById('radar');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2, R = Math.min(W,H)*0.36, N = 5;
+  const labels = ['Temp','Tension','Tone','Space','Flow'];
+  const angles = labels.map((_,i) => Math.PI*2*i/N - Math.PI/2);
+  ctx.clearRect(0,0,W,H);
+  const gridC = 'rgba(107,140,114,0.13)', labelC = 'rgba(45,40,33,0.38)';
+  for (let ring=1; ring<=5; ring++) {
+    const r = R*ring/5;
+    ctx.beginPath();
+    angles.forEach((a,i) => { const x=cx+Math.cos(a)*r, y=cy+Math.sin(a)*r; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+    ctx.closePath(); ctx.strokeStyle=gridC; ctx.lineWidth=1; ctx.stroke();
+  }
+  angles.forEach(a => { ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R); ctx.strokeStyle=gridC; ctx.lineWidth=1; ctx.stroke(); });
+  const pts = vals.map((v,i) => ({ x:cx+Math.cos(angles[i])*(R*v/10), y:cy+Math.sin(angles[i])*(R*v/10) }));
+  const grad = ctx.createRadialGradient(cx,cy,0,cx,cy,R);
+  grad.addColorStop(0,'rgba(107,140,114,0.38)'); grad.addColorStop(0.6,'rgba(107,140,114,0.18)'); grad.addColorStop(1,'rgba(107,140,114,0.02)');
+  const shape = () => {
+    ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+    for (let i=0;i<pts.length;i++) { const c=pts[i],n=pts[(i+1)%pts.length],mx=(c.x+n.x)/2,my=(c.y+n.y)/2; ctx.quadraticCurveTo(c.x,c.y,mx,my); }
+    ctx.closePath();
+  };
+  shape(); ctx.fillStyle=grad; ctx.fill();
+  shape(); ctx.strokeStyle='rgba(107,140,114,0.65)'; ctx.lineWidth=1.8; ctx.stroke();
+  pts.forEach(p => {
+    ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2); ctx.fillStyle='rgba(107,140,114,0.85)'; ctx.fill();
+    ctx.beginPath(); ctx.arc(p.x,p.y,2,0,Math.PI*2); ctx.fillStyle='white'; ctx.fill();
+  });
+  ctx.font='11px Inter, sans-serif'; ctx.fillStyle=labelC; ctx.textAlign='center'; ctx.textBaseline='middle';
+  angles.forEach((a,i) => { ctx.fillText(labels[i], cx+Math.cos(a)*(R+22), cy+Math.sin(a)*(R+22)); });
+}
+
+let currentView = 'gentle';
+function switchView(mode) {
+  currentView = mode;
+  document.querySelectorAll('.view-mode-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + mode).classList.add('active');
+  document.getElementById('view-gentle').style.display = mode === 'gentle' ? 'block' : 'none';
+  document.getElementById('view-rational').style.display = mode === 'rational' ? 'block' : 'none';
+}
+
+const dimNamesEn = ['Temperature','Tension','Tone','Space','Flow'];
+const dimLowEn   = ['Cool','Still','Dark','Close','Scattered'];
+const dimHighEn  = ['Warm','Tense','Bright','Open','Flowing'];
+
+function buildRationalDims(t, te, b, sp, fl) {
+  const vals = [t, te, b, sp, fl];
+  return vals.map((v, i) => `
+    <div class="rational-bar-wrap">
+      <div class="rational-bar-label"><span>${dimNamesEn[i]}</span><span>${dimLowEn[i]} ←→ ${dimHighEn[i]}</span></div>
+      <div class="rational-bar"><div class="rational-bar-fill" style="width:${v*10}%"></div></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:3px 0;border:none;">
+      <span class="rational-key">Current value</span>
+      <span style="font-size:13px;color:var(--text);font-weight:400">${v} / 10</span>
+    </div>
+  `).join('<hr style="border:none;border-top:0.5px solid var(--border);margin:8px 0;">');
+}
+
+function buildRationalAnalysis(t, te, b, sp, fl, hasConflict, conflictKey) {
+  const lines = [];
+  if (te >= 7) lines.push(`Tension high (${te}/10): System under elevated internal pressure, ongoing resource drain.`);
+  else if (te <= 3) lines.push(`Tension low (${te}/10): Internally stable, minimal fluctuation.`);
+  else lines.push(`Tension moderate (${te}/10): Some movement, within manageable range.`);
+  if (b <= 4) lines.push(`Emotional tone low (${b}/10): Energy turning inward, mood baseline subdued.`);
+  else if (b >= 7) lines.push(`Emotional tone high (${b}/10): Brighter baseline, outward-oriented tendency.`);
+  if (fl <= 4) lines.push(`Fluency low (${fl}/10): Thoughts fragmented, limited directional coherence.`);
+  else if (fl >= 7) lines.push(`Fluency high (${fl}/10): Thoughts have direction, processing in motion.`);
+  if (t <= 3) lines.push(`Temperature low (${t}/10): State leaning toward restraint and distance.`);
+  else if (t >= 7) lines.push(`Temperature high (${t}/10): State leaning toward warmth and closeness.`);
+  if (hasConflict) lines.push(`Emotional conflict detected: "${conflictKey.replace('|', '" and "')}" — dual activation creating internal tension.`);
+  return lines.map(l => '<p>' + l + '</p>').join('');
+}
+
+function buildRationalReason(t, te, b, sp, fl, conflictKey) {
+  const reasons = [];
+  if (te >= 7 && fl <= 4) reasons.push('High tension + low fluency: sustained pressure without a clear release point.');
+  if (te >= 6 && b <= 4) reasons.push('Elevated internal load + subdued tone: possible accumulated fatigue phase.');
+  if (conflictKey === 'exhausted and wanting to stop|unable to stop') reasons.push('Stop signal and drive signal simultaneously active — resource inefficiency: neither resting nor advancing.');
+  if (conflictKey === 'wanting to connect|wanting to be alone') reasons.push('Connection need and boundary need co-activated: common when relationship dynamics feel uncertain.');
+  if (conflictKey === 'fine on the surface|something feels off') reasons.push('Surface functioning intact, but low-level unprocessed signal present — early warning state.');
+  if (sp <= 3 && te >= 6) reasons.push('Low space + high tension: compressed state, limited breathing room.');
+  if (reasons.length === 0) reasons.push('Dimensions in mid-range. State relatively stable. No significant anomaly detected.');
+  return reasons.map(r => '<p>' + r + '</p>').join('');
+}
+
+function buildRationalSuggest(t, te, b, sp, fl, conflictKey) {
+  const items = [];
+  if (te >= 7) items.push('Priority: reduce tension. Fewer open loops, a defined stopping point.');
+  if (fl <= 4) items.push('Improve fluency: externalize the dominant thought. Writing it down tends to free up flow.');
+  if (b <= 4) items.push('Tone: brief light exposure, light movement, or temperature shift (warm drink, sunlight) can move the baseline.');
+  if (conflictKey === 'exhausted and wanting to stop|unable to stop') items.push('Hard stop: 15 minutes, no output required. Not "how long" — just stop first.');
+  if (conflictKey === 'wanting to say something|not knowing how') items.push('Lower the bar: write for yourself, no audience. Externalize without a destination.');
+  if (items.length === 0) items.push('State stable. No intervention needed. Maintain current rhythm.');
+  return items.map((item, i) => '<p>' + (i+1) + '. ' + item + '</p>').join('');
+}
+
+function generate() {
+  const state = document.getElementById('custom-input').value.trim();
+  const t  = Number(document.getElementById('d-temp').value);
+  const te = Number(document.getElementById('d-tension').value);
+  const b  = Number(document.getElementById('d-bright').value);
+  const sp = Number(document.getElementById('d-space').value);
+  const fl = Number(document.getElementById('d-flow').value);
+  const hasConflict = conflict.a !== '';
+  const conflictKey = hasConflict ? `${conflict.a}|${conflict.b}` : '';
+
+  drawRadar([t, te, b, sp, fl]);
+  document.getElementById('out-portrait').innerHTML = buildPortrait(state, t, te, b, sp, fl);
+
+  const conflictCard = document.getElementById('out-conflict-card');
+  if (hasConflict) {
+    document.getElementById('out-conflict').innerHTML = buildConflict(conflict.a, conflict.b);
+    conflictCard.style.display = 'block';
+  } else {
+    conflictCard.style.display = 'none';
+  }
+
+  document.getElementById('out-interp').innerHTML   = buildInterp(te, fl, b, hasConflict);
+  document.getElementById('out-need').innerHTML     = buildNeed(t, te, sp, conflictKey);
+  document.getElementById('out-meditate').innerHTML = buildMeditate(te, fl, conflictKey);
+  document.getElementById('out-actions').innerHTML  = buildActions(te, b, fl, conflictKey).map(a => `<li>${a}</li>`).join('');
+  document.getElementById('out-companion').innerHTML = buildCompanion(t, te, b, sp, fl, conflictKey);
+
+  musicDims = { t, te, b, sp };
+  musicMode = 'express';
+  document.querySelectorAll('.music-mode-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('mode-express').classList.add('active');
+  document.getElementById('music-mode-desc').textContent = modeDesc['express'];
+  document.getElementById('out-music').textContent = buildMusic(t, te, b, sp, 'express');
+  document.getElementById('music-copy-hint').textContent = '';
+
+  document.getElementById('rational-dims').innerHTML     = buildRationalDims(t, te, b, sp, fl);
+  document.getElementById('rational-analysis').innerHTML = buildRationalAnalysis(t, te, b, sp, fl, hasConflict, conflictKey);
+  document.getElementById('rational-reason').innerHTML   = buildRationalReason(t, te, b, sp, fl, conflictKey);
+  document.getElementById('rational-suggest').innerHTML  = buildRationalSuggest(t, te, b, sp, fl, conflictKey);
+
+  if (appMode === 'rational') switchView('rational');
+  else switchView('gentle');
+
+  const out = document.getElementById('output');
+  out.classList.add('show');
+  setTimeout(() => out.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+}
+
+function sendReaction(val) {
+  document.getElementById('reaction-thanks').style.display = 'block';
+  setTimeout(() => {
+    window.open('https://docs.google.com/forms/d/e/1FAIpQLSfAHslUoAZYQtT85YX5MMQ5w2Z16ShoNyPBSPev3fxssdpjmg/viewform?usp=pp_url', '_blank');
+  }, 400);
+}
+
+function restart() {
+  document.getElementById('output').classList.remove('show');
+  document.getElementById('input-card').style.display = 'none';
+  document.getElementById('entry-select').style.display = 'flex';
+  document.getElementById('entry-select').style.flexDirection = 'column';
+  document.getElementById('custom-input').value = '';
+  document.querySelectorAll('.conflict-btn').forEach(b => b.classList.remove('active'));
+  conflict.a = ''; conflict.b = '';
+  document.querySelectorAll('input[type=range]').forEach(el => { el.value = 5; updateSlider(el); });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
