@@ -5,6 +5,7 @@
 **Live Demo**
 https://serenaw951-ai998.github.io/orientation-gate/
 with API: https://serenaw951-ai998.github.io/orientation-gate/orientation_gate_v04.html
+https://serenaw951-ai998.github.io/orientation-gate/orientation_gate_v05.1.html
 
 **GitHub Repo**
 https://github.com/serenaw951-ai998/orientation-gate
