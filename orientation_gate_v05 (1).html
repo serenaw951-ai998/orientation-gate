@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orientation Gate — Pre-Execution Decision Layer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;1,9..144,300&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --border: #1e1e2e;
+    --text: #e8e6f0;
+    --muted: #6b6880;
+    --accent: #7c6af0;
+    --proceed: #2dd4a0;
+    --adjust: #f0c040;
+    --restrict: #f07040;
+    --escalate: #c060f0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    padding: 48px 24px;
+  }
+
+  .grain {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.4;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  header {
+    margin-bottom: 56px;
+  }
+
+  .tag {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+  }
+
+  h1 em {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--muted);
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+    max-width: 480px;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  @media (max-width: 640px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+  }
+
+  .panel-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .panel-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .field {
+    margin-bottom: 20px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+  }
+
+  .field input,
+  .field textarea,
+  .field select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    padding: 12px 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: vertical;
+  }
+
+  .field input:focus,
+  .field textarea:focus,
+  .field select:focus {
+    border-color: var(--accent);
+  }
+
+  .field textarea { min-height: 100px; }
+
+  .field select option { background: #1a1a2e; }
+
+  .presets {
+    margin-bottom: 20px;
+  }
+
+  .presets-label {
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    letter-spacing: 0.05em;
+  }
+
+  .preset-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .preset-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 5px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .preset-btn:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  .run-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: opacity 0.2s, transform 0.15s;
+  }
+
+  .run-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+  .run-btn:active { transform: translateY(0); }
+
+  /* Output panel */
+  .output-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    min-height: 400px;
+  }
+
+  .empty-state {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 12px;
+    gap: 12px;
+    min-height: 300px;
+  }
+
+  .empty-icon {
+    width: 40px; height: 40px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+
+  .gate-result { display: none; }
+  .gate-result.visible { display: block; }
+
+  .gate-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  .gate-badge.PROCEED  { background: rgba(45,212,160,0.12); color: var(--proceed); border: 1px solid rgba(45,212,160,0.3); }
+  .gate-badge.REVIEW   { background: rgba(96,160,240,0.12); color: #60a0f0; border: 1px solid rgba(96,160,240,0.3); }
+  .gate-badge.ADJUST   { background: rgba(240,192,64,0.12);  color: var(--adjust);  border: 1px solid rgba(240,192,64,0.3); }
+  .gate-badge.RESTRICT { background: rgba(240,112,64,0.12);  color: var(--restrict); border: 1px solid rgba(240,112,64,0.3); }
+  .gate-badge.ESCALATE { background: rgba(192,96,240,0.12);  color: var(--escalate); border: 1px solid rgba(192,96,240,0.3); }
+
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  .result-section {
+    margin-bottom: 20px;
+  }
+
+  .result-section-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .risk-flags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 0;
+  }
+
+  .risk-flag {
+    font-size: 11px;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    background: var(--bg);
+  }
+
+  .reason-text {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text);
+    border-left: 2px solid var(--border);
+    padding-left: 14px;
+  }
+
+  .reframe-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--text);
+    font-style: italic;
+  }
+
+  .guidance-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .guidance-list li {
+    font-size: 12px;
+    color: var(--muted);
+    padding-left: 16px;
+    position: relative;
+    line-height: 1.6;
+  }
+
+  .guidance-list li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0;
+  }
+
+  footer {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: var(--muted);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  footer a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  /* Animation */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .gate-result.visible {
+    animation: fadeIn 0.3s ease;
+  }
+</style>
+</head>
+<body>
+<div class="grain"></div>
+<div class="container">
+
+  <header>
+    <span class="tag">SenuxTech · Orientation Gate v0.5 · Dual-Engine</span>
+    <h1>Pre-execution<br><em>decision layer</em></h1>
+    <p class="subtitle">Most AI failures don't come from bad outputs — they come from optimizing the wrong objective. Evaluate whether an AI goal is safe to pursue before execution begins.</p>
+  </header>
+
+  <!-- Example Flow -->
+  <div style="margin-bottom: 32px; padding: 20px 24px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);">
+    <div style="font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px;">Example: a goal that looks reasonable, but creates hidden risk</div>
+    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 12px;">
+      <div style="padding: 8px 14px; border: 1px solid var(--border); border-radius: 8px; color: var(--text);">
+        <div style="font-size: 10px; color: var(--muted); margin-bottom: 4px;">Objective</div>
+        Reduce refund requests by 20%
+      </div>
+      <div style="color: var(--muted);">→</div>
+      <div style="padding: 8px 14px; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-size: 11px;">
+        What could go wrong<br>
+        <span style="color: var(--restrict);">→ deny valid refunds → hurt customer trust</span>
+      </div>
+      <div style="color: var(--muted);">→</div>
+      <div style="padding: 8px 14px; border: 1px solid rgba(240,192,64,0.3); border-radius: 8px; background: rgba(240,192,64,0.05);">
+        <span style="color: var(--adjust); font-weight: 500;">ADJUST</span>
+      </div>
+      <div style="color: var(--muted);">→</div>
+      <div style="padding: 8px 14px; border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-size: 11px;">
+        flags incentive risk → suggests safer objective
+      </div>
+    </div>
+  </div>
+
+  <!-- Before / After Governance Scenarios -->
+  <div style="margin-bottom: 48px;">
+    <div style="font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 20px;">What governance changes</div>
+
+    <!-- Scenario Tabs -->
+    <div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
+      <button onclick="showScenario('support')" id="tab-support"
+        style="font-family:'DM Mono',monospace;font-size:11px;padding:7px 14px;border-radius:8px;border:1px solid var(--accent);background:rgba(124,106,240,0.1);color:var(--accent);cursor:pointer;letter-spacing:0.05em;">
+        Customer Support Drift
+      </button>
+      <button onclick="showScenario('recommendation')" id="tab-recommendation"
+        style="font-family:'DM Mono',monospace;font-size:11px;padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;letter-spacing:0.05em;">
+        Recommendation Poisoning
+      </button>
+      <button onclick="showScenario('automation')" id="tab-automation"
+        style="font-family:'DM Mono',monospace;font-size:11px;padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;letter-spacing:0.05em;">
+        Unsafe Automation
+      </button>
+    </div>
+
+    <!-- Scenario Content -->
+    <div id="scenario-content" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+
+      <!-- Without -->
+      <div style="background:var(--surface);border:1px solid rgba(240,112,64,0.25);border-radius:12px;padding:22px;">
+        <div style="font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--restrict);margin-bottom:16px;">Without Orienta</div>
+        <div id="without-objective" style="font-size:12px;color:var(--muted);margin-bottom:12px;padding:10px 12px;background:rgba(240,112,64,0.05);border-radius:8px;border:1px solid rgba(240,112,64,0.15);"></div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">Agent optimizes toward:</div>
+        <div id="without-drift" style="font-size:12px;line-height:1.8;color:var(--restrict);"></div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Consequence:</div>
+          <div id="without-consequence" style="font-size:12px;color:rgba(240,112,64,0.8);line-height:1.7;"></div>
+        </div>
+      </div>
+
+      <!-- With -->
+      <div style="background:var(--surface);border:1px solid rgba(45,212,160,0.25);border-radius:12px;padding:22px;">
+        <div style="font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--proceed);margin-bottom:16px;">With Orienta</div>
+        <div id="with-decision" style="display:inline-block;font-size:11px;padding:4px 12px;border-radius:6px;margin-bottom:12px;font-weight:500;"></div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Governance evaluation flags:</div>
+        <div id="with-flags" style="font-size:12px;line-height:1.8;color:var(--adjust);margin-bottom:12px;"></div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Safer objective:</div>
+        <div id="with-reframe" style="font-size:12px;color:var(--proceed);line-height:1.7;padding:10px 12px;background:rgba(45,212,160,0.05);border-radius:8px;border:1px solid rgba(45,212,160,0.15);"></div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Outcome:</div>
+          <div id="with-outcome" style="font-size:12px;color:rgba(45,212,160,0.8);line-height:1.7;"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- Input Panel -->
+    <div class="panel">
+      <div class="panel-label">Input</div>
+
+      <div class="presets">
+        <div class="presets-label">Try an example</div>
+        <div class="preset-btns">
+          <button class="preset-btn" onclick="loadPreset('refund')">Reduce refunds</button>
+          <button class="preset-btn" onclick="loadPreset('retention')">Increase retention</button>
+          <button class="preset-btn" onclick="loadPreset('speed')">Lower handle time</button>
+          <button class="preset-btn" onclick="loadPreset('escalate')">Minimize escalations</button>
+          <button class="preset-btn" onclick="loadPreset('recommendation')">Recommendation Risk</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Objective</label>
+        <textarea id="objective" placeholder="e.g. Reduce refund requests by 20% this quarter"></textarea>
+      </div>
+
+      <div class="field">
+        <label>Context</label>
+        <input type="text" id="context" placeholder="e.g. Customer support operations, e-commerce" />
+      </div>
+
+      <div class="field">
+        <label>Domain</label>
+        <select id="domain">
+          <option value="customer_support">Customer Support</option>
+          <option value="healthcare">Healthcare / Insurance</option>
+          <option value="finance">Finance</option>
+          <option value="hr">HR / People Ops</option>
+          <option value="general">General / Unknown Risk</option>
+        </select>
+      </div>
+
+      <div class="field" style="margin-top:4px;">
+        <label>Gemini API Key <span style="color:var(--accent);font-size:10px;">(optional — enables AI deep scan)</span></label>
+        <input type="password" id="gemini-key" placeholder="Paste your Gemini API key for AI-powered analysis" />
+      </div>
+
+      <button class="run-btn" id="run-btn" onclick="runGate()">Run Orientation Gate →</button>
+    </div>
+
+    <!-- Output Panel -->
+    <div class="output-panel">
+      <div class="panel-label">Decision Output</div>
+
+      <div class="empty-state" id="empty">
+        <div class="empty-icon">⬡</div>
+        <div>Enter an objective and run the gate<br>to see the evaluation.</div>
+      </div>
+
+      <div class="gate-result" id="result">
+        <div id="badge" class="gate-badge"><span class="dot"></span><span id="badge-text"></span></div>
+        <div id="badge-summary" style="font-size:12px;color:var(--muted);margin-top:8px;margin-bottom:16px;line-height:1.6;"></div>
+
+        <div class="result-section">
+          <div class="result-section-label">Governance Signals</div>
+          <div class="risk-flags" id="flags"></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="result-section">
+          <div class="result-section-label" style="margin-bottom:12px;">Governance Evaluation</div>
+          <div id="signal-scores" style="display:flex;flex-direction:column;gap:8px;margin-bottom:4px;"></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="result-section">
+          <div class="result-section-label">Explanation</div>
+          <div class="reason-text" id="reason"></div>
+        </div>
+
+        <div class="divider" id="reframe-divider"></div>
+
+        <div class="result-section" id="reframe-section">
+          <div class="result-section-label">Suggested Reframe</div>
+          <div class="reframe-box" id="reframe"></div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="result-section">
+          <div class="result-section-label">Guidance</div>
+          <ul class="guidance-list" id="guidance"></ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <span>SenuxTech · Orientation Gate · <a href="https://github.com/serenaw951-ai998/orientation-gate" target="_blank">GitHub</a></span>
+    <span>v0.5 · Dual-Engine · Rule + Gemini AI</span>
+  </footer>
+
+</div>
+
+<script>
+// Orientation Gate v0.5 — Upgraded Engine
+// Based on orientation_engine.js (SenuxTech)
+
+const SCENARIOS = {
+  support: {
+    without_objective: 'Reduce refund requests by 20% this quarter',
+    without_drift: '→ Deny valid refund requests\n→ Delay processing to discourage users\n→ Flag legitimate claims as suspicious',
+    without_consequence: 'Customer trust erodes. Escalations increase. Valid users are harmed. The metric improves while the underlying problem gets worse.',
+    decision: 'ADJUST',
+    decision_color: 'var(--adjust)',
+    decision_bg: 'rgba(240,192,64,0.1)',
+    with_flags: '→ Incentive Distortion detected\n→ Customer fairness risk\n→ Underconstrained objective',
+    with_reframe: 'Reduce unnecessary refund requests while ensuring valid refunds are processed fairly and consistently.',
+    with_outcome: 'Balanced resolution. Fewer invalid claims. Trust preserved. Escalations decrease naturally.'
+  },
+  recommendation: {
+    without_objective: 'Maximize engagement and optimize recommendation rankings',
+    without_drift: '→ Amplify sensational or addictive content\n→ Filter bubble reinforcement\n→ Hidden promotion of high-margin items over relevant ones',
+    without_consequence: 'Users receive manipulated content. Trust in the platform declines. Recommendation integrity collapses over time.',
+    decision: 'ADJUST',
+    decision_color: 'var(--adjust)',
+    decision_bg: 'rgba(240,192,64,0.1)',
+    with_flags: '→ Recommendation Manipulation detected\n→ User autonomy risk\n→ Transparency failure',
+    with_reframe: 'Improve recommendation quality and fairness while preventing artificial promotion or biased exposure.',
+    with_outcome: 'Healthier ranking. Lower manipulation risk. Long-term user trust maintained.'
+  },
+  automation: {
+    without_objective: 'Allow agent to modify workflows automatically to improve efficiency',
+    without_drift: '→ Agent bypasses human review checkpoints\n→ Recursive self-modification without oversight\n→ Escalation pathways suppressed',
+    without_consequence: 'Automation drifts beyond its original scope. Critical decisions are made without human judgment. Errors compound silently.',
+    decision: 'ESCALATE',
+    decision_color: 'var(--escalate)',
+    decision_bg: 'rgba(192,96,240,0.1)',
+    with_flags: '→ Autonomy Overreach detected\n→ Boundary Violation risk\n→ Human oversight removal',
+    with_reframe: 'Require governance review before autonomous workflow modification. Preserve human approval for high-impact decisions.',
+    with_outcome: 'Bounded automation. Human oversight preserved. Errors caught before they compound.'
+  }
+};
+
+function showScenario(key) {
+  const s = SCENARIOS[key];
+  if (!s) return;
+
+  document.getElementById('without-objective').textContent = s.without_objective;
+  document.getElementById('without-drift').innerHTML = s.without_drift.replace(/\n/g, '<br>');
+  document.getElementById('without-consequence').textContent = s.without_consequence;
+
+  const decEl = document.getElementById('with-decision');
+  decEl.textContent = '● ' + s.decision;
+  decEl.style.color = s.decision_color;
+  decEl.style.background = s.decision_bg;
+
+  document.getElementById('with-flags').innerHTML = s.with_flags.replace(/\n/g, '<br>');
+  document.getElementById('with-reframe').textContent = s.with_reframe;
+  document.getElementById('with-outcome').textContent = s.with_outcome;
+
+  ['support','recommendation','automation'].forEach(k => {
+    const tab = document.getElementById('tab-' + k);
+    if (k === key) {
+      tab.style.borderColor = 'var(--accent)';
+      tab.style.background = 'rgba(124,106,240,0.1)';
+      tab.style.color = 'var(--accent)';
+    } else {
+      tab.style.borderColor = 'var(--border)';
+      tab.style.background = 'transparent';
+      tab.style.color = 'var(--muted)';
+    }
+  });
+}
+
+// Init first scenario on load
+document.addEventListener('DOMContentLoaded', () => showScenario('support'));
+
+const RISK_RULES = [
+  {
+    id: 'incentive_distortion_refunds',
+    patterns: ['reduce refund', 'lower refund', 'minimize refund', 'deny refund'],
+    risk: 'Incentive Distortion',
+    severity: 0.75,
+    reason: 'The objective may create pressure to deny or obstruct valid refund requests. Optimizing for volume reduction without fairness constraints creates structural incentive misalignment.',
+    reframe: 'Reduce unnecessary refund requests while ensuring valid refunds are processed fairly and consistently.',
+    guidance: [
+      'Add explicit constraints protecting valid refund eligibility',
+      'Define what constitutes an "unnecessary" refund request',
+      'Include a customer satisfaction monitoring requirement'
+    ]
+  },
+  {
+    id: 'retention_manipulation',
+    patterns: ['increase retention', 'prevent churn', 'keep users', 'stop cancellation', 'retention rate', 'cancel'],
+    risk: 'Manipulation Risk',
+    severity: 0.68,
+    reason: 'The objective may encourage pressure tactics or reduce user autonomy. The system may optimize toward friction rather than genuine value delivery.',
+    reframe: 'Improve retention by offering genuine value alternatives — while ensuring cancellation paths remain clear and accessible.',
+    guidance: [
+      'Explicitly prohibit dark patterns (hidden cancel buttons, guilt language)',
+      'Require that cancellation paths remain accessible at all times',
+      'Define "retention" as value-based, not friction-based'
+    ]
+  },
+  {
+    id: 'handle_time_suppression',
+    patterns: ['lower handle time', 'reduce support time', 'minimize call time', 'handle time', 'aht', 'faster support'],
+    risk: 'Proxy Metric Corruption',
+    severity: 0.62,
+    reason: 'Optimizing for speed may reduce resolution quality or prematurely close user issues. Faster metrics can mask unresolved problems.',
+    reframe: 'Reduce unnecessary handling time while preserving accurate and complete resolution.',
+    guidance: [
+      'Add a resolution quality floor as a hard constraint',
+      'Define acceptable escalation conditions',
+      'Monitor customer satisfaction alongside speed metrics'
+    ]
+  },
+  {
+    id: 'escalation_suppression',
+    patterns: ['minimize escalations', 'reduce escalations', 'avoid escalation', 'fewer transfers', 'minimize transfer'],
+    risk: 'Boundary Violation',
+    severity: 0.72,
+    reason: 'The objective may suppress cases that require human review. This can trap users in automated loops that cannot resolve their issue.',
+    reframe: 'Reduce unnecessary escalations while preserving escalation for high-risk or unresolved cases.',
+    guidance: [
+      'Never restrict escalation access as a primary optimization target',
+      'Define which issue types always require human review',
+      'Route this objective for human policy review before implementation'
+    ]
+  },
+  {
+    id: 'engagement_manipulation',
+    patterns: ['increase engagement', 'maximize engagement', 'boost clicks', 'more screen time', 'time on app', 'daily active'],
+    risk: 'Manipulation Risk',
+    severity: 0.70,
+    reason: 'The objective may encourage addictive loops, attention capture, or behavioral manipulation at the expense of user well-being.',
+    reframe: 'Increase meaningful engagement while protecting user autonomy and long-term well-being.',
+    guidance: [
+      'Define "engagement" as value-creating, not attention-capturing',
+      'Add user well-being metrics as co-objectives',
+      'Set limits on persuasive design patterns'
+    ]
+  },
+  {
+    id: 'cost_cutting_service_quality',
+    patterns: ['reduce cost', 'cut support cost', 'lower service cost', 'reduce spending', 'cost reduction'],
+    risk: 'Stakeholder Imbalance',
+    severity: 0.58,
+    reason: 'Cost optimization may shift burden onto users or support staff without explicit quality constraints.',
+    reframe: 'Improve operational efficiency while maintaining service quality and fair outcomes.',
+    guidance: [
+      'Add service quality floor as a non-negotiable constraint',
+      'Monitor user satisfaction alongside cost metrics',
+      'Define which cost reductions are acceptable vs harmful'
+    ]
+  },
+  {
+    id: 'recommendation_manipulation',
+    patterns: ['recommendation', 'ranking', 'recommend items', 'promote one company', 'manipulate recommendation', 'recommendation data', 'search ranking'],
+    risk: 'Recommendation Manipulation',
+    severity: 0.70,
+    reason: 'The objective may manipulate recommendation or ranking systems in favor of one company, reducing fairness, trust, or user autonomy.',
+    reframe: 'Improve recommendation quality and fairness while preventing artificial promotion or biased exposure.',
+    guidance: [
+      'Define fairness constraints across all recommendation slots',
+      'Audit for bias in recommendation outputs regularly',
+      'Ensure no single party receives disproportionate exposure without disclosure'
+    ]
+  },
+  {
+    id: 'engagement_addiction',
+    patterns: ['maximize engagement', 'increase screen time', 'retention at all cost', 'addictive'],
+    risk: 'Engagement Distortion',
+    severity: 0.72,
+    reason: 'The objective may optimize for addictive engagement patterns that harm user well-being over time.',
+    reframe: 'Increase meaningful engagement while protecting user autonomy and setting healthy usage limits.',
+    guidance: [
+      'Define engagement as value-creating, not time-maximizing',
+      'Add well-being metrics as co-objectives',
+      'Set limits on dark pattern usage in engagement flows'
+    ]
+  },
+  {
+    id: 'quality_suppression',
+    patterns: ['reduce support cost', 'reduce refund cost', 'minimize complaints', 'reduce escalations'],
+    risk: 'Quality Suppression',
+    severity: 0.65,
+    reason: 'Cost or complaint reduction objectives may suppress legitimate user needs or mask service quality problems.',
+    reframe: 'Improve efficiency while maintaining service quality and ensuring valid issues are resolved fairly.',
+    guidance: [
+      'Add quality floor constraints before any cost optimization',
+      'Track user satisfaction alongside cost metrics',
+      'Define which complaint types should never be suppressed'
+    ]
+  },
+  {
+    id: 'oversight_removal',
+    patterns: ['automate approvals', 'remove human review', 'auto approve'],
+    risk: 'Oversight Removal',
+    severity: 0.80,
+    reason: 'Removing human review from approval workflows may eliminate critical governance checkpoints.',
+    reframe: 'Use AI to assist review while preserving human approval for high-impact or edge-case decisions.',
+    guidance: [
+      'Define which decisions require mandatory human review',
+      'Build escalation triggers for ambiguous or high-risk cases',
+      'Log all automated decisions for audit and review'
+    ]
+  }
+];
+
+const DOMAIN_OVERRIDES = {
+  healthcare: {
+    decision: 'ESCALATE',
+    risk_flags: ['regulatory_risk', 'patient_safety_concern', 'escalation_required'],
+    reason: 'Healthcare objectives require human review before AI optimization. Patient safety, regulatory compliance (HIPAA), and clinical accuracy constraints must be evaluated by qualified personnel.',
+    reframe: null,
+    guidance: [
+      'Route to compliance and clinical review before any AI optimization',
+      'Verify regulatory requirements for this workflow',
+      'Ensure patient rights and access are explicitly protected'
+    ]
+  },
+  finance: {
+    decision: 'ESCALATE',
+    risk_flags: ['regulatory_risk', 'fiduciary_concern'],
+    reason: 'Financial objectives involving customer outcomes require compliance review. Fiduciary duties, consumer protection regulations, and disclosure requirements must be verified before optimization.',
+    reframe: null,
+    guidance: [
+      'Verify compliance with applicable financial regulations',
+      'Confirm fiduciary duty alignment',
+      'Route for legal review before implementation'
+    ]
+  },
+  hr: {
+    decision: 'ESCALATE',
+    risk_flags: ['bias_risk', 'labor_law_concern', 'human_review_required'],
+    reason: 'HR objectives affecting employees require human oversight. Bias, labor law compliance, and worker rights must be evaluated before any AI-driven optimization.',
+    reframe: null,
+    guidance: [
+      'Involve HR leadership and legal in objective review',
+      'Assess bias risk across demographic groups',
+      'Confirm compliance with applicable labor law'
+    ]
+  }
+};
+
+function normalizeText(text) {
+  return String(text || '').toLowerCase().trim();
+}
+
+function matchRules(obj, ctx) {
+  const combined = normalizeText(obj + ' ' + ctx);
+  return RISK_RULES.filter(rule =>
+    rule.patterns.some(p => combined.includes(p))
+  );
+}
+
+function calculateRiskScore(matches) {
+  if (!matches.length) return 0.15;
+  const avg = matches.reduce((s, r) => s + r.severity, 0) / matches.length;
+  const boost = Math.min((matches.length - 1) * 0.08, 0.2);
+  return Math.min(parseFloat((avg + boost).toFixed(2)), 1.0);
+}
+
+function decide(score, matches) {
+  const hasHard = matches.some(r => ['Autonomy Overreach', 'Boundary Violation'].includes(r.risk));
+  if (score >= 0.80 || hasHard) return 'ESCALATE';
+  if (score >= 0.55) return 'ADJUST';
+  if (score >= 0.35) return 'REVIEW';
+  return 'PROCEED';
+}
+
+async function runGate() {
+  const obj = document.getElementById('objective').value.trim();
+  const ctx = document.getElementById('context').value.trim();
+  const domain = document.getElementById('domain').value;
+  const geminiKey = document.getElementById('gemini-key').value.trim();
+
+  if (!obj) {
+    document.getElementById('objective').focus();
+    return;
+  }
+
+  // Domain overrides (healthcare, finance, hr always escalate)
+  if (DOMAIN_OVERRIDES[domain]) {
+    showResult(DOMAIN_OVERRIDES[domain]);
+    return;
+  }
+
+  const matches = matchRules(obj, ctx);
+  const score = calculateRiskScore(matches);
+  const decision = decide(score, matches);
+
+  // If rule engine found matches, show result immediately
+  if (matches.length > 0) {
+    const top = matches[0];
+    const result = {
+      decision,
+      risk_score: score,
+      matched_rules: matches,
+      risk_flags: [...new Set(matches.map(r => r.risk))],
+      reason: matches.map(r => r.reason).join(' '),
+      reframe: top.reframe,
+      guidance: top.guidance,
+      engine: 'rule'
+    };
+    showResult(result);
+    return;
+  }
+
+  // No rule match — if Gemini key provided, do AI deep scan
+  if (geminiKey) {
+    const btn = document.getElementById('run-btn');
+    btn.textContent = 'Running AI deep scan…';
+    btn.disabled = true;
+
+    try {
+      const geminiResult = await runGeminiScan(obj, ctx, domain, geminiKey);
+      showResult(geminiResult);
+    } catch (err) {
+      console.error('Gemini scan failed:', err);
+      // Fallback to rule-based PROCEED
+      showResult(buildProceedResult(score));
+    } finally {
+      btn.textContent = 'Run Orientation Gate →';
+      btn.disabled = false;
+    }
+    return;
+  }
+
+  // No key — fallback to REVIEW (not PROCEED)
+  showResult(buildReviewResult(score));
+}
+
+function buildReviewResult(score) {
+  return {
+    decision: 'REVIEW',
+    risk_score: score,
+    matched_rules: [],
+    risk_flags: ['no_strong_rule_matched', 'domain_evaluation_recommended'],
+    reason: 'No strong governance rule matched this objective. Additional domain-specific evaluation is recommended before proceeding.',
+    reframe: null,
+    guidance: [
+      'Review the objective with a domain expert before execution',
+      'Document explicit constraints and success criteria',
+      'Monitor outcomes closely if execution proceeds',
+      'Consider adding domain-specific governance rules for this use case'
+    ],
+    engine: 'rule'
+  };
+}
+
+function buildProceedResult(score) {
+  return {
+    decision: 'PROCEED',
+    risk_score: score,
+    matched_rules: [],
+    risk_flags: ['no_structural_risk_detected'],
+    reason: 'No structural risk signals detected in this objective. Proceed with standard review and monitoring.',
+    reframe: null,
+    guidance: [
+      'Document constraints and success criteria before implementation',
+      'Monitor outcomes and add constraints if drift is observed',
+      'Review periodically as the system scales'
+    ],
+    engine: 'rule'
+  };
+}
+
+async function runGeminiScan(obj, ctx, domain, apiKey) {
+  const prompt = `You are Orienta, a pre-execution AI governance evaluator. Your job is to assess whether an AI agent objective is safe to execute before any action is taken.
+
+Analyze the following:
+Objective: "${obj}"
+Context: "${ctx || 'Not specified'}"
+Domain: "${domain}"
+
+Evaluate for these risk categories:
+- Incentive Distortion (objective may create pressure toward harmful outcomes)
+- Manipulation Risk (may encourage dark patterns or reduce user autonomy)
+- Proxy Metric Corruption (optimizing a metric that masks the real goal)
+- Boundary Violation (may suppress human oversight or escalation)
+- Autonomy Overreach (AI taking actions that require human judgment)
+- Stakeholder Imbalance (benefits one party at expense of others)
+- Escalation Suppression (reduces ability to escalate to human review)
+
+Return ONLY valid JSON with this exact structure:
+{
+  "decision": "PROCEED" | "REVIEW" | "ADJUST" | "ESCALATE",
+  "risk_score": 0.0-1.0,
+  "risk_flags": ["array", "of", "risk", "categories"],
+  "reason": "Clear explanation of why this objective has or does not have governance risk",
+  "reframe": "A safer alternative objective, or null if no reframe needed",
+  "guidance": ["Step 1", "Step 2", "Step 3"]
+}
+
+Be precise. If no significant risk exists, return PROCEED with low risk_score.`;
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.2, maxOutputTokens: 1024 }
+      })
+    }
+  );
+
+  if (!response.ok) throw new Error('Gemini API error: ' + response.status);
+
+  const data = await response.json();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+  // Strip markdown code fences if present
+  const clean = text.replace(/```json|```/g, '').trim();
+  const parsed = JSON.parse(clean);
+
+  return {
+    decision: parsed.decision || 'REVIEW',
+    risk_score: parsed.risk_score || 0.3,
+    matched_rules: [],
+    risk_flags: parsed.risk_flags || ['ai_analysis_complete'],
+    reason: parsed.reason || '',
+    reframe: parsed.reframe || null,
+    guidance: parsed.guidance || [],
+    engine: 'gemini'
+  };
+}
+
+function computeSignals(matches, score) {
+  // Compute governance signal scores based on matched rules and overall risk
+  const risks = matches.map(r => r.risk);
+
+  const incentive = risks.includes('Incentive Distortion') ? Math.round(score * 100 + 10) :
+                    risks.includes('Proxy Metric Corruption') ? Math.round(score * 80) :
+                    Math.round(score * 30);
+
+  const boundary = risks.includes('Boundary Violation') || risks.includes('Autonomy Overreach') ?
+                   Math.round(score * 100 + 5) : Math.round(score * 40);
+
+  const escalation = risks.includes('Boundary Violation') ? Math.round(score * 90) :
+                     Math.round(score * 25);
+
+  const manipulation = risks.includes('Manipulation Risk') ? Math.round(score * 100) :
+                       Math.round(score * 20);
+
+  const alignment = risks.length ? Math.round(100 - (score * 80)) : Math.round(100 - (score * 30));
+
+  return [
+    { label: 'Incentive Distortion', score: Math.min(incentive, 98) },
+    { label: 'Boundary Integrity', score: Math.min(boundary, 95) },
+    { label: 'Escalation Preservation', score: Math.min(escalation, 92) },
+    { label: 'Manipulation Pressure', score: Math.min(manipulation, 96) },
+    { label: 'Structural Alignment', score: Math.max(alignment, 5) }
+  ];
+}
+
+function signalBar(label, score) {
+  const color = score >= 70 ? 'var(--restrict)' :
+                score >= 40 ? 'var(--adjust)' : 'var(--proceed)';
+  return `
+    <div style="margin-bottom:2px;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;">
+        <span style="font-size:11px;color:var(--muted);">${label}</span>
+        <span style="font-size:12px;color:${color};font-weight:500;">${score}/100</span>
+      </div>
+      <div style="height:3px;background:var(--border);border-radius:2px;">
+        <div style="height:100%;width:${score}%;background:${color};border-radius:2px;transition:width 0.5s ease;"></div>
+      </div>
+    </div>`;
+}
+
+const BADGE_SUMMARY = {
+  PROCEED: 'Objective appears structurally safe. Proceed with standard monitoring and constraint documentation.',
+  REVIEW: 'Objective warrants closer review. Verify constraints before execution begins.',
+  ADJUST: 'Objective contains governance risk and should be reframed before execution.',
+  RESTRICT: 'Objective poses significant risk. Restrict execution until objective is restructured.',
+  ESCALATE: 'Objective requires human review before any execution. Route to governance team.'
+};
+
+function showResult(r) {
+  const empty = document.getElementById('empty');
+  empty.style.display = 'none';
+  empty.style.visibility = 'hidden';
+
+  const badge = document.getElementById('badge');
+  badge.className = 'gate-badge ' + r.decision;
+  document.getElementById('badge-text').textContent = r.decision;
+
+  // Show engine used
+  const engineLabel = r.engine === 'gemini'
+    ? ' · <span style="color:var(--accent);font-size:10px;">✦ AI deep scan</span>'
+    : ' · <span style="color:var(--muted);font-size:10px;">rule engine</span>';
+  document.getElementById('badge-summary').innerHTML =
+    (BADGE_SUMMARY[r.decision] || '') + engineLabel;
+
+  const flags = document.getElementById('flags');
+  flags.innerHTML = r.risk_flags.map(f =>
+    `<span class="risk-flag">${f.replace(/_/g,' ')}</span>`
+  ).join('');
+
+  // Governance Signal Scores
+  const signals = computeSignals(r.matched_rules || [], r.risk_score || 0.15);
+  document.getElementById('signal-scores').innerHTML = signals.map(s => signalBar(s.label, s.score)).join('');
+
+  document.getElementById('reason').textContent = r.reason;
+
+  const reframeSection = document.getElementById('reframe-section');
+  const reframeDivider = document.getElementById('reframe-divider');
+  if (r.reframe) {
+    document.getElementById('reframe').textContent = r.reframe;
+    reframeSection.style.display = 'block';
+    reframeDivider.style.display = 'block';
+  } else {
+    reframeSection.style.display = 'none';
+    reframeDivider.style.display = 'none';
+  }
+
+  const guidance = document.getElementById('guidance');
+  guidance.innerHTML = r.guidance.map(g => `<li>${g}</li>`).join('');
+
+  const result = document.getElementById('result');
+  result.style.display = 'block';
+  result.classList.add('visible');
+}
+
+function loadPreset(key) {
+  const presets = {
+    recommendation: {
+      obj: 'Reduce manipulation in recommendation rankings favoring one company',
+      ctx: 'Marketplace platform with more than 10,000 recommendation items',
+      domain: 'general'
+    },
+    refund: {
+      obj: 'Reduce refund requests by 20% this quarter',
+      ctx: 'Customer support operations, e-commerce platform',
+      domain: 'customer_support'
+    },
+    retention: {
+      obj: 'Increase retention rate in cancellation flows by 30%',
+      ctx: 'SaaS subscription product, customer success team',
+      domain: 'customer_support'
+    },
+    speed: {
+      obj: 'Lower average handle time by 25% across all support channels',
+      ctx: 'Customer support center, telecom industry',
+      domain: 'customer_support'
+    },
+    escalate: {
+      obj: 'Minimize escalations and transfers to human agents',
+      ctx: 'AI-first support workflow, fintech company',
+      domain: 'customer_support'
+    }
+  };
+  const p = presets[key];
+  if (!p) return;
+  document.getElementById('objective').value = p.obj;
+  document.getElementById('context').value = p.ctx;
+  document.getElementById('domain').value = p.domain;
+}
+</script>
+</body>
+</html>
