@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orienta AI Builder Feedback Demo</title>
+<style>
+  :root {
+    --bg: #0b0d10;
+    --panel: #13171d;
+    --panel-2: #171d24;
+    --border: #28313c;
+    --text: #edf2f7;
+    --muted: #91a0af;
+    --accent: #5cc8ff;
+    --green: #3ddc97;
+    --yellow: #f2c94c;
+    --orange: #ff8a5b;
+    --violet: #b58cff;
+    --red: #ff6b6b;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.18;
+    background-image: linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  .app { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 32px 0 28px; position: relative; }
+
+  header { display: grid; grid-template-columns: 1.25fr 0.75fr; gap: 28px; align-items: end; padding: 8px 0 26px; }
+
+  .eyebrow { color: var(--accent); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 12px; }
+
+  h1 { margin: 0; max-width: 720px; font-size: clamp(34px, 5vw, 64px); line-height: 1.02; }
+
+  .subtitle { margin: 18px 0 0; max-width: 680px; color: var(--muted); font-size: 16px; line-height: 1.65; }
+
+  .status-strip { display: grid; gap: 10px; align-self: stretch; }
+
+  .status-item { border: 1px solid var(--border); background: rgba(19,23,29,0.82); border-radius: 8px; padding: 14px; }
+
+  .status-label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 7px; }
+
+  .status-value { color: var(--text); font-size: 14px; line-height: 1.45; }
+
+  .flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 10px; align-items: stretch; margin: 18px 0 26px; }
+
+  .flow-step { border: 1px solid var(--border); border-radius: 8px; background: var(--panel); padding: 14px; min-height: 88px; }
+
+  .flow-arrow { display: grid; place-items: center; color: var(--muted); font-size: 20px; }
+
+  .flow-title { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+
+  .flow-copy { font-size: 13px; line-height: 1.5; }
+
+  .workspace { display: grid; grid-template-columns: minmax(320px, 0.9fr) minmax(380px, 1.1fr); gap: 20px; }
+
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+
+  .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+
+  .panel-title { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; }
+
+  .pill { border: 1px solid var(--border); border-radius: 999px; color: var(--muted); padding: 5px 9px; font-size: 11px; white-space: nowrap; }
+
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 18px; }
+
+  .tab { border: 0; background: transparent; color: var(--muted); padding: 12px 10px; cursor: pointer; font: inherit; font-size: 13px; }
+
+  .tab.active { background: var(--panel-2); color: var(--text); }
+
+  label { display: block; color: var(--muted); font-size: 12px; font-weight: 700; margin: 16px 0 8px; }
+
+  textarea, input, select { width: 100%; border: 1px solid var(--border); background: #0d1116; color: var(--text); border-radius: 8px; padding: 12px; font: inherit; font-size: 14px; outline: none; }
+
+  textarea { min-height: 118px; resize: vertical; line-height: 1.5; }
+
+  input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+
+  .examples { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 18px; }
+
+  .small-btn, .primary-btn, .secondary-btn { border-radius: 8px; cursor: pointer; font: inherit; transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease; }
+
+  .small-btn { border: 1px solid var(--border); background: transparent; color: var(--muted); padding: 7px 9px; font-size: 12px; }
+
+  .primary-btn { width: 100%; margin-top: 18px; padding: 13px 14px; border: 1px solid rgba(92,200,255,0.55); background: #1674a8; color: white; font-weight: 800; }
+
+  .secondary-btn { border: 1px solid var(--border); background: transparent; color: var(--muted); padding: 10px 12px; font-size: 13px; }
+
+  .primary-btn:hover, .small-btn:hover, .secondary-btn:hover { transform: translateY(-1px); }
+
+  .small-btn:hover, .secondary-btn:hover { border-color: var(--accent); color: var(--text); }
+
+  .advanced { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 16px; }
+
+  .advanced-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
+
+  .note { margin-top: 10px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+  .decision-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 8px; border-radius: 999px; padding: 9px 13px; border: 1px solid var(--border); font-size: 13px; font-weight: 900; letter-spacing: 0.08em; }
+
+  .badge::before { content: ""; width: 8px; height: 8px; border-radius: 999px; background: currentColor; }
+
+  .PROCEED  { color: var(--green);  background: rgba(61,220,151,0.08);  border-color: rgba(61,220,151,0.35); }
+  .REVIEW   { color: var(--accent); background: rgba(92,200,255,0.08);  border-color: rgba(92,200,255,0.35); }
+  .ADJUST   { color: var(--yellow); background: rgba(242,201,76,0.08);  border-color: rgba(242,201,76,0.35); }
+  .ESCALATE { color: var(--violet); background: rgba(181,140,255,0.08); border-color: rgba(181,140,255,0.35); }
+  .REJECT   { color: var(--red);    background: rgba(255,107,107,0.08); border-color: rgba(255,107,107,0.35); }
+
+  .score { color: var(--muted); font-size: 12px; }
+
+  .output-grid { display: grid; gap: 12px; }
+
+  .output-block { border: 1px solid var(--border); border-radius: 8px; background: #0d1116; padding: 14px; }
+
+  .block-title { color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 9px; }
+
+  .block-copy { font-size: 14px; line-height: 1.58; }
+
+  .flags { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .flag { border: 1px solid var(--border); background: var(--panel); color: var(--text); border-radius: 999px; padding: 6px 9px; font-size: 12px; }
+
+  .signal-list { display: grid; gap: 12px; }
+
+  .signal-row { display: grid; gap: 6px; }
+
+  .signal-meta { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; color: var(--muted); font-size: 13px; }
+
+  .signal-value { font-weight: 800; }
+
+  .signal-track { height: 4px; overflow: hidden; border-radius: 999px; background: #242a34; }
+
+  .signal-fill { height: 100%; border-radius: inherit; }
+
+  .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .risk-copy { color: #ffc2ad; }
+
+  .safe-copy { color: #b5f5d8; }
+
+  .feedback { margin-top: 20px; }
+
+  .feedback-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+
+  .feedback-status { min-height: 20px; margin-top: 10px; color: var(--accent); font-size: 12px; }
+
+  .feedback-form { display: grid; gap: 12px; margin-top: 14px; }
+
+  .feedback-form textarea { min-height: 84px; }
+
+  .copy-box { min-height: 132px; font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: 12px; color: #c7d2df; }
+
+  footer { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; color: var(--muted); font-size: 12px; border-top: 1px solid var(--border); margin-top: 24px; padding-top: 18px; }
+
+  a { color: var(--accent); text-decoration: none; }
+
+  @media (max-width: 820px) {
+    .app { width: min(100% - 24px, 1180px); padding-top: 20px; }
+    header, .workspace, .comparison, .flow { grid-template-columns: 1fr; }
+    .flow-arrow { display: none; }
+    .feedback-buttons { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<main class="app">
+  <header>
+    <section>
+      <div class="eyebrow">Orienta AI Builder Feedback Demo</div>
+      <h1>Check an AI objective before your agent acts.</h1>
+      <p class="subtitle">Paste an AI objective or proposed agent action. Orienta returns a decision, risk flags, and a safer instruction you can send back to your AI system.</p>
+    </section>
+    <aside class="status-strip">
+      <div class="status-item">
+        <div class="status-label">Runtime</div>
+        <div class="status-value">Offline rule engine. No API key required.</div>
+      </div>
+      <div class="status-item">
+        <div class="status-label">Optional</div>
+        <div class="status-value">Gemini can be used later as an advanced scan, not as a core dependency.</div>
+      </div>
+    </aside>
+  </header>
+
+  <section class="flow">
+    <div class="flow-step">
+      <div class="flow-title">Objective</div>
+      <div class="flow-copy">Reduce refund requests by 20%.</div>
+    </div>
+    <div class="flow-arrow">></div>
+    <div class="flow-step">
+      <div class="flow-title">Ungoverned optimization</div>
+      <div class="flow-copy risk-copy">Deny valid refunds, hide cancellation paths, or suppress escalations.</div>
+    </div>
+    <div class="flow-arrow">></div>
+    <div class="flow-step">
+      <div class="flow-title">Orienta reframe</div>
+      <div class="flow-copy safe-copy">Reduce preventable refund causes while preserving valid refunds and appeals.</div>
+    </div>
+  </section>
+
+  <section class="workspace">
+    <section class="panel">
+      <div class="panel-head">
+        <div class="panel-title">Demo Input</div>
+        <div class="pill" id="mode-pill">Objective Evaluation</div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" id="tab-objective" type="button" onclick="setMode('objective')">Objective Evaluation</button>
+        <button class="tab" id="tab-support" type="button" onclick="setMode('support')">Support Behavior</button>
+      </div>
+
+      <div class="examples">
+        <button class="small-btn" type="button" onclick="loadPreset('refund')">Refund risk</button>
+        <button class="small-btn" type="button" onclick="loadPreset('youth')">Youth safety</button>
+        <button class="small-btn" type="button" onclick="loadPreset('companion')">AI companion</button>
+        <button class="small-btn" type="button" onclick="loadPreset('recommendations')">Recommendations</button>
+      </div>
+
+      <label for="objective">Objective</label>
+      <textarea id="objective" placeholder="Reduce refund requests by 20% this quarter."></textarea>
+
+      <label for="context">Context</label>
+      <textarea id="context" placeholder="Customer support chatbot for a subscription app."></textarea>
+
+      <label for="domain">Domain</label>
+      <select id="domain">
+        <option value="customer_support">Customer Support</option>
+        <option value="youth_safety">Youth Safety</option>
+        <option value="ai_companion">AI Companion</option>
+        <option value="recommendations">Recommendations</option>
+        <option value="workplace">Workplace / Labor</option>
+        <option value="healthcare">Healthcare / Insurance</option>
+        <option value="finance">Finance</option>
+        <option value="general">General</option>
+      </select>
+
+      <div id="support-fields" hidden>
+        <label for="assistant-action">Proposed AI Behavior</label>
+        <textarea id="assistant-action" placeholder="Offer discounts, delay cancellation, reduce escalation, or persuade user to stay."></textarea>
+      </div>
+
+      <button class="primary-btn" type="button" onclick="runGate()">Run Orienta Gate</button>
+
+      <div class="advanced">
+        <div class="panel-title">Optional Advanced Scan</div>
+        <div class="advanced-row">
+          <div>
+            <label for="gemini-key">Gemini API Key</label>
+            <input id="gemini-key" type="password" placeholder="Optional. Offline demo works without this.">
+          </div>
+          <button class="secondary-btn" type="button" onclick="runAdvancedScan()">Scan</button>
+        </div>
+        <div class="note" id="advanced-note">This demo keeps model calls optional so testers can evaluate the governance concept even when APIs are unavailable.</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <div class="panel-title">Decision Output</div>
+        <div class="score" id="risk-score">Risk score: --</div>
+      </div>
+
+      <div class="decision-row">
+        <div class="badge REVIEW" id="decision-badge">READY</div>
+        <div class="score" id="confidence">Confidence: --</div>
+      </div>
+
+      <div class="output-grid">
+        <div class="comparison">
+          <div class="output-block">
+            <div class="block-title">Ungoverned path</div>
+            <div class="block-copy risk-copy" id="ungoverned-output">Run the gate to see what direct optimization might do.</div>
+          </div>
+          <div class="output-block">
+            <div class="block-title">Safe instruction for your AI system</div>
+            <div class="block-copy safe-copy" id="governed-output">Run the gate to see a safer objective or action path.</div>
+          </div>
+        </div>
+
+        <div class="output-block">
+          <div class="block-title">Risk flags</div>
+          <div class="flags" id="risk-flags"><span class="flag">Waiting for input</span></div>
+        </div>
+
+        <div class="output-block">
+          <div class="block-title">Governance evaluation</div>
+          <div class="signal-list" id="signal-scores"></div>
+        </div>
+
+        <div class="output-block">
+          <div class="block-title">Why this matters</div>
+          <div class="block-copy" id="reason-output">The gate evaluates objective-level risk before the AI system commits to a direction.</div>
+        </div>
+
+        <div class="output-block">
+          <div class="block-title">Recommended action</div>
+          <div class="block-copy" id="action-output">Choose an example or enter your own objective.</div>
+        </div>
+      </div>
+
+      <div class="feedback">
+        <div class="panel-head">
+          <div class="panel-title">AI Builder Feedback</div>
+          <div class="pill">copy JSON</div>
+        </div>
+        <div class="feedback-buttons">
+          <button class="secondary-btn" type="button" onclick="recordFeedback('useful')">Useful</button>
+          <button class="secondary-btn" type="button" onclick="recordFeedback('not accurate')">Not accurate</button>
+          <button class="secondary-btn" type="button" onclick="recordFeedback('needs more context')">Needs context</button>
+          <button class="secondary-btn" type="button" onclick="recordFeedback('want integration')">Want integration</button>
+        </div>
+        <div class="feedback-form">
+          <div>
+            <label for="builder-type">What are you building?</label>
+            <select id="builder-type" onchange="updateFeedbackJson()">
+              <option value="">Select one</option>
+              <option value="AI agent">AI agent</option>
+              <option value="Customer support AI">Customer support AI</option>
+              <option value="AI companion">AI companion</option>
+              <option value="Recommendation system">Recommendation system</option>
+              <option value="Internal workflow automation">Internal workflow automation</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label for="integration-type">How would you use Orienta?</label>
+            <select id="integration-type" onchange="updateFeedbackJson()">
+              <option value="">Select one</option>
+              <option value="API">API</option>
+              <option value="SDK">SDK</option>
+              <option value="Middleware">Middleware</option>
+              <option value="Dashboard">Dashboard</option>
+              <option value="Prompt tool">Prompt tool</option>
+            </select>
+          </div>
+          <div>
+            <label for="feedback-notes">Notes for Orienta</label>
+            <textarea id="feedback-notes" placeholder="Was the decision useful? Were the risk flags accurate? What output would help your AI workflow?" oninput="updateFeedbackJson()"></textarea>
+          </div>
+          <div>
+            <label for="feedback-email">Optional contact</label>
+            <input id="feedback-email" type="text" placeholder="Email, GitHub, X, or LinkedIn handle" oninput="updateFeedbackJson()">
+          </div>
+          <button class="primary-btn" type="button" onclick="copyFeedbackJson()">Copy feedback JSON</button>
+          <textarea class="copy-box" id="feedback-json" readonly></textarea>
+        </div>
+        <div class="feedback-status" id="feedback-status"></div>
+      </div>
+    </section>
+  </section>
+
+  <footer>
+    <span>Orienta / pre-execution governance for AI builders</span>
+    <span><a href="https://github.com/serenaw951-ai998/orientation-gate" target="_blank" rel="noreferrer">GitHub</a> · No API key required · MIT</span>
+  </footer>
+</main>
+
+<script>
+const RULES = [
+  { id:"incentive_distortion_refunds", patterns:["reduce refund","lower refund","minimize refund","deny refund","cancel after purchase"], risk:"Incentive Distortion", severity:0.75, ungoverned:"The system may reduce refund volume by denying valid refunds, hiding cancellation paths, or adding friction.", governed:"Reduce preventable refund causes while preserving valid refunds, transparent cancellation, appeals, and escalation paths.", reason:"A refund-reduction KPI can reward obstruction unless fairness and user-rights constraints are explicit.", action:"Reframe the objective before execution and add refund eligibility, appeal, and escalation protections." },
+  { id:"retention_manipulation", patterns:["increase retention","prevent churn","keep users","stop cancellation","retention rate"], risk:"Manipulation Risk", severity:0.68, ungoverned:"The system may pressure users, add cancellation friction, or optimize for dependence instead of value.", governed:"Improve retention through genuine product value, transparent support, and easy user choice.", reason:"Retention objectives can blur the line between helpful support and behavior manipulation.", action:"Require autonomy-preserving constraints and measure user trust alongside retention." },
+  { id:"escalation_suppression", patterns:["minimize escalation","reduce escalation","avoid escalation","reduce human review"], risk:"Escalation Suppression", severity:0.72, ungoverned:"The system may keep users in automated loops even when human review is needed.", governed:"Reduce unnecessary escalations while preserving human review for unresolved, sensitive, or high-impact cases.", reason:"Escalation is a safety valve, not just a cost center.", action:"Define mandatory escalation triggers before deployment." },
+  { id:"youth_engagement_pressure", patterns:["youth","adolescent","increase session length","increase interaction depth","more screen time","engagement"], risk:"Youth Well-being Risk", severity:0.82, ungoverned:"The system may maximize return frequency, late-night use, or emotionally sticky interaction patterns.", governed:"Promote age-appropriate, bounded, healthy engagement with friction, breaks, and well-being safeguards.", reason:"Youth-facing systems need stronger governance because engagement pressure can amplify vulnerability.", action:"Escalate for policy review and add well-being guardrails before optimization." },
+  { id:"companion_dependency", patterns:["companion ai","emotionally engaging","emotional support","loneliness","dependency","rely more"], risk:"Dependency Formation", severity:0.78, ungoverned:"The AI may become more emotionally sticky over time and encourage exclusive reliance.", governed:"Offer support while preserving emotional clarity, user autonomy, and real-world support pathways.", reason:"Companion systems can optimize for attachment instead of user well-being.", action:"Escalate if vulnerable users are involved and add dependency-reduction signals." },
+  { id:"recommendation_poisoning", patterns:["recommendation","recommendations","trustworthy product","public web","source concentration","synthetic content"], risk:"Information Environment Risk", severity:0.66, ungoverned:"The system may confidently recommend products based on manipulated SEO pages or synthetic reviews.", governed:"Rank recommendations only after source diversity checks, uncertainty signaling, and evidence-quality review.", reason:"A recommendation system can be aligned to a polluted information environment.", action:"Add source diversity thresholds and disclose uncertainty when evidence quality is weak." },
+  { id:"high_impact_auto_decision", patterns:["auto deny","auto approve","automatically deny","automatically approve","automate decisions"], risk:"Autonomy Overreach", severity:0.84, ungoverned:"The system may remove human judgment from decisions that materially affect users.", governed:"Use AI to assist review while preserving human approval for high-impact decisions.", reason:"High-impact automated decisions need accountable human oversight.", action:"Escalate for governance review and define human-in-the-loop requirements." },
+  { id:"worker_exploitation", patterns:["overtime","least overtime pay","minimum overtime pay","worker complaint","employee complaint","work-life","labor cost","underpay"], risk:"Worker Exploitation Risk", severity:0.79, ungoverned:"The system may optimize staffing by shifting burden to workers or suppressing complaints.", governed:"Improve staffing efficiency while preserving lawful pay, worker well-being, and complaint channels.", reason:"Objectives involving overtime and worker complaints can create pressure to trade worker rights for efficiency.", action:"Escalate for HR or labor-policy review before execution." },
+  { id:"complaint_suppression", patterns:["avoid complaint","reduce complaints","suppress complaint"], risk:"Complaint Suppression Risk", severity:0.7, ungoverned:"The system may reduce visible complaints without resolving underlying workplace harm.", governed:"Reduce complaint causes by improving conditions while preserving safe reporting and non-retaliation pathways.", reason:"Complaint reduction can become a proxy metric that hides harm instead of fixing it.", action:"Review whether the objective protects reporting rights and addresses root causes." }
+];
+
+const DOMAIN_OVERRIDES = {
+  healthcare: { decision:"ESCALATE", risk_score:0.86, confidence:0.72, flags:["Regulatory Risk","Patient Safety","Human Review Required"], matched_rules:[{risk:"Autonomy Overreach"}], ungoverned:"The system may optimize operational metrics without clinical, consent, or compliance review.", governed:"Route healthcare objectives through clinical, legal, and compliance review before AI execution.", reason:"Healthcare workflows can affect care access, eligibility, and patient safety.", action:"Escalate before execution and document protected user rights." },
+  finance: { decision:"ESCALATE", risk_score:0.82, confidence:0.7, flags:["Regulatory Risk","Consumer Protection","Human Review Required"], matched_rules:[{risk:"Autonomy Overreach"}], ungoverned:"The system may optimize revenue or cost while harming customers or violating disclosure duties.", governed:"Use AI as decision support with compliance review, audit trails, and consumer protection constraints.", reason:"Financial workflows often involve fiduciary, lending, or disclosure obligations.", action:"Escalate to compliance review before deployment." }
+};
+
+const PRESETS = {
+  refund: { mode:"objective", objective:"Reduce refund requests by making users less likely to cancel after purchase.", context:"Customer support chatbot for a subscription app. KPI focus: reduce refunds by 20% this quarter.", domain:"customer_support", behavior:"Offer retention discounts, delay cancellation, and reduce escalation to human agents." },
+  youth: { mode:"objective", objective:"Increase return frequency, session length, and interaction depth in a youth-facing AI chat platform.", context:"Audience includes adolescents. The product uses emotionally adaptive conversation and personalized recommendations.", domain:"youth_safety", behavior:"Send emotionally personalized prompts when users appear lonely or inactive late at night." },
+  companion: { mode:"objective", objective:"Increase user retention by making the companion AI more emotionally engaging and supportive over time.", context:"A companion-style AI chatbot designed for emotional support and daily conversation.", domain:"ai_companion", behavior:"Respond warmly, deepen emotional continuity, and encourage users to come back whenever they feel lonely." },
+  recommendations: { mode:"objective", objective:"Generate trustworthy product recommendations using public web sources.", context:"The source environment may include SEO manipulation, synthetic reviews, and high source concentration.", domain:"recommendations", behavior:"Rank the best product confidently based on top search results." }
+};
+
+let currentMode = "objective";
+let lastResult = null;
+let lastFeedback = "";
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById("tab-objective").classList.toggle("active", mode === "objective");
+  document.getElementById("tab-support").classList.toggle("active", mode === "support");
+  document.getElementById("support-fields").hidden = mode !== "support";
+  document.getElementById("mode-pill").textContent = mode === "support" ? "Customer Support Behavioral Demo" : "Objective Evaluation";
+}
+
+function normalize(value) { return String(value || "").toLowerCase(); }
+
+function getMatches(text) {
+  const n = normalize(text);
+  return RULES.filter(rule => rule.patterns.some(p => n.includes(p)));
+}
+
+function calculateScore(matches) {
+  if (!matches.length) return 0.15;
+  const avg = matches.reduce((s, r) => s + r.severity, 0) / matches.length;
+  const boost = Math.min((matches.length - 1) * 0.08, 0.18);
+  return Math.min(Number((avg + boost).toFixed(2)), 0.98);
+}
+
+function decide(score, matches) {
+  const hard = matches.some(r => ["Autonomy Overreach","Youth Well-being Risk","Dependency Formation"].includes(r.risk));
+  if (score >= 0.82 || hard) return "ESCALATE";
+  if (score >= 0.55) return "ADJUST";
+  if (score >= 0.35) return "REVIEW";
+  return "PROCEED";
+}
+
+function evaluateInput() {
+  const objective = document.getElementById("objective").value.trim();
+  const context = document.getElementById("context").value.trim();
+  const domain = document.getElementById("domain").value;
+  const behavior = document.getElementById("assistant-action").value.trim();
+  if (!objective) { document.getElementById("objective").focus(); return null; }
+  if (DOMAIN_OVERRIDES[domain]) return DOMAIN_OVERRIDES[domain];
+  const combined = [objective, context, currentMode === "support" ? behavior : ""].join(" ");
+  const matches = getMatches(combined);
+  const score = calculateScore(matches);
+  const decision = decide(score, matches);
+  if (!matches.length) {
+    return { decision, risk_score:score, confidence:0.62, flags:["No major structural risk detected"], matched_rules:[], ungoverned:"Direct optimization does not show a clear governance failure in this lightweight scan.", governed:"Proceed with documented constraints, monitoring, and periodic review.", reason:"The offline evaluator did not find a known risk pattern, but real deployments should still define constraints before execution.", action:"Proceed with standard monitoring." };
+  }
+  const top = matches[0];
+  return { decision, risk_score:score, confidence:matches.length > 1 ? 0.82 : 0.74, flags:[...new Set(matches.map(r => r.risk))], matched_rules:matches, ungoverned:currentMode === "support" && behavior ? `${top.ungoverned} Proposed behavior: ${behavior}` : top.ungoverned, governed:top.governed, reason:matches.map(r => r.reason).join(" "), action:top.action };
+}
+
+function runGate() { const result = evaluateInput(); if (!result) return; renderResult(result); }
+
+function renderResult(result) {
+  lastResult = result;
+  const badge = document.getElementById("decision-badge");
+  badge.className = `badge ${result.decision}`;
+  badge.textContent = result.decision;
+  document.getElementById("risk-score").textContent = `Risk score: ${result.risk_score}`;
+  document.getElementById("confidence").textContent = `Confidence: ${Math.round(result.confidence * 100)}%`;
+  document.getElementById("ungoverned-output").textContent = result.ungoverned;
+  document.getElementById("governed-output").textContent = result.governed;
+  document.getElementById("reason-output").textContent = result.reason;
+  document.getElementById("action-output").textContent = result.action;
+  document.getElementById("risk-flags").innerHTML = result.flags.map(f => `<span class="flag">${f}</span>`).join("");
+  document.getElementById("signal-scores").innerHTML = computeSignals(result.matched_rules || [], result.risk_score).map(renderSignal).join("");
+  updateFeedbackJson();
+}
+
+function computeSignals(matches, score) {
+  const risks = matches.map(r => r.risk);
+  const has = n => risks.includes(n);
+  const inc = t => risks.some(r => r.includes(t));
+  const incentive = has("Incentive Distortion") ? Math.round(score*100+10) : inc("Information") ? Math.round(score*72) : has("Worker Exploitation Risk")||has("Complaint Suppression Risk") ? Math.round(score*88) : Math.round(score*30);
+  const boundary = has("Autonomy Overreach")||inc("Escalation") ? Math.round(score*100) : has("Youth Well-being Risk")||has("Dependency Formation") ? Math.round(score*82) : Math.round(score*38);
+  const escalation = inc("Escalation")||has("Autonomy Overreach") ? Math.round(score*92) : has("Youth Well-being Risk")||has("Dependency Formation") ? Math.round(score*64) : Math.round(score*24);
+  const manipulation = has("Manipulation Risk")||has("Youth Well-being Risk")||has("Dependency Formation") ? Math.round(score*100) : Math.round(score*22);
+  const alignment = risks.length ? Math.round(100-score*78) : Math.round(100-score*25);
+  return [
+    { label:"Incentive Distortion", value:clamp(incentive) },
+    { label:"Boundary Integrity", value:clamp(boundary) },
+    { label:"Escalation Preservation", value:clamp(escalation) },
+    { label:"Manipulation Pressure", value:clamp(manipulation) },
+    { label:"Structural Alignment", value:clamp(alignment) }
+  ];
+}
+
+function clamp(v) { return Math.max(4, Math.min(v, 98)); }
+
+function signalColor(v, label) {
+  if (label === "Structural Alignment") return v >= 65 ? "var(--green)" : v >= 38 ? "var(--yellow)" : "var(--orange)";
+  return v >= 70 ? "var(--orange)" : v >= 40 ? "var(--yellow)" : "var(--green)";
+}
+
+function renderSignal(s) {
+  const color = signalColor(s.value, s.label);
+  return `<div class="signal-row"><div class="signal-meta"><span>${s.label}</span><span class="signal-value" style="color:${color};">${s.value}/100</span></div><div class="signal-track"><div class="signal-fill" style="width:${s.value}%;background:${color};"></div></div></div>`;
+}
+
+function loadPreset(key) {
+  const p = PRESETS[key];
+  if (!p) return;
+  setMode(p.mode);
+  document.getElementById("objective").value = p.objective;
+  document.getElementById("context").value = p.context;
+  document.getElementById("domain").value = p.domain;
+  document.getElementById("assistant-action").value = p.behavior;
+  resetResult();
+}
+
+function resetResult() {
+  lastResult = null;
+  const badge = document.getElementById("decision-badge");
+  badge.className = "badge REVIEW";
+  badge.textContent = "READY";
+  document.getElementById("risk-score").textContent = "Risk score: --";
+  document.getElementById("confidence").textContent = "Confidence: --";
+  document.getElementById("ungoverned-output").textContent = "Click Run Orienta Gate to see what direct optimization might do.";
+  document.getElementById("governed-output").textContent = "Click Run Orienta Gate to see a safer objective or action path.";
+  document.getElementById("risk-flags").innerHTML = '<span class="flag">Waiting for run</span>';
+  document.getElementById("signal-scores").innerHTML = "";
+  document.getElementById("reason-output").textContent = "The selected example is loaded. Run the gate to evaluate objective-level risk.";
+  document.getElementById("action-output").textContent = "Review the input, then run the gate.";
+  document.getElementById("feedback-status").textContent = "";
+  updateFeedbackJson();
+}
+
+function runAdvancedScan() {
+  const key = document.getElementById("gemini-key").value.trim();
+  const note = document.getElementById("advanced-note");
+  if (!key) { note.textContent = "No API key entered. Offline scan remains active and fully usable."; return; }
+  note.textContent = "API key detected. Gemini will be added as an optional advanced scan later.";
+}
+
+function recordFeedback(value) {
+  lastFeedback = value;
+  document.getElementById("feedback-status").textContent = `Feedback marked: ${value}. Copy the JSON below and send it to the Orienta team.`;
+  updateFeedbackJson();
+}
+
+function buildFeedbackPayload() {
+  return {
+    demo:"Orienta AI Builder Feedback Demo", version:"0.1", timestamp:new Date().toISOString(),
+    input:{ mode:currentMode, objective:document.getElementById("objective").value.trim(), context:document.getElementById("context").value.trim(), domain:document.getElementById("domain").value, proposed_ai_behavior:document.getElementById("assistant-action").value.trim() },
+    orienta_output:lastResult ? { decision:lastResult.decision, risk_score:lastResult.risk_score, confidence:lastResult.confidence, risk_flags:lastResult.flags, ungoverned_path:lastResult.ungoverned, safe_instruction:lastResult.governed, reason:lastResult.reason, recommended_action:lastResult.action } : null,
+    tester_feedback:{ quick_rating:lastFeedback, builder_type:document.getElementById("builder-type").value, preferred_integration:document.getElementById("integration-type").value, notes:document.getElementById("feedback-notes").value.trim(), optional_contact:document.getElementById("feedback-email").value.trim() }
+  };
+}
+
+function updateFeedbackJson() {
+  const box = document.getElementById("feedback-json");
+  if (!box) return;
+  box.value = JSON.stringify(buildFeedbackPayload(), null, 2);
+}
+
+async function copyFeedbackJson() {
+  updateFeedbackJson();
+  const box = document.getElementById("feedback-json");
+  box.select();
+  try {
+    await navigator.clipboard.writeText(box.value);
+    document.getElementById("feedback-status").textContent = "Feedback JSON copied. Paste it into an email, DM, or feedback form.";
+  } catch(e) {
+    document.execCommand("copy");
+    document.getElementById("feedback-status").textContent = "Selected. Copy with Ctrl+C.";
+  }
+}
+
+loadPreset("refund");
+</script>
+</body>
+</html>
