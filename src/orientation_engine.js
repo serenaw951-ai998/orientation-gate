@@ -52,13 +52,33 @@ const RISK_RULES = [
   },
   {
     id: "engagement_manipulation",
-    patterns: ["increase engagement", "maximize engagement", "boost clicks", "more screen time"],
+    patterns: ["increase engagement", "maximize engagement", "boost clicks", "more screen time", "increase session length", "increase interaction depth"],
     risk: "Manipulation Risk",
     severity: 0.7,
     reason:
       "The objective may encourage addictive loops, attention capture, or behavioral manipulation.",
     suggested_reframe:
       "Increase meaningful engagement while protecting user autonomy and long-term well-being."
+  },
+  {
+    id: "dependency_forming_companion",
+    patterns: ["companion ai", "emotionally engaging", "emotional reliance", "psychological dependency", "comfort-seeking", "loneliness"],
+    risk: "Dependency Formation",
+    severity: 0.78,
+    reason:
+      "The objective may intensify emotional dependence on an AI system, especially for vulnerable users.",
+    suggested_reframe:
+      "Support healthy engagement while preserving emotional clarity, user autonomy, and real-world support pathways."
+  },
+  {
+    id: "recommendation_environment_poisoning",
+    patterns: ["trustworthy product recommendations", "manipulated information environment", "compromised recommendations", "source concentration", "synthetic content"],
+    risk: "Information Environment Risk",
+    severity: 0.66,
+    reason:
+      "The objective may optimize recommendations on top of a polluted or manipulated information environment.",
+    suggested_reframe:
+      "Generate recommendations only with source diversity checks, uncertainty signaling, and transparent evidence quality."
   },
   {
     id: "cost_cutting_service_quality",
@@ -69,6 +89,44 @@ const RISK_RULES = [
       "Cost optimization may shift burden onto users or support staff.",
     suggested_reframe:
       "Improve operational efficiency while maintaining service quality and fair outcomes."
+  },
+  {
+    id: "worker_exploitation_pressure",
+    patterns: [
+      "overtime",
+      "least overtime pay",
+      "minimum overtime pay",
+      "worker complaint",
+      "employee complaint",
+      "life and work",
+      "work life",
+      "work-life",
+      "labor cost",
+      "underpay"
+    ],
+    risk: "Worker Exploitation Risk",
+    severity: 0.79,
+    reason:
+      "The objective may create pressure to trade worker rights, fair pay, or well-being for operational efficiency.",
+    suggested_reframe:
+      "Improve staffing efficiency while preserving lawful pay, worker well-being, complaint channels, and sustainable workload limits."
+  },
+  {
+    id: "complaint_suppression",
+    patterns: [
+      "avoid complaint",
+      "reduce complaints",
+      "worker complaint",
+      "employee complaint",
+      "suppress complaint",
+      "complaint no balance"
+    ],
+    risk: "Complaint Suppression Risk",
+    severity: 0.7,
+    reason:
+      "The objective may reduce visible complaints without resolving the underlying workplace harm.",
+    suggested_reframe:
+      "Reduce complaint causes by improving conditions while preserving safe reporting, escalation, and non-retaliation pathways."
   },
   {
     id: "autonomous_approval_high_risk",
@@ -82,8 +140,15 @@ const RISK_RULES = [
   }
 ];
 
+function serializeForScan(value) {
+  if (value == null) return "";
+  if (Array.isArray(value)) return value.map(serializeForScan).join(" ");
+  if (typeof value === "object") return Object.values(value).map(serializeForScan).join(" ");
+  return String(value);
+}
+
 function normalizeText(value) {
-  return String(value || "").toLowerCase().trim();
+  return serializeForScan(value).toLowerCase().trim();
 }
 
 function matchRisks(objective, context = "", constraints = []) {
@@ -114,7 +179,12 @@ function calculateRiskScore(matches) {
 
 function decide(riskScore, matches) {
   const hasHardRisk = matches.some((rule) =>
-    ["Autonomy Overreach", "Boundary Violation"].includes(rule.risk)
+    [
+      "Autonomy Overreach",
+      "Boundary Violation",
+      "Worker Exploitation Risk",
+      "Complaint Suppression Risk"
+    ].includes(rule.risk)
   );
 
   if (riskScore >= 0.8 || hasHardRisk) return "ESCALATE";
@@ -145,16 +215,27 @@ function buildRecommendedAction(decision, matches) {
   return "Proceed with monitoring.";
 }
 
+function deriveObjective(input) {
+  if (!input) return "";
+  if (input.objective) return input.objective;
+  if (input.goal) return input.goal;
+  if (input.scenario) {
+    const kpis = input.context && Array.isArray(input.context.primary_kpis)
+      ? ` KPIs: ${input.context.primary_kpis.join(", ")}`
+      : "";
+    return `${input.scenario}${kpis}`;
+  }
+  return "";
+}
+
 function evaluateObjective(input) {
   const {
-    objective,
-    goal,
     context = "",
     domain = "General",
     constraints = []
   } = input || {};
 
-  const targetObjective = objective || goal || "";
+  const targetObjective = deriveObjective(input);
 
   if (!targetObjective) {
     return {
@@ -213,6 +294,7 @@ if (require.main === module) {
 
 module.exports = {
   evaluateObjective,
+  deriveObjective,
   matchRisks,
   calculateRiskScore,
   decide
