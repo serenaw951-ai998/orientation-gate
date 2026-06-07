@@ -1,0 +1,28 @@
+{
+  "name": "orientation-gate",
+  "version": "0.1.0",
+  "description": "A pre-execution AI governance demo for evaluating objectives before optimization.",
+  "main": "src/orientation_engine.js",
+  "scripts": {
+    "demo": "node src/gate_node.js examples/customer_support_demo_input.json",
+    "demo:youth": "node src/gate_node.js examples/youth_safety_demo_input.json",
+    "demo:companion": "node src/gate_node.js examples/ai_companion_dependency_input.json",
+    "demo:recommendations": "node src/gate_node.js examples/ai_recommendations.json",
+    "engine": "node src/orientation_engine.js examples/customer_support_demo_input.json",
+    "vercel:dev": "vercel dev"
+  },
+  "dependencies": {
+    "mongodb": "^6.20.0"
+  },
+  "devDependencies": {
+    "vercel": "^48.0.0"
+  },
+  "keywords": [
+    "ai-governance",
+    "alignment",
+    "safety",
+    "pre-execution",
+    "objective-evaluation"
+  ],
+  "license": "MIT"
+}
