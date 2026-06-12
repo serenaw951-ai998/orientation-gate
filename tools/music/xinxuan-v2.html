@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>心旋 · 状态回声</title>
+<meta name="description" content="看见正在变化的状态">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f7f6f3; --surface: #ffffff; --surface2: #f0ede8;
+  --border: rgba(0,0,0,0.10); --border-strong: rgba(0,0,0,0.20);
+  --text: #1a1917; --text-muted: #6b6860; --text-hint: #9b9890;
+  --radius: 10px; --radius-sm: 6px;
+  --tag-active-bg: #1a1917; --tag-active-text: #f7f6f3;
+  --inst-active-bg: #1a1917; --inst-active-text: #f7f6f3;
+  --accent: #345c50; --accent-soft: rgba(52,92,80,0.10);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141412; --surface: #1e1d1b; --surface2: #272522;
+    --border: rgba(255,255,255,0.09); --border-strong: rgba(255,255,255,0.18);
+    --text: #f0ede8; --text-muted: #9b9890; --text-hint: #6b6860;
+    --tag-active-bg: #f0ede8; --tag-active-text: #1a1917;
+    --inst-active-bg: #f0ede8; --inst-active-text: #1a1917;
+    --accent: #b7d5c8; --accent-soft: rgba(183,213,200,0.11);
+  }
+}
+body { background: var(--bg); color: var(--text); font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; min-height: 100vh; }
+.page { max-width: 720px; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
+header { margin-bottom: 3rem; }
+.logo { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-hint); margin-bottom: 1rem; }
+h1 { font-size: 28px; font-weight: 600; line-height: 1.2; color: var(--text); margin-bottom: 0.5rem; }
+.tagline { font-size: 15px; color: var(--text-muted); line-height: 1.5; }
+.section { margin-bottom: 2.5rem; }
+.section-header { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-hint); margin-bottom: 14px; padding-bottom: 8px; border-bottom: 0.5px solid var(--border); }
+
+/* Sliders */
+.slider-row { display: grid; grid-template-columns: 110px 1fr 80px; align-items: center; gap: 14px; margin-bottom: 12px; }
+.slider-label-wrap { position: relative; }
+.slider-label { font-size: 13px; color: var(--text); cursor: help; border-bottom: 1px dashed var(--border-strong); display: inline-block; }
+.slider-hint { font-size: 10px; color: var(--text-hint); margin-top: 2px; line-height: 1.3; }
+.slider-poles { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-hint); margin-top: 3px; }
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 3px; border-radius: 2px; background: var(--border-strong); outline: none; cursor: pointer; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--text); cursor: pointer; transition: transform 0.1s; }
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+input[type=range]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--text); border: none; cursor: pointer; }
+.slider-val { font-size: 11px; color: var(--text-muted); text-align: right; white-space: nowrap; }
+.slider-num { font-size: 10px; color: var(--text-hint); margin-left: 3px; }
+
+/* Tags */
+.tag-group { display: flex; flex-wrap: wrap; gap: 7px; }
+.tag { font-size: 12px; padding: 6px 13px; border-radius: 20px; border: 0.5px solid var(--border-strong); background: var(--surface); color: var(--text-muted); cursor: pointer; transition: all 0.12s; user-select: none; line-height: 1; }
+.tag:hover { color: var(--text); border-color: var(--text); }
+.tag.active { background: var(--tag-active-bg); color: var(--tag-active-text); border-color: var(--tag-active-bg); }
+
+/* Preset combos */
+.preset-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; align-items: center; }
+.preset-label { font-size: 10px; color: var(--text-hint); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin-right: 2px; }
+.preset-btn { font-size: 11px; padding: 4px 10px; border-radius: 20px; border: 0.5px solid var(--border-strong); background: var(--surface); color: var(--text-muted); cursor: pointer; transition: all 0.12s; user-select: none; }
+.preset-btn:hover { color: var(--text); border-color: var(--text); background: var(--surface2); }
+
+/* Instruments */
+.cat-label { font-size: 11px; color: var(--text-hint); margin: 14px 0 7px; font-weight: 500; }
+.cat-label:first-child { margin-top: 0; }
+.inst-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 7px; }
+.inst-card { border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 9px 12px; cursor: pointer; user-select: none; transition: all 0.12s; background: var(--surface); }
+.inst-card:hover { border-color: var(--border-strong); }
+.inst-card.active { background: var(--inst-active-bg); border-color: var(--inst-active-bg); }
+.inst-card.active .inst-name { color: var(--inst-active-text); }
+.inst-card.active .inst-meta { color: rgba(247,246,243,0.45); }
+@media (prefers-color-scheme: dark) { .inst-card.active .inst-meta { color: rgba(20,20,18,0.5); } }
+.inst-name { font-size: 13px; color: var(--text); margin-bottom: 2px; font-weight: 500; }
+.inst-meta { font-size: 11px; color: var(--text-hint); }
+
+/* State intro layer */
+.state-intro { background: var(--surface); border-radius: var(--radius); border: 0.5px solid var(--border); padding: 1.25rem 1.5rem; margin-bottom: 2.5rem; }
+.state-intro-headline { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.state-intro-sub { font-size: 12px; color: var(--text-hint); margin-bottom: 12px; line-height: 1.6; }
+.state-scenes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.state-scene-btn { font-size: 11px; padding: 5px 11px; border-radius: 20px; border: 0.5px solid var(--border-strong); background: transparent; color: var(--text-muted); cursor: pointer; transition: all 0.12s; font-family: inherit; }
+.state-scene-btn:hover { border-color: var(--text); color: var(--text); }
+.state-scene-btn.active { background: var(--tag-active-bg); color: var(--tag-active-text); border-color: var(--tag-active-bg); }
+.tagline-sub { font-size:13px; color:var(--text-hint); margin-top:4px; line-height:1.5; }
+.intention-btn { font-size:11px; padding:5px 12px; border-radius:20px; border:0.5px solid var(--border-strong); background:var(--surface); color:var(--text-muted); cursor:pointer; transition:all 0.12s; font-family:inherit; }
+.intention-btn:hover { color:var(--text); border-color:var(--text); }
+.intention-btn.active { background:var(--tag-active-bg); color:var(--tag-active-text); border-color:var(--tag-active-bg); }
+.state-input-wrap { position: relative; }
+.state-input { width: 100%; padding: 8px 32px 8px 10px; font-size: 13px; color: var(--text); background: var(--surface2); border: 0.5px solid var(--border); border-radius: var(--radius-sm); outline: none; font-family: inherit; transition: border-color 0.12s; }
+.state-input:focus { border-color: var(--border-strong); }
+.state-clear { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--text-hint); cursor: pointer; background: none; border: none; display: none; line-height: 1; }
+.state-clear.show { display: block; }
+
+/* Arc */
+.arc-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.arc-card { border: 0.5px solid var(--border-strong); border-radius: var(--radius-sm); padding: 12px 14px; cursor: pointer; user-select: none; transition: all 0.15s; background: var(--surface); }
+.arc-card:hover { border-color: var(--text); }
+.arc-card.active { background: var(--tag-active-bg); border-color: var(--tag-active-bg); }
+.arc-card.active .arc-name { color: var(--tag-active-text); }
+.arc-card.active .arc-desc { color: rgba(247,246,243,0.55); }
+.arc-card.active .arc-svg path { stroke: rgba(247,246,243,0.85); }
+@media (prefers-color-scheme: dark) {
+  .arc-card.active .arc-desc { color: rgba(20,20,18,0.55); }
+  .arc-card.active .arc-svg path { stroke: rgba(20,20,18,0.85); }
+}
+.arc-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.arc-desc { font-size: 11px; color: var(--text-hint); margin-bottom: 8px; line-height: 1.4; }
+.arc-svg { width: 100%; height: 34px; display: block; }
+.arc-svg path { stroke: var(--text-muted); stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Advanced */
+.adv-toggle-row { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 8px 0; user-select: none; }
+.adv-toggle-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-hint); }
+.adv-toggle-line { flex: 1; height: 0.5px; background: var(--border); }
+.adv-toggle-arrow { font-size: 9px; color: var(--text-hint); transition: transform 0.2s; }
+.adv-toggle-row.open .adv-toggle-arrow { transform: rotate(180deg); }
+.adv-panel { display: none; padding-top: 16px; }
+.adv-panel.open { display: block; }
+.adv-row { display: grid; grid-template-columns: 100px 1fr; align-items: start; gap: 14px; margin-bottom: 14px; }
+.adv-label { font-size: 13px; color: var(--text); }
+.adv-sublabel { font-size: 10px; color: var(--text-hint); margin-top: 2px; }
+.select-wrap { position: relative; }
+.select-wrap::after { content: '▾'; position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 10px; color: var(--text-hint); pointer-events: none; }
+select.sel { width: 100%; padding: 7px 28px 7px 10px; font-size: 13px; color: var(--text); background: var(--surface); border: 0.5px solid var(--border-strong); border-radius: var(--radius-sm); outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; }
+select.sel:focus { border-color: var(--text); }
+
+/* Output */
+.divider { height: 0.5px; background: var(--border); margin: 2.5rem 0; }
+.radar-wrap { display: flex; flex-direction: column; align-items: center; margin-bottom: 2rem; padding: 1.5rem 1rem; background: var(--surface); border-radius: var(--radius); border: 0.5px solid var(--border); }
+.radar-title { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-hint); margin-bottom: 1rem; align-self: flex-start; }
+#radar-canvas { width: 280px; height: 280px; max-width: 100%; }
+.emotion-summary { margin-top: 1rem; font-size: 13px; color: var(--text-muted); text-align: center; line-height: 1.6; }
+
+.output-block { background: var(--surface2); border-radius: var(--radius); border: 0.5px solid var(--border); margin-bottom: 10px; overflow: hidden; }
+.output-block-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 14px 10px; border-bottom: 0.5px solid var(--border); }
+.output-block-label { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.45; letter-spacing: 0; text-transform: none; }
+.music-arrow { color: var(--text-hint); margin-left: 6px; font-size: 15px; }
+.output-block-meta { display: flex; align-items: center; gap: 10px; }
+.char-count { display: none; }
+.copy-btn-sm { font-size: 11px; padding: 3px 10px; border-radius: 4px; border: 0.5px solid var(--border-strong); background: transparent; color: var(--text-muted); cursor: pointer; transition: all 0.12s; }
+.copy-btn-sm:hover { background: var(--surface); color: var(--text); }
+.output-body { padding: 12px 14px; min-height: 52px; }
+.output-text { font-size: 13px; color: var(--text); line-height: 1.75; word-break: break-word; }
+.output-text.placeholder { color: var(--text-hint); font-family: inherit; font-size: 14px; }
+.reflection-card { display:none; background:var(--surface); border-radius:var(--radius); border:0.5px solid var(--border); padding:1.35rem 1.45rem; margin-bottom:10px; }
+.reflection-card.primary { border-color: var(--border-strong); background: linear-gradient(180deg, var(--surface), var(--accent-soft)); }
+.reflection-label { font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-hint); margin-bottom:10px; }
+.reflection-text { font-size:15px; color:var(--text); line-height:1.9; }
+.reflection-subtext { font-size:13px; color:var(--text-muted); line-height:1.8; }
+.feedback-row { display:none; flex-wrap:wrap; gap:7px; margin:8px 0 12px; }
+.feedback-btn { font-size:11px; padding:6px 12px; border-radius:99px; border:0.5px solid var(--border-strong); background:var(--surface); color:var(--text-muted); cursor:pointer; font-family:inherit; transition:all 0.12s; }
+.feedback-btn:hover, .feedback-btn.active { color:var(--tag-active-text); background:var(--tag-active-bg); border-color:var(--tag-active-bg); }
+.reveal-card { display:none; margin-bottom:10px; padding:1.25rem 1.4rem; border:0.5px solid var(--border-strong); border-radius:var(--radius); background:var(--surface); }
+.reveal-kicker { font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-hint); margin-bottom:8px; }
+.archetype-name { font-size:20px; font-weight:600; color:var(--text); line-height:1.35; margin-bottom:7px; }
+.archetype-summary { font-size:13px; color:var(--text-muted); line-height:1.75; }
+.archetype-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 18px; margin-top:14px; padding-top:12px; border-top:0.5px solid var(--border); }
+.archetype-item-label { font-size:10px; color:var(--text-hint); margin-bottom:3px; }
+.archetype-item-value { font-size:12px; color:var(--text); line-height:1.5; }
+.resonance-action { margin-top:14px; display:flex; align-items:center; gap:8px; }
+.resonance-btn { padding:7px 12px; border:0.5px solid var(--border-strong); border-radius:99px; background:transparent; color:var(--text); font:inherit; font-size:12px; cursor:pointer; }
+.resonance-btn:hover { background:var(--surface2); }
+.resonance-panel { display:none; margin-top:12px; padding-top:12px; border-top:0.5px solid var(--border); }
+.resonance-tabs { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+.resonance-tab { padding:5px 10px; border:0.5px solid var(--border); border-radius:99px; background:transparent; color:var(--text-muted); font:inherit; font-size:11px; cursor:pointer; }
+.resonance-tab.active { background:var(--text); color:var(--bg); border-color:var(--text); }
+.resonance-copy { font-size:13px; color:var(--text-muted); line-height:1.8; }
+.chart-panel { margin-top:1.2rem; padding:1rem; border:0.5px solid var(--border); border-radius:var(--radius); background:var(--surface); }
+.chart-panel.locked { background:var(--surface2); }
+.chart-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; }
+.chart-title { font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-hint); }
+.chart-progress { font-size:11px; color:var(--text-hint); }
+.chart-lock-copy { font-size:13px; color:var(--text-muted); line-height:1.7; }
+.chart-result { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 18px; }
+.chart-field { padding-top:9px; border-top:0.5px solid var(--border); }
+.chart-field-label { font-size:10px; color:var(--text-hint); margin-bottom:4px; }
+.chart-field-value { font-size:12px; color:var(--text); line-height:1.6; }
+.export-panel { margin-top:2rem; padding:1.15rem 1.25rem; border:0.5px solid var(--border); border-radius:var(--radius); background:var(--surface); }
+.export-title { font-size:13px; font-weight:600; color:var(--text); margin-bottom:5px; }
+.export-note { font-size:11px; color:var(--text-hint); line-height:1.6; margin-bottom:10px; }
+.export-textarea { width:100%; min-height:100px; resize:vertical; padding:10px 11px; border:0.5px solid var(--border-strong); border-radius:var(--radius-sm); background:var(--surface2); color:var(--text); font:inherit; font-size:12px; line-height:1.65; outline:none; }
+.export-textarea:focus { border-color:var(--text); }
+.export-actions { display:flex; align-items:center; gap:10px; margin-top:9px; flex-wrap:wrap; }
+.export-btn { padding:8px 14px; border:0; border-radius:var(--radius-sm); background:var(--text); color:var(--bg); font:inherit; font-size:12px; font-weight:600; cursor:pointer; }
+.export-status { font-size:11px; color:var(--text-hint); }
+.disclosure { margin-bottom:1rem; border:0.5px solid var(--border); border-radius:var(--radius); background:var(--surface); overflow:hidden; }
+.disclosure summary { list-style:none; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; cursor:pointer; user-select:none; }
+.disclosure summary::-webkit-details-marker { display:none; }
+.disclosure-title { font-size:13px; font-weight:600; color:var(--text); }
+.disclosure-sub { font-size:11px; color:var(--text-hint); margin-top:3px; line-height:1.5; }
+.disclosure-arrow { color:var(--text-hint); font-size:12px; transition:transform 0.18s; }
+.disclosure[open] .disclosure-arrow { transform:rotate(180deg); }
+.disclosure-content { padding:4px 16px 16px; border-top:0.5px solid var(--border); }
+.disclosure-content > .section:first-child { margin-top:18px; }
+.quick-action { margin:-1.35rem 0 2rem; }
+.quick-action .btn-gen { width:100%; }
+.quick-note { margin-top:7px; text-align:center; font-size:11px; color:var(--text-hint); }
+.result-shell { display:none; }
+.history-panel { display:none; margin-top:2.2rem; padding-top:1.25rem; border-top:0.5px solid var(--border); }
+.history-header { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; }
+.history-title { font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-hint); }
+.history-count { font-size:11px; color:var(--text-hint); }
+.history-list { display:grid; gap:8px; }
+.history-item { background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius-sm); padding:12px 13px; }
+.history-meta { display:flex; justify-content:space-between; gap:8px; margin-bottom:6px; font-size:11px; color:var(--text-hint); }
+.history-scene { font-size:13px; color:var(--text); line-height:1.55; margin-bottom:6px; }
+.history-reflection { font-size:12px; color:var(--text-muted); line-height:1.65; }
+.history-themes { margin-top:8px; display:flex; flex-wrap:wrap; gap:5px; }
+.history-theme { font-size:10px; color:var(--text-muted); border:0.5px solid var(--border); border-radius:99px; padding:3px 7px; }
+.trend-panel { display:none; margin-top:1.2rem; background:var(--surface); border:0.5px solid var(--border); border-radius:var(--radius); padding:1rem 1rem 0.9rem; }
+.trend-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px; }
+.trend-title { font-size:10px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-hint); }
+.trend-note { font-size:11px; color:var(--text-hint); }
+.trend-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
+.trend-btn { font-size:11px; padding:5px 11px; border-radius:99px; border:0.5px solid var(--border-strong); background:transparent; color:var(--text-muted); cursor:pointer; font-family:inherit; transition:all 0.12s; }
+.trend-btn:hover { border-color:var(--text); color:var(--text); }
+#trend-canvas { width:100%; height:220px; display:block; }
+.trend-legend { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; font-size:10px; color:var(--text-muted); }
+.trend-dot { width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:4px; }
+.trend-analysis { display:none; margin-top:10px; padding:10px 12px; border-radius:var(--radius-sm); background:var(--surface2); color:var(--text-muted); font-size:12px; line-height:1.75; }
+
+.btn-row { display: flex; gap: 8px; margin-bottom: 0; }
+.btn-gen { flex: 1; padding: 13px; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: var(--radius); background: var(--text); color: var(--bg); border: none; transition: opacity 0.12s; }
+.btn-gen:hover { opacity: 0.85; }
+.btn-gen:active { opacity: 0.7; transform: scale(0.99); }
+.hint { font-size: 12px; color: var(--text-hint); margin-top: 8px; min-height: 18px; }
+footer { margin-top: 4rem; padding-top: 1.5rem; border-top: 0.5px solid var(--border); font-size: 12px; color: var(--text-hint); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+
+@media (max-width: 480px) {
+  .page { padding: 2rem 1rem 4rem; }
+  h1 { font-size: 22px; }
+  .slider-row { grid-template-columns: 90px 1fr 64px; gap: 10px; }
+  .inst-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+  #radar-canvas { width: 240px; height: 240px; }
+  .adv-row { grid-template-columns: 80px 1fr; }
+  .output-block-header { align-items: flex-start; flex-direction: column; }
+  .archetype-grid, .chart-result { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+<header>
+  <div class="logo">SenuxTech · 心旋</div>
+  <h1>心旋</h1>
+  <p class="tagline">看见你正在经历的状态</p>
+  <p class="tagline-sub">先把混乱变成可以观察的语言，再让它成为一个轻微的出口。</p>
+</header>
+
+<!-- 状态引子层 -->
+<div class="state-intro">
+  <div class="state-intro-headline">最近最反复出现的念头是什么？</div>
+  <div class="state-intro-sub">选一个接近你的状态，或者直接写一句。这里不做诊断，只帮你看见正在发生的变化。</div>
+  <div class="state-scenes">
+    <button class="state-scene-btn" onclick="setScene(this, '怕被AI时代落下')">怕被AI时代落下</button>
+    <button class="state-scene-btn" onclick="setScene(this, '刷了很多信息但更空')">刷了很多信息但更空</button>
+    <button class="state-scene-btn" onclick="setScene(this, '不知道自己适合什么')">不知道自己适合什么</button>
+    <button class="state-scene-btn" onclick="setScene(this, '感觉别人都在前进')">感觉别人都在前进</button>
+    <button class="state-scene-btn" onclick="setScene(this, '对未来有点麻木')">对未来有点麻木</button>
+    <button class="state-scene-btn" onclick="setScene(this, '想努力但启动不了')">想努力但启动不了</button>
+    <button class="state-scene-btn" onclick="setScene(this, '不知道自己还有没有价值')">不知道自己还有没有价值</button>
+    <button class="state-scene-btn" onclick="setScene(this, '很想被理解但不想解释太多')">想被理解但不想解释太多</button>
+    <button class="state-scene-btn" onclick="setScene(this, '工作生活都在推进，但人有点跟不上')">生活在推进，人跟不上</button>
+    <button class="state-scene-btn" onclick="setScene(this, '关系很多，但真正能说话的地方很少')">关系很多，能说话的地方很少</button>
+    <button class="state-scene-btn" onclick="setScene(this, '想找回一点自己的节奏')">想找回自己的节奏</button>
+    <button class="state-scene-btn" onclick="setScene(this, '心里堵着一点东西，但说不清')">心里堵着，说不清</button>
+  </div>
+  <div class="state-input-wrap">
+    <input class="state-input" id="state-input" type="text" placeholder="或者写一句：最近我总是在想……" maxlength="140">
+    <button class="state-clear" id="state-clear" onclick="clearScene()">×</button>
+  </div>
+  <!-- Trajectory Intention -->
+  <div style="margin-top:12px;">
+    <div style="font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-hint);margin-bottom:8px;">现在更需要什么</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;" id="intention-group">
+      <button class="intention-btn" onclick="setIntention(this,'slow')">想慢下来</button>
+      <button class="intention-btn" onclick="setIntention(this,'understood')">想被理解</button>
+      <button class="intention-btn" onclick="setIntention(this,'release')">想释放一下</button>
+      <button class="intention-btn" onclick="setIntention(this,'focus')">想重新专注</button>
+      <button class="intention-btn" onclick="setIntention(this,'direction')">想找回方向</button>
+      <button class="intention-btn" onclick="setIntention(this,'worth')">想确认价值感</button>
+    </div>
+  </div>
+</div>
+
+<div class="quick-action">
+  <button class="btn-gen" onclick="generate()">快速看见自己</button>
+  <div class="quick-note">写一句就可以开始，其他细节都可以稍后补充。</div>
+</div>
+
+<details id="state-details" class="disclosure">
+  <summary>
+    <div><div class="disclosure-title">想让结果更贴近你？</div><div class="disclosure-sub">补充自我温度、压力、未来感、呼吸空间与控制感</div></div>
+    <span class="disclosure-arrow">▾</span>
+  </summary>
+  <div class="disclosure-content">
+<div class="section" style="margin-bottom:0;">
+  <div class="section-header">状态维度</div>
+
+  <div class="slider-row">
+    <div class="slider-label-wrap">
+      <div class="slider-label">自我温度</div>
+      <div class="slider-hint">冷 = 疏离自己 · 暖 = 仍能照顾自己</div>
+      <div class="slider-poles"><span>疏离</span><span>靠近</span></div>
+    </div>
+    <input type="range" min="1" max="10" value="5" id="temp" step="1">
+    <div class="slider-val" id="temp-out">中性 <span class="slider-num">5</span></div>
+  </div>
+
+  <div class="slider-row">
+    <div class="slider-label-wrap">
+      <div class="slider-label">压力强度</div>
+      <div class="slider-hint">从轻微不安到持续被推着走</div>
+      <div class="slider-poles"><span>松</span><span>紧</span></div>
+    </div>
+    <input type="range" min="1" max="10" value="5" id="tension" step="1">
+    <div class="slider-val" id="tension-out">中等 <span class="slider-num">5</span></div>
+  </div>
+
+  <div class="slider-row">
+    <div class="slider-label-wrap">
+      <div class="slider-label">未来亮度</div>
+      <div class="slider-hint">暗 = 看不清 · 亮 = 仍有一点可能</div>
+      <div class="slider-poles"><span>暗</span><span>亮</span></div>
+    </div>
+    <input type="range" min="1" max="10" value="5" id="brightness" step="1">
+    <div class="slider-val" id="brightness-out">中性 <span class="slider-num">5</span></div>
+  </div>
+
+  <div class="slider-row">
+    <div class="slider-label-wrap">
+      <div class="slider-label">呼吸空间</div>
+      <div class="slider-hint">窄 = 被挤压 · 宽 = 还有余地</div>
+      <div class="slider-poles"><span>窄</span><span>宽</span></div>
+    </div>
+    <input type="range" min="1" max="10" value="5" id="space" step="1">
+    <div class="slider-val" id="space-out">平衡 <span class="slider-num">5</span></div>
+  </div>
+
+  <div class="slider-row">
+    <div class="slider-label-wrap">
+      <div class="slider-label">控制感</div>
+      <div class="slider-hint">散 = 失序 · 稳 = 能做一点选择</div>
+      <div class="slider-poles"><span>散</span><span>稳</span></div>
+    </div>
+    <input type="range" min="1" max="10" value="5" id="symmetry" step="1">
+    <div class="slider-val" id="symmetry-out">平衡 <span class="slider-num">5</span></div>
+  </div>
+</div>
+</div>
+</details>
+
+<details id="music-details" class="disclosure">
+  <summary>
+    <div><div class="disclosure-title">想把此刻变成一段音乐？</div><div class="disclosure-sub">可选乐器、状态走向、风格和声音细节</div></div>
+    <span class="disclosure-arrow">▾</span>
+  </summary>
+  <div class="disclosure-content">
+<div class="section">
+  <div class="section-header">状态走向（可选）</div>
+  <div class="arc-grid" id="arc-grid">
+    <div class="arc-card" data-arc="steady">
+      <div class="arc-name">平稳流动</div>
+      <div class="arc-desc">全程能量一致，无戏剧性起伏</div>
+      <svg class="arc-svg" viewBox="0 0 120 36" preserveAspectRatio="none">
+        <path d="M6,18 C40,18 80,18 114,18"/>
+      </svg>
+    </div>
+    <div class="arc-card" data-arc="rise">
+      <div class="arc-name">缓慢上升</div>
+      <div class="arc-desc">从安静开始，逐渐推向高潮</div>
+      <svg class="arc-svg" viewBox="0 0 120 36" preserveAspectRatio="none">
+        <path d="M6,30 C40,28 80,14 114,4"/>
+      </svg>
+    </div>
+    <div class="arc-card" data-arc="climax">
+      <div class="arc-name">积累与释放</div>
+      <div class="arc-desc">低 → 高潮 → 落回平静</div>
+      <svg class="arc-svg" viewBox="0 0 120 36" preserveAspectRatio="none">
+        <path d="M6,30 C30,28 52,4 60,4 C68,4 90,28 114,30"/>
+      </svg>
+    </div>
+    <div class="arc-card" data-arc="wave">
+      <div class="arc-name">波浪起伏</div>
+      <div class="arc-desc">多次起伏，状态像浪潮</div>
+      <svg class="arc-svg" viewBox="0 0 120 36" preserveAspectRatio="none">
+        <path d="M6,18 C20,4 36,32 60,18 C84,4 100,32 114,18"/>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-header">乐器配置（可多选）</div>
+  <div class="cat-label">弦乐</div>
+  <div class="inst-grid">
+    <div class="inst-card" data-en="lush strings"><div class="inst-name">弦乐团</div><div class="inst-meta">温暖 · 史诗</div></div>
+    <div class="inst-card" data-en="solo violin"><div class="inst-name">独奏小提琴</div><div class="inst-meta">细腻 · 哀伤</div></div>
+    <div class="inst-card" data-en="solo cello"><div class="inst-name">大提琴</div><div class="inst-meta">深沉 · 共鸣</div></div>
+    <div class="inst-card" data-en="pizzicato strings"><div class="inst-name">拨奏弦乐</div><div class="inst-meta">轻盈 · 俏皮</div></div>
+  </div>
+  <div class="cat-label">键盘</div>
+  <div class="inst-grid">
+    <div class="inst-card" data-en="acoustic piano"><div class="inst-name">原声钢琴</div><div class="inst-meta">百搭 · 中性</div></div>
+    <div class="inst-card" data-en="electric piano"><div class="inst-name">电钢琴</div><div class="inst-meta">温暖 · 复古</div></div>
+    <div class="inst-card" data-en="soft synth pads"><div class="inst-name">合成器铺底</div><div class="inst-meta">冷感 · 氛围</div></div>
+    <div class="inst-card" data-en="church organ"><div class="inst-name">管风琴</div><div class="inst-meta">宏大 · 庄严</div></div>
+  </div>
+  <div class="cat-label">拨弦</div>
+  <div class="inst-grid">
+    <div class="inst-card" data-en="acoustic guitar"><div class="inst-name">原声吉他</div><div class="inst-meta">自然 · 亲密</div></div>
+    <div class="inst-card" data-en="electric guitar"><div class="inst-name">电吉他</div><div class="inst-meta">力量 · 摇滚</div></div>
+    <div class="inst-card" data-en="guqin"><div class="inst-name">古琴</div><div class="inst-meta">古朴 · 冥想</div></div>
+    <div class="inst-card" data-en="pipa"><div class="inst-name">琵琶</div><div class="inst-meta">中式 · 戏剧性</div></div>
+    <div class="inst-card" data-en="guzheng"><div class="inst-name">古筝</div><div class="inst-meta">流动 · 雅致</div></div>
+  </div>
+  <div class="cat-label">管乐 / 人声</div>
+  <div class="inst-grid">
+    <div class="inst-card" data-en="flute"><div class="inst-name">长笛</div><div class="inst-meta">空灵 · 飘逸</div></div>
+    <div class="inst-card" data-en="erhu"><div class="inst-name">二胡</div><div class="inst-meta">哀婉 · 人声感</div></div>
+    <div class="inst-card" data-en="brass section"><div class="inst-name">铜管组</div><div class="inst-meta">英雄 · 壮阔</div></div>
+    <div class="inst-card" data-en="choir vocals"><div class="inst-name">合唱</div><div class="inst-meta">神圣 · 宏大</div></div>
+    <div class="inst-card" data-en="breathy female vocals"><div class="inst-name">气息人声</div><div class="inst-meta">柔软 · 亲密</div></div>
+  </div>
+  <div class="cat-label">节奏 / 打击乐</div>
+  <div class="inst-grid">
+    <div class="inst-card" data-en="live drums"><div class="inst-name">真实鼓组</div><div class="inst-meta">有力 · 真实</div></div>
+    <div class="inst-card" data-en="electronic beats"><div class="inst-name">电子节拍</div><div class="inst-meta">现代 · 律动</div></div>
+    <div class="inst-card" data-en="taiko drums"><div class="inst-name">太鼓</div><div class="inst-meta">史诗 · 冲击</div></div>
+    <div class="inst-card" data-en="no drums, percussion-free"><div class="inst-name">无打击乐</div><div class="inst-meta">纯净 · 稀疏</div></div>
+  </div>
+  <div class="cat-label">电子</div>
+  <div class="inst-grid">
+    <div class="inst-card" data-en="deep bass synth"><div class="inst-name">贝斯合成器</div><div class="inst-meta">厚重 · 基底</div></div>
+    <div class="inst-card" data-en="arpeggiated synth"><div class="inst-name">琶音合成器</div><div class="inst-meta">流动 · 未来感</div></div>
+    <div class="inst-card" data-en="ambient texture layers"><div class="inst-name">环境音层</div><div class="inst-meta">漂浮 · 冥想</div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-header">声音出口 · 风格（可选）</div>
+  <div class="tag-group" id="genre-tags">
+    <span class="tag" data-val="short drama">短剧</span>
+    <span class="tag" data-val="cinematic">电影配乐</span>
+    <span class="tag" data-val="lo-fi">Lo-fi</span>
+    <span class="tag" data-val="ambient">氛围音乐</span>
+    <span class="tag" data-val="pop">流行</span>
+    <span class="tag" data-val="electronic">电子</span>
+    <span class="tag" data-val="traditional Chinese">中国传统</span>
+    <span class="tag" data-val="game OST">游戏原声</span>
+    <span class="tag" data-val="web novel">网文</span>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-header">声音出口 · 关键词（可选）</div>
+  <div class="preset-row">
+    <span class="preset-label">快速预设：</span>
+    <button class="preset-btn" onclick="applyPreset(['hope','determination','tenderness'])">希望 + 坚定</button>
+    <button class="preset-btn" onclick="applyPreset(['heartbreak','numbness','melancholy'])">心碎</button>
+    <button class="preset-btn" onclick="applyPreset(['longing','nostalgia','tenderness'])">思念</button>
+    <button class="preset-btn" onclick="applyPreset(['rage','dread','resilience'])">黑暗抗争</button>
+  </div>
+  <div class="tag-group" id="mood-tags">
+    <span class="tag" data-val="longing">思念</span>
+    <span class="tag" data-val="heartbreak">心碎</span>
+    <span class="tag" data-val="resilience">韧性</span>
+    <span class="tag" data-val="hope">希望</span>
+    <span class="tag" data-val="rage">愤怒</span>
+    <span class="tag" data-val="melancholy">忧郁</span>
+    <span class="tag" data-val="euphoria">狂喜</span>
+    <span class="tag" data-val="numbness">麻木</span>
+    <span class="tag" data-val="tenderness">温柔</span>
+    <span class="tag" data-val="dread">恐惧</span>
+    <span class="tag" data-val="nostalgia">怀旧</span>
+    <span class="tag" data-val="determination">决心</span>
+  </div>
+</div>
+
+<div class="section" style="margin-bottom: 1rem;">
+  <div class="adv-toggle-row" id="adv-toggle" onclick="toggleAdv()">
+    <div class="adv-toggle-label">更多声音细节</div>
+    <div class="adv-toggle-line"></div>
+    <div class="adv-toggle-arrow">▾</div>
+  </div>
+  <div class="adv-panel" id="adv-panel">
+    <div class="adv-row">
+      <div><div class="adv-label">速度</div><div class="adv-sublabel">BPM</div></div>
+      <div class="select-wrap">
+        <select class="sel" id="adv-bpm">
+          <option value="">自动 — 由AI决定</option>
+          <option value="60 BPM, very slow tempo">60 BPM — 极慢</option>
+          <option value="75 BPM, slow ballad tempo">75 BPM — 慢抒情</option>
+          <option value="90 BPM, relaxed tempo">90 BPM — 舒缓</option>
+          <option value="110 BPM, walking pace">110 BPM — 步行节奏</option>
+          <option value="120 BPM, moderate tempo">120 BPM — 中速</option>
+          <option value="130 BPM, energetic tempo">130 BPM — 有活力</option>
+          <option value="140 BPM, dance tempo">140 BPM — 舞曲</option>
+          <option value="150 BPM, fast tempo">150 BPM — 快速</option>
+          <option value="170 BPM, very fast tempo">170 BPM — 极快</option>
+        </select>
+      </div>
+    </div>
+    <div class="adv-row">
+      <div><div class="adv-label">调性</div><div class="adv-sublabel">大调 = 明亮 · 小调 = 暗沉 · Dorian = 中性带希望</div></div>
+      <div class="select-wrap">
+        <select class="sel" id="adv-key">
+          <option value="">自动</option>
+          <option value="C major">C大调 — 明亮中性</option>
+          <option value="G major">G大调 — 温暖田园</option>
+          <option value="D major">D大调 — 凯旋</option>
+          <option value="A major">A大调 — 光辉</option>
+          <option value="A minor">A小调 — 忧郁</option>
+          <option value="D minor">D小调 — 暗沉严肃</option>
+          <option value="E minor">E小调 — 孤独寻觅</option>
+          <option value="B minor">B小调 — 沉思</option>
+          <option value="D Dorian mode">D Dorian — 带希望的中性</option>
+          <option value="A Phrygian mode">A Phrygian — 紧张东方感</option>
+        </select>
+      </div>
+    </div>
+    <div class="adv-row">
+      <div><div class="adv-label">节奏型</div><div class="adv-sublabel">鼓点模式</div></div>
+      <div class="select-wrap">
+        <select class="sel" id="adv-rhythm">
+          <option value="">自动</option>
+          <option value="4/4 time, kick on 1 and 3, snare on 2 and 4">4/4 标准 — 底鼓1&3，军鼓2&4</option>
+          <option value="half-time feel, kick on beat 1, snare on beat 3">Half-time — 厚重慢感</option>
+          <option value="2-step groove, sparse kick, snare on 3">2-step — 漂浮律动</option>
+          <option value="3/4 waltz time">3/4 华尔兹 — 圆润流动</option>
+          <option value="syncopated rhythm, offbeat accents">切分音 — 律动不规则</option>
+          <option value="no drums, percussion-free">无鼓 — 纯净稀疏</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</details>
+
+<div id="result-shell" class="result-shell">
+<div class="divider"></div>
+
+<div class="radar-wrap">
+  <div class="radar-title">此刻的状态轮廓</div>
+  <canvas id="radar-canvas" width="280" height="280"></canvas>
+  <div class="emotion-summary" id="emotion-summary">调整状态后点击生成，查看这一刻的轮廓</div>
+</div>
+
+<!-- 状态镜像 -->
+<div id="reflection-block" class="reflection-card primary">
+  <div class="reflection-label">状态镜像</div>
+  <div id="reflection-text" class="reflection-text"></div>
+</div>
+
+<div id="feedback-row" class="feedback-row">
+  <button class="feedback-btn" onclick="setFeedback(this,'像我')">像我</button>
+  <button class="feedback-btn" onclick="setFeedback(this,'有一点准')">有一点准</button>
+  <button class="feedback-btn" onclick="setFeedback(this,'不太像')">不太像</button>
+</div>
+
+<!-- 当前状态原型与同频画像 -->
+<div id="archetype-card" class="reveal-card">
+  <div class="reveal-kicker">当前状态原型</div>
+  <div id="archetype-name" class="archetype-name"></div>
+  <div id="archetype-summary" class="archetype-summary"></div>
+  <div class="archetype-grid">
+    <div><div class="archetype-item-label">当前主导力量</div><div id="archetype-strength" class="archetype-item-value"></div></div>
+    <div><div class="archetype-item-label">隐藏需求</div><div id="archetype-need" class="archetype-item-value"></div></div>
+    <div><div class="archetype-item-label">当前阻力</div><div id="archetype-friction" class="archetype-item-value"></div></div>
+    <div><div class="archetype-item-label">转折信号</div><div id="archetype-signal" class="archetype-item-value"></div></div>
+  </div>
+  <div class="resonance-action">
+    <button class="resonance-btn" onclick="toggleResonanceProfile()">查看同频对象画像</button>
+  </div>
+  <div id="resonance-panel" class="resonance-panel">
+    <div class="resonance-tabs">
+      <button class="resonance-tab active" data-kind="partner" onclick="setResonanceKind(this,'partner')">伴侣</button>
+      <button class="resonance-tab" data-kind="friend" onclick="setResonanceKind(this,'friend')">朋友</button>
+      <button class="resonance-tab" data-kind="creator" onclick="setResonanceKind(this,'creator')">创作搭档</button>
+    </div>
+    <div id="resonance-copy" class="resonance-copy"></div>
+    <div class="state-intro-sub" style="margin:9px 0 0;">依据当前状态生成的互动适配画像，不代表命定关系。</div>
+  </div>
+</div>
+
+<!-- 连续性轨迹 -->
+<div id="trajectory-block" class="reflection-card">
+  <div class="reflection-label">连续性轨迹</div>
+  <div id="trajectory-text" class="reflection-subtext"></div>
+</div>
+
+<!-- 轻微下一步 -->
+<div id="return-block" class="reflection-card">
+  <div class="reflection-label">今天只需要一个很小的返回点</div>
+  <div id="return-text" class="reflection-subtext"></div>
+</div>
+
+<!-- 和谐度检测 -->
+<div id="harmony-check" style="display:none; margin-bottom:10px; padding:9px 14px; border-radius:8px; font-size:12px; line-height:1.5;"></div>
+
+<!-- 输出 -->
+<div class="output-block">
+  <div class="output-block-header">
+    <div class="output-block-label">想把此刻的状态变成一段音乐？<span class="music-arrow">↓</span></div>
+    <div class="output-block-meta">
+      <span class="char-count" id="output-chars"></span>
+      <button class="copy-btn-sm" onclick="copyPrompt()">复制音乐提示词</button>
+    </div>
+  </div>
+  <div class="output-body">
+    <div class="output-text placeholder" id="output">生成后，这里会出现一个可以复制到音乐工具里的声音方向。</div>
+  </div>
+</div>
+<div class="hint" id="hint"></div>
+
+<div class="btn-row" style="margin-top:12px;">
+  <button class="btn-gen" onclick="generate()">重新生成更贴近的结果</button>
+</div>
+<div style="margin-top:8px;text-align:center;">
+  <button id="save-btn" onclick="saveThisMoment()" style="display:none;font-size:12px;padding:7px 20px;border-radius:99px;border:0.5px solid var(--border-strong);background:transparent;color:var(--text-muted);cursor:pointer;font-family:inherit;transition:all 0.12s;" onmouseover="this.style.borderColor='var(--text)';this.style.color='var(--text)';" onmouseout="this.style.borderColor='var(--border-strong)';this.style.color='var(--text-muted)';">保存这次状态</button>
+  <div id="save-hint" style="font-size:11px;color:var(--text-hint);margin-top:5px;min-height:16px;"></div>
+</div>
+</div>
+
+<div id="history-panel" class="history-panel">
+  <div class="history-header">
+    <div class="history-title">最近记录</div>
+    <div id="history-count" class="history-count"></div>
+  </div>
+  <div id="history-list" class="history-list"></div>
+  <div id="trend-panel" class="trend-panel">
+    <div class="trend-head">
+      <div class="trend-title">状态趋势图</div>
+      <div class="trend-actions">
+        <div id="trend-note" class="trend-note">保存 5 次后会更有参考性</div>
+        <button class="trend-btn" onclick="explainTrend()">解析这张图</button>
+      </div>
+    </div>
+    <canvas id="trend-canvas" width="680" height="220"></canvas>
+    <div class="trend-legend">
+      <span><i class="trend-dot" style="background:#345c50;"></i>自我温度</span>
+      <span><i class="trend-dot" style="background:#b34d4d;"></i>压力强度</span>
+      <span><i class="trend-dot" style="background:#c49a2c;"></i>未来亮度</span>
+      <span><i class="trend-dot" style="background:#4b79a8;"></i>呼吸空间</span>
+      <span><i class="trend-dot" style="background:#7b5fa7;"></i>控制感</span>
+    </div>
+    <div id="trend-analysis" class="trend-analysis"></div>
+  </div>
+  <div id="stage-chart" class="chart-panel locked">
+    <div class="chart-head">
+      <div class="chart-title">阶段命盘</div>
+      <div id="chart-progress" class="chart-progress">0 / 5</div>
+    </div>
+    <div id="chart-content" class="chart-lock-copy">留下 5 次状态后，解锁这段时期的主题、隐藏需求、同频互动与变化倾向。</div>
+  </div>
+</div>
+
+<div class="export-panel">
+  <div class="export-title">匿名测试反馈</div>
+  <div class="export-note">导出内容不包含你输入的状态、状态镜像、主题、命盘或其他个人内容。文件只会保存在你的电脑中，由你决定是否发送。</div>
+  <textarea id="anonymous-comment" class="export-textarea" placeholder="可选：哪个部分最吸引你？哪里没用或不舒服？你会因为什么再次打开？还有什么想说的？"></textarea>
+  <div class="export-actions">
+    <button class="export-btn" onclick="exportAnonymousFeedback()">下载匿名反馈</button>
+    <span id="export-status" class="export-status"></span>
+  </div>
+</div>
+
+<footer>
+  <span>心旋 · SenuxTech</span>
+  <span>有些变化，值得被看见。</span>
+</footer>
+</div>
+
+<script>
+const tempLabels = ['很远','疏离','偏冷','有距离','中性','靠近','温和','有照顾感','很暖','很靠近'];
+const tensionLabels = ['很松','松','平静','轻微紧','中等','上升','明显','很紧','压迫','快爆了'];
+const brightLabels = ['很暗','极暗','暗','偏暗','中性','微亮','有光','明亮','很亮','清楚'];
+const spaceLabels = ['很窄','压缩','紧','偏窄','平衡','有余地','开阔','宽','很宽','自由'];
+const symLabels = ['失序','很散','散','不稳','平衡','可控','稳定','清楚','很稳','过度控制'];
+
+function bindSlider(id, labels, outId) {
+  const el = document.getElementById(id);
+  const out = document.getElementById(outId);
+  const render = () => {
+    const v = parseInt(el.value);
+    out.innerHTML = labels[v-1] + ' <span class="slider-num">' + v + '</span>';
+  };
+  el.addEventListener('input', render);
+  render();
+}
+bindSlider('temp', tempLabels, 'temp-out');
+bindSlider('tension', tensionLabels, 'tension-out');
+bindSlider('brightness', brightLabels, 'brightness-out');
+bindSlider('space', spaceLabels, 'space-out');
+bindSlider('symmetry', symLabels, 'symmetry-out');
+
+document.querySelectorAll('.inst-card').forEach(c => c.addEventListener('click', () => c.classList.toggle('active')));
+
+function setupTags(groupId, multi) {
+  document.getElementById(groupId).querySelectorAll('.tag').forEach(t => {
+    t.addEventListener('click', () => {
+      if (!multi) document.getElementById(groupId).querySelectorAll('.tag').forEach(x => x.classList.remove('active'));
+      t.classList.toggle('active');
+    });
+  });
+}
+setupTags('genre-tags', false);
+setupTags('mood-tags', true);
+
+function applyPreset(vals) {
+  document.querySelectorAll('#mood-tags .tag').forEach(t => {
+    t.classList.toggle('active', vals.includes(t.dataset.val));
+  });
+}
+
+let activeArc = null;
+document.querySelectorAll('.arc-card').forEach(card => {
+  card.addEventListener('click', () => {
+    const key = card.dataset.arc;
+    if (activeArc === key) {
+      card.classList.remove('active');
+      activeArc = null;
+    } else {
+      document.querySelectorAll('.arc-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+      activeArc = key;
+    }
+  });
+});
+
+const arcPrompts = {
+  steady: 'consistent energy throughout, even dynamics, no dramatic peaks',
+  rise: 'starts quietly, builds gradually, verse subdued, chorus lifts, final section at full intensity',
+  climax: 'verse low and restrained, pre-chorus builds tension, chorus peaks but does not explode, bridge drops back, final chorus highest point',
+  wave: 'alternating energy, first chorus lifts, bridge drops, final chorus surges, wave-like emotional arc'
+};
+
+function toggleAdv() {
+  document.getElementById('adv-toggle').classList.toggle('open');
+  document.getElementById('adv-panel').classList.toggle('open');
+}
+
+function getActiveInst() { return [...document.querySelectorAll('.inst-card.active')].map(c => c.dataset.en); }
+function getActiveInstNames() {
+  return [...document.querySelectorAll('.inst-card.active')].map(c => c.querySelector('.inst-name').textContent);
+}
+function getActive(groupId) { return [...document.getElementById(groupId).querySelectorAll('.tag.active')].map(t => t.dataset.val); }
+
+function drawRadar(values) {
+  const canvas = document.getElementById('radar-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2, R = Math.min(W,H)*0.38, N = 5;
+  const labels = ['自我','压力','未来','呼吸','控制'];
+  const angles = labels.map((_,i) => Math.PI*2*i/N - Math.PI/2);
+  ctx.clearRect(0,0,W,H);
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const gridC = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)';
+  const labelC = isDark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.40)';
+  for (let ring=1; ring<=5; ring++) {
+    const r = R*ring/5;
+    ctx.beginPath();
+    angles.forEach((a,i) => { const x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r; i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+    ctx.closePath(); ctx.strokeStyle=gridC; ctx.lineWidth=1; ctx.stroke();
+  }
+  angles.forEach(a => { ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(a)*R,cy+Math.sin(a)*R); ctx.strokeStyle=gridC; ctx.lineWidth=1; ctx.stroke(); });
+  const pts = values.map((v,i) => ({ x: cx+Math.cos(angles[i])*(R*v/10), y: cy+Math.sin(angles[i])*(R*v/10) }));
+  const t = values[0]/10, hue = 210+(340-210)*t, sat = 60+t*20, lit = isDark?55:50;
+  const grad = ctx.createRadialGradient(cx,cy,0,cx,cy,R);
+  grad.addColorStop(0,`hsla(${hue},${sat}%,${lit}%,0.55)`);
+  grad.addColorStop(0.6,`hsla(${hue},${sat}%,${lit}%,0.30)`);
+  grad.addColorStop(1,`hsla(${hue},${sat}%,${lit}%,0.05)`);
+  const drawShape = () => {
+    ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+    for (let i=0;i<pts.length;i++) { const c=pts[i],n=pts[(i+1)%pts.length],mx=(c.x+n.x)/2,my=(c.y+n.y)/2; ctx.quadraticCurveTo(c.x,c.y,mx,my); }
+    ctx.closePath();
+  };
+  drawShape(); ctx.fillStyle=grad; ctx.fill();
+  drawShape(); ctx.strokeStyle=`hsla(${hue},${sat}%,${lit}%,0.9)`; ctx.lineWidth=2; ctx.stroke();
+  pts.forEach(p => {
+    ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2); ctx.fillStyle=`hsla(${hue},${sat}%,${lit}%,1)`; ctx.fill();
+    ctx.beginPath(); ctx.arc(p.x,p.y,2,0,Math.PI*2); ctx.fillStyle=isDark?'#141412':'#ffffff'; ctx.fill();
+  });
+  ctx.font='11px -apple-system,Helvetica Neue,sans-serif'; ctx.fillStyle=labelC; ctx.textAlign='center'; ctx.textBaseline='middle';
+  angles.forEach((a,i) => { ctx.fillText(labels[i], cx+Math.cos(a)*(R+22), cy+Math.sin(a)*(R+22)); });
+}
+
+function getEmotionSummary(values) {
+  const [temp,tension,brightness,space,symmetry] = values;
+  const parts = [];
+  if (temp<=3) parts.push('离自己有点远'); else if (temp>=8) parts.push('还能够靠近自己');
+  if (tension<=3) parts.push('压力较低'); else if (tension>=7) parts.push('压力很明显');
+  if (brightness<=3) parts.push('未来偏暗'); else if (brightness>=7) parts.push('还有光感');
+  if (space>=7) parts.push('呼吸空间较宽'); else if (space<=3) parts.push('空间被挤压');
+  if (symmetry<=3) parts.push('控制感较散'); else if (symmetry>=8) parts.push('控制感较强');
+  return parts.length ? `此刻的状态轮廓：${parts.join(' · ')}` : '状态暂时处在中间地带';
+}
+
+// ── 状态引子 ──
+let currentScene = '';
+function setScene(btn, text) {
+  document.querySelectorAll('.state-scene-btn').forEach(b => b.classList.remove('active'));
+  const input = document.getElementById('state-input');
+  if (currentScene === text) {
+    currentScene = '';
+    input.value = '';
+    document.getElementById('state-clear').classList.remove('show');
+  } else {
+    currentScene = text;
+    btn.classList.add('active');
+    input.value = text;
+    document.getElementById('state-clear').classList.add('show');
+  }
+}
+document.getElementById('state-input').addEventListener('input', function() {
+  currentScene = this.value;
+  document.querySelectorAll('.state-scene-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('state-clear').classList.toggle('show', this.value.length > 0);
+});
+function clearScene() {
+  currentScene = '';
+  document.getElementById('state-input').value = '';
+  document.getElementById('state-clear').classList.remove('show');
+  document.querySelectorAll('.state-scene-btn').forEach(b => b.classList.remove('active'));
+}
+
+const sceneAtmosphereMap = {
+  '地铁': 'an introspective, half-drifting state — mind floating between presence and distance',
+  '下班': 'a quiet, gradual unwinding — the weight of the day slowly releasing',
+  '散步': 'an open, unhurried presence — moving freely, thoughts loose and drifting',
+  '开车': 'a calm, solitary stillness in motion — forward movement with no pressure',
+  '吃饭': 'a warm, undemanding ease — relaxed and present, nothing pressing',
+  '专注': 'a gently alert mental state — trying to stay present and clear',
+  '放假': 'a soft, expansive ease — time unhurried, nothing required',
+  '小事': 'a light, meditative rhythm — body occupied, mind softly drifting',
+  '躺': 'a soft dissolving state — the body heavy, awareness slowly fading',
+  '夜晚': 'a still, contained calm — quiet inside, the day already distant',
+  '心里': 'a reflective, gently restless inner state — something present but unnamed',
+  '身体': 'an active, forward-leaning energy — body in motion, mind somewhere else',
+  '忙': 'a divided state — body occupied but mind elsewhere, present yet absent',
+  'AI': 'a future-pressure state — trying to keep up with change without losing self-trust',
+  '信息': 'an overstimulated state — too much input, not enough inner landing space',
+  '适合': 'an identity-searching state — trying to find a shape that feels self-owned',
+  '别人': 'a comparison-heavy state — measuring self against moving targets',
+  '未来': 'a muted future-facing state — uncertainty is taking up inner space',
+  '启动': 'a blocked action state — wanting movement but lacking an entry point',
+  '价值': 'a meaning-sensitive state — questioning whether effort still connects to worth',
+  '理解': 'a quiet need for witnessing — wanting to be seen without overexplaining',
+  '关系': 'a socially crowded but emotionally thin state — contact exists, depth feels scarce',
+  '节奏': 'a self-returning state — trying to recover an inner tempo'
+};
+
+function getSceneAtmosphere(scene) {
+  if (!scene) return '';
+  for (const key of Object.keys(sceneAtmosphereMap)) {
+    if (scene.includes(key)) return sceneAtmosphereMap[key];
+  }
+  return 'a personal, present moment — quiet and self-contained';
+}
+
+function checkHarmony(temp, tension, brightness, space, symmetry) {
+  const warnings = [];
+  if ((temp <= 3 && brightness >= 8) || (temp >= 8 && brightness <= 3)) {
+    warnings.push('冷感与极亮调性方向相反，可能产生冲突');
+  }
+  if (tension >= 8 && symmetry <= 3) {
+    warnings.push('极高能量配合极碎片结构，可能听起来像噪音');
+  }
+  const extremes = [temp, tension, brightness, space, symmetry].filter(v => v <= 2 || v >= 9).length;
+  if (extremes >= 3) {
+    warnings.push('超过3个维度处于极端值，层次感可能不足');
+  }
+  const el = document.getElementById('harmony-check');
+  if (warnings.length === 0) {
+    el.style.display = 'none';
+    el.innerHTML = '';
+  } else {
+    el.style.display = 'block';
+    el.style.background = 'rgba(234,179,8,0.08)';
+    el.style.border = '0.5px solid rgba(234,179,8,0.30)';
+    el.style.color = '#a16207';
+    el.innerHTML = '⚠ ' + warnings.join('<br>⚠ ');
+  }
+}
+
+// ── Intention ──
+let currentIntention = '';
+let currentFeedback = '';
+let currentMusicPrompt = '';
+let currentArchetype = null;
+let currentResonanceKind = 'partner';
+
+function getUsageMetrics() {
+  try {
+    return JSON.parse(localStorage.getItem('xinxuan_usage_metrics') || '{}');
+  } catch(e) { return {}; }
+}
+
+function incrementMetric(key) {
+  const metrics = getUsageMetrics();
+  metrics[key] = (metrics[key] || 0) + 1;
+  localStorage.setItem('xinxuan_usage_metrics', JSON.stringify(metrics));
+}
+function setIntention(btn, val) {
+  const wasActive = btn.classList.contains('active');
+  document.querySelectorAll('.intention-btn').forEach(b => b.classList.remove('active'));
+  if (!wasActive) {
+    btn.classList.add('active');
+    currentIntention = val;
+  } else {
+    currentIntention = '';
+  }
+}
+
+function setFeedback(btn, val) {
+  document.querySelectorAll('.feedback-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFeedback = val;
+}
+
+function getSceneThemes(scene) {
+  const s = scene || '';
+  const themes = [];
+  if (/AI|时代|落下|落后|跟不上/.test(s)) themes.push('被落下感');
+  if (/信息|刷|内容|社交媒体|短视频/.test(s)) themes.push('信息过载');
+  if (/适合|方向|专业|职业|未来/.test(s)) themes.push('方向不确定');
+  if (/别人|比较|前进|同龄/.test(s)) themes.push('比较压力');
+  if (/麻木|空|没感觉/.test(s)) themes.push('意义感变薄');
+  if (/启动|努力|进入不了|拖延/.test(s)) themes.push('行动阻滞');
+  if (/价值|意义|没用/.test(s)) themes.push('价值感摇晃');
+  if (/理解|解释|说话|关系/.test(s)) themes.push('被理解需求');
+  if (/节奏|控制|选择/.test(s)) themes.push('找回节奏');
+  if (/堵|说不清|混乱/.test(s)) themes.push('状态未命名');
+  return themes;
+}
+
+function buildArchetype(temp, tension, brightness, space, symmetry, scene) {
+  const themes = getSceneThemes(scene);
+  if (themes.includes('被落下感')) return {
+    name: '逆流校准者',
+    summary: '你不是单纯害怕变化，而是在高速环境里重新判断：哪些速度值得追，哪些方向仍然属于自己。',
+    strength: '敏锐、学习欲、对变化的感受力',
+    need: '一个不必时时证明自己没有掉队的节奏',
+    friction: '外部速度、信息比较与持续紧迫感',
+    signal: '开始区分“我真正需要的”与“大家都在追的”'
+  };
+  if (themes.includes('信息过载')) return {
+    name: '雾中拾光者',
+    summary: '你不是没有内容，而是接收得太多，内在暂时没有足够空间把重要的东西留下来。',
+    strength: '观察力、连接信息的能力、开放感',
+    need: '更少但更有分量的输入',
+    friction: '碎片信息不断打断自己的判断',
+    signal: '开始主动关掉噪声，并保留真正触动自己的东西'
+  };
+  if (themes.includes('方向不确定')) return {
+    name: '雾中寻路者',
+    summary: '旧的判断标准正在失效，新的方向还没有完全成形。你经历的更像重新定位，而不是彻底迷路。',
+    strength: '反思力、可能性意识、重新选择的勇气',
+    need: '一个可以小范围试错的现实落点',
+    friction: '选择太多，以及害怕选错后的自我怀疑',
+    signal: '从“哪个最好”转向“哪个值得我继续靠近”'
+  };
+  if (themes.includes('比较压力')) return {
+    name: '失速观测者',
+    summary: '你看见了太多别人的进度，自己的节奏因此变得难以听见。你需要的不是加速，而是恢复内部标尺。',
+    strength: '自省、上进心、对差距的敏感度',
+    need: '不被排名和时间表定义的确认感',
+    friction: '持续把别人的结果当成自己的倒计时',
+    signal: '开始用自己的实际移动，而不是他人的速度衡量一天'
+  };
+  if (themes.includes('行动阻滞')) return {
+    name: '蓄力未启者',
+    summary: '想行动的部分仍然存在，只是启动入口被压力和疲惫挡住。现在缺的不是意志，而是一个足够小的开头。',
+    strength: '仍在场的创造欲与行动意愿',
+    need: '低门槛、可完成、不会立刻被评价的开始',
+    friction: '把开始想象成一次完整交付',
+    signal: '愿意先完成两分钟的动作，而不是等待完美状态'
+  };
+  if (themes.includes('价值感摇晃') || themes.includes('意义感变薄')) return {
+    name: '意义重建者',
+    summary: '你正在重新确认努力和价值之间是否还有连接。这不是简单的低落，而是一轮更深的意义校准。',
+    strength: '诚实、价值敏感、不会轻易接受空洞答案',
+    need: '看见那些没有被公开奖励、却真实重要的部分',
+    friction: '把可见成绩当成价值的唯一证据',
+    signal: '开始为自己真正认可的事投入，而不只追逐外部证明'
+  };
+  if (themes.includes('被理解需求')) return {
+    name: '深水表达者',
+    summary: '你有很多层次，但反复从头解释自己已经很累。你想要的不是热闹回应，而是有人能接住复杂度。',
+    strength: '细腻、深度表达、关系感知力',
+    need: '不必简化自己也能被容纳的交流',
+    friction: '每次开口都像重新证明自己的合理性',
+    signal: '开始选择真正能承接你的人，而不是向所有人解释'
+  };
+  if (tension >= 7 && space <= 4) return {
+    name: '窄岸行舟者',
+    summary: '你仍在前进，但可供转身和呼吸的空间很少。此刻最重要的是先扩大余地，而不是继续加码。',
+    strength: '承压能力、责任感、继续推进的力量',
+    need: '可以暂停、调整和重新选择的空间',
+    friction: '压力不断占用注意力与身体资源',
+    signal: '愿意减少一个负担，让系统先恢复弹性'
+  };
+  if (brightness >= 7 && symmetry >= 6) return {
+    name: '微光建造者',
+    summary: '你正在重新获得一点清晰感，并尝试把可能性变成可掌握的结构。',
+    strength: '恢复力、组织力、温和的行动感',
+    need: '让这点亮度被小成果持续确认',
+    friction: '过早要求自己恢复到满格',
+    signal: '稳定完成小事，并允许方向逐步成形'
+  };
+  return {
+    name: '潮汐观察者',
+    summary: '你正处在一个没有完全定论的中间地带。它不一定需要立刻解决，更适合被持续观察。',
+    strength: '感受力、适应性、保留可能性的能力',
+    need: '不被催促定义自己的时间',
+    friction: '急着为暂时状态下永久结论',
+    signal: '能够看见变化，而不急着给自己贴标签'
+  };
+}
+
+function buildResonanceProfile(kind, archetype, scene) {
+  const themes = getSceneThemes(scene);
+  const need = archetype?.need || '稳定而尊重边界的互动';
+  if (kind === 'friend') {
+    return `此刻与你同频的朋友，不一定天天出现，但愿意听你把复杂的话说完；不会用比较催促你，也不会急着替你下结论。更适合你的是能提供轻松感，同时尊重“${need}”这份需要的人。`;
+  }
+  if (kind === 'creator') {
+    return `此刻与你同频的创作搭档，应该能理解你的发散与敏感，同时把想法带回一个可实现的落点。${themes.includes('行动阻滞') ? '比起继续增加灵感，你更需要一个能陪你完成最小版本的人。' : '对方最好既不压平你的想象，也不会让项目永远停在概念里。'}`;
+  }
+  return `此刻与你同频的伴侣，不一定最热烈，但会稳定回应、尊重你的节奏，并允许你保留复杂度。对方不会把关心变成控制，也不会要求你反复证明自己；更重要的是，能理解“${need}”对你意味着什么。`;
+}
+
+function renderArchetype(archetype) {
+  currentArchetype = archetype;
+  document.getElementById('archetype-name').textContent = archetype.name;
+  document.getElementById('archetype-summary').textContent = archetype.summary;
+  document.getElementById('archetype-strength').textContent = archetype.strength;
+  document.getElementById('archetype-need').textContent = archetype.need;
+  document.getElementById('archetype-friction').textContent = archetype.friction;
+  document.getElementById('archetype-signal').textContent = archetype.signal;
+  document.getElementById('archetype-card').style.display = 'block';
+  document.getElementById('resonance-panel').style.display = 'none';
+  currentResonanceKind = 'partner';
+  document.querySelectorAll('.resonance-tab').forEach(tab => tab.classList.toggle('active', tab.dataset.kind === 'partner'));
+}
+
+function toggleResonanceProfile() {
+  const panel = document.getElementById('resonance-panel');
+  const open = panel.style.display === 'block';
+  panel.style.display = open ? 'none' : 'block';
+  if (!open) {
+    incrementMetric('resonanceViews');
+    document.getElementById('resonance-copy').textContent = buildResonanceProfile(currentResonanceKind, currentArchetype, currentScene);
+  }
+}
+
+function setResonanceKind(button, kind) {
+  currentResonanceKind = kind;
+  document.querySelectorAll('.resonance-tab').forEach(tab => tab.classList.toggle('active', tab === button));
+  document.getElementById('resonance-copy').textContent = buildResonanceProfile(kind, currentArchetype, currentScene);
+}
+
+// ── Reflection Generator ──
+function buildReflection(temp, tension, brightness, space, symmetry, scene, intention) {
+  const t = temp, te = tension, br = brightness, sp = space, sy = symmetry;
+  const themes = getSceneThemes(scene);
+
+  // State mirror, not diagnosis.
+  let base = '';
+  if (themes.includes('被落下感')) {
+    base = '你现在的焦虑不像只是“不会用某个工具”，更像是害怕世界的速度突然超过了自己。';
+  } else if (themes.includes('信息过载')) {
+    base = '你接收了很多东西，但真正能落到自己身上的部分很少，所以空不是没有内容，而是内容太多之后没有沉淀。';
+  } else if (themes.includes('方向不确定')) {
+    base = '你不像完全没有方向，更像是在太多可能性里，暂时失去了一个属于自己的判断坐标。';
+  } else if (themes.includes('比较压力')) {
+    base = '你看到很多人在前进，但那些速度不一定等于你的节奏。现在消耗你的，可能不是能力不足，而是一直被外部参照拉走。';
+  } else if (themes.includes('行动阻滞')) {
+    base = '你并不是没有想做事的部分，只是启动这件事现在被压力、比较和疲惫堵住了入口。';
+  } else if (themes.includes('价值感摇晃')) {
+    base = '你在问的可能不只是“我能不能做好”，而是“我做这些还有没有意义”。这比普通的低落更深一点。';
+  } else if (themes.includes('被理解需求')) {
+    base = '你想被理解，但又不想把自己重新解释一遍。这个状态里真正累的地方，是每次开口都像要从头证明自己。';
+  } else if (te >= 7 && br <= 4) {
+    base = '有些东西在绷着，但还没有完全说清楚是什么。';
+  } else if (te >= 7 && br >= 6) {
+    base = '心里有能量，但不确定它现在想往哪里走。';
+  } else if (te <= 3 && br <= 4) {
+    base = '此刻比较安静，也许有点空，但不一定是不好的空。';
+  } else if (te <= 3 && br >= 7) {
+    base = '有一点轻，有一点亮，这种状态有时候比较难得。';
+  } else if (sy <= 3) {
+    base = '思绪有点散，不太容易集中在一个地方。';
+  } else if (t <= 3 && sp <= 4) {
+    base = '有点缩着，不太想往外走，这也是一种状态。';
+  } else if (t >= 8) {
+    base = '情绪是柔软的，有点被包裹的感觉。';
+  } else {
+    base = '说不上特别好或特别不好，就是现在这样。';
+  }
+
+  // Intention layer
+  let intentionLine = '';
+  if (intention === 'slow') {
+    intentionLine = ' 你好像想慢下来一点，不用急着去到哪里。';
+  } else if (intention === 'understood') {
+    intentionLine = ' 也许现在更需要的，是被看见，而不是被解决。';
+  } else if (intention === 'release') {
+    intentionLine = ' 有些东西想放出去，不一定需要变成语言。';
+  } else if (intention === 'focus') {
+    intentionLine = ' 想重新找到一个落点，让注意力有地方安放。';
+  } else if (intention === 'direction') {
+    intentionLine = ' 现在也许不需要一次性确定人生，只需要先找回一个可以继续判断的小方向。';
+  } else if (intention === 'worth') {
+    intentionLine = ' 你需要的可能不是更多证明，而是一点点重新确认：你的价值不只来自追上别人。';
+  }
+
+  // Scene layer
+  let sceneLine = '';
+  if (scene && scene.includes('躺')) {
+    sceneLine = ' 身体已经停下来了，脑子可能还没有。';
+  } else if (scene && scene.includes('堵')) {
+    sceneLine = ' 有东西卡在那里，说不清是什么，但能感觉到。';
+  } else if (scene && scene.includes('忙')) {
+    sceneLine = ' 外面看起来在动，里面不一定跟得上。';
+  }
+
+  return base + intentionLine + sceneLine;
+}
+
+function buildSoundReflection(temp, tension, brightness, space, symmetry, scene, intention, instrumentNames) {
+  const themes = getSceneThemes(scene);
+  const parts = [];
+  const selected = instrumentNames || [];
+
+  if (selected.length) {
+    parts.push(`这段可以用${selected.join('、')}来承载`);
+  } else if (themes.includes('被理解需求')) {
+    parts.push('可以用大提琴、气息人声或很轻的钢琴来承载');
+  } else if (themes.includes('被落下感')) {
+    parts.push('可以用低频合成器、钢琴和细薄的弦乐来承载');
+  } else if (themes.includes('信息过载')) {
+    parts.push('可以用合成器铺底、少量钢琴和稀疏节奏来承载');
+  } else if (tension >= 7) {
+    parts.push('可以用弦乐、低鼓或暗色合成器来承载');
+  } else {
+    parts.push('可以用钢琴、轻弦乐或环境音层来承载');
+  }
+
+  if (tension >= 7) parts.push('前段保留一点绷紧感');
+  else if (tension <= 3) parts.push('整体保持低速和低密度');
+  else parts.push('节奏不要太满，留出中间的呼吸');
+
+  if (brightness <= 4) parts.push('调性偏暗，但不要压到没有出口');
+  else if (brightness >= 7) parts.push('后半段可以慢慢打开一点光');
+  else parts.push('明暗保持中性，像还没有定论的状态');
+
+  if (space <= 3) parts.push('声音靠近耳边，像只说给自己听');
+  else if (space >= 7) parts.push('空间可以更宽，像把心里的东西放远一点看');
+  else parts.push('空间适中，亲密但不窒息');
+
+  if (symmetry <= 3 || themes.includes('信息过载')) parts.push('结构可以有轻微碎片感，但不要混乱');
+  else if (symmetry >= 7) parts.push('结构稳定，给人一点重新站住的感觉');
+
+  if (themes.includes('被理解需求')) parts.push('人声可以像陪伴，但不要太戏剧化');
+  if (themes.includes('被落下感')) parts.push('避免宏大胜利感，更像在高速世界里找回自己的步伐');
+  if (intention === 'release') parts.push('结尾做一个很轻的释放');
+  if (intention === 'focus' || intention === 'direction') parts.push('结尾需要一点清晰的落点');
+
+  return parts.join('。') + '。';
+}
+
+function buildReturnStep(scene, intention) {
+  const themes = getSceneThemes(scene);
+  if (themes.includes('被落下感')) return '今天只选一个和 AI 有关的小问题弄明白，不用追完整个时代。';
+  if (themes.includes('信息过载')) return '关掉一个信息入口十分钟，写下一个真正留在你心里的句子。';
+  if (themes.includes('方向不确定')) return '不用决定未来，只写下一个你“不排斥继续靠近”的方向。';
+  if (themes.includes('比较压力')) return '把“别人做到哪了”换成“我今天能往前挪哪一毫米”。';
+  if (themes.includes('行动阻滞')) return '只做一个两分钟能完成的开头，让身体先知道事情可以开始。';
+  if (themes.includes('价值感摇晃')) return '记录一件你做过但没有被看见的小事，它也算数。';
+  if (themes.includes('被理解需求')) return '写一句不用解释前因后果的话，只保留真实感。';
+  if (intention === 'slow') return '把节奏放慢一点，今天先允许自己不立刻给出答案。';
+  if (intention === 'focus') return '选一个最小落点，二十分钟内只让注意力停在那里。';
+  return '今天不用解决全部，只留下一个你愿意继续观察的信号。';
+}
+
+// ── Trajectory ──
+function getHistory() {
+  try {
+    return JSON.parse(localStorage.getItem('xinxuan_history') || '[]');
+  } catch(e) { return []; }
+}
+
+function buildTrajectory(current) {
+  const history = getHistory();
+  const currentThemes = getSceneThemes(current.scene);
+  if (history.length === 0) {
+    const firstThemes = currentThemes.length ? `这次先记录到的主题是：${currentThemes.join('、')}。` : '这是第一条状态记录。';
+    return `${firstThemes} 保存几次之后，心旋会开始看见哪些状态在反复出现。`;
+  }
+
+  const last = history[history.length - 1];
+  const changes = [];
+
+  const dimNames = { tension:'压力强度', brightness:'未来亮度', space:'呼吸空间', symmetry:'控制感', temp:'自我温度' };
+  const dimKeys = ['tension','brightness','space','symmetry','temp'];
+
+  dimKeys.forEach(key => {
+    const diff = current[key] - last.dims[key];
+    if (Math.abs(diff) >= 2) {
+      const dir = diff > 0 ? '上升' : '下降';
+      const label = dimNames[key];
+      changes.push(`${label} ${dir}`);
+    }
+  });
+
+  const repeated = currentThemes.filter(theme => (last.themes || []).includes(theme));
+  const newThemes = currentThemes.filter(theme => !(last.themes || []).includes(theme));
+  const themeLine = [
+    repeated.length ? `延续的主题：${repeated.join('、')}。` : '',
+    newThemes.length ? `新出现的主题：${newThemes.join('、')}。` : ''
+  ].filter(Boolean).join(' ');
+
+  if (changes.length === 0) {
+    return themeLine || '和上次相比，整体状态比较接近。';
+  }
+
+  const timeAgo = formatTimeAgo(last.timestamp);
+  return `和${timeAgo}的记录相比：${changes.join('、')}。${themeLine ? ' ' + themeLine : ''}`;
+}
+
+function formatTimeAgo(ts) {
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (days > 0) return `${days}天前`;
+  if (hours > 0) return `${hours}小时前`;
+  if (mins > 0) return `${mins}分钟前`;
+  return '刚才';
+}
+
+function renderHistory() {
+  const history = getHistory();
+  const panel = document.getElementById('history-panel');
+  const list = document.getElementById('history-list');
+  const count = document.getElementById('history-count');
+  if (!panel || !list || !count) return;
+
+  if (history.length === 0) {
+    panel.style.display = 'none';
+    list.innerHTML = '';
+    count.textContent = '';
+    return;
+  }
+
+  panel.style.display = 'block';
+  count.textContent = `${history.length} 条已保存`;
+  const recent = history.slice(-5).reverse();
+  list.innerHTML = recent.map(record => {
+    const time = new Date(record.timestamp).toLocaleString('zh-CN', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
+    const scene = record.scene || '没有填写状态';
+    const feedback = record.feedback ? ` · ${record.feedback}` : '';
+    const reflection = record.reflection || '';
+    const themes = (record.themes || []).map(theme => `<span class="history-theme">${theme}</span>`).join('');
+    return `
+      <div class="history-item">
+        <div class="history-meta"><span>${time}</span><span>${record.intention || '未选择需要'}${feedback}</span></div>
+        <div class="history-scene">${escapeHtml(scene)}</div>
+        <div class="history-reflection">${escapeHtml(reflection)}</div>
+        ${themes ? `<div class="history-themes">${themes}</div>` : ''}
+      </div>
+    `;
+  }).join('');
+  drawTrendChart(history);
+  renderStageChart(history);
+}
+
+function renderStageChart(history) {
+  const panel = document.getElementById('stage-chart');
+  const progress = document.getElementById('chart-progress');
+  const content = document.getElementById('chart-content');
+  if (!panel || !progress || !content) return;
+
+  const count = Math.min(history.length, 5);
+  progress.textContent = `${count} / 5`;
+  if (history.length < 5) {
+    panel.classList.add('locked');
+    content.className = 'chart-lock-copy';
+    content.textContent = `再留下 ${5 - history.length} 次状态，解锁这段时期的主题、隐藏需求、同频互动与变化倾向。`;
+    return;
+  }
+
+  panel.classList.remove('locked');
+  const records = history.slice(-5);
+  const keys = ['temp','tension','brightness','space','symmetry'];
+  const avg = Object.fromEntries(keys.map(key => [key, records.reduce((sum, record) => sum + (record.dims?.[key] || 5), 0) / records.length]));
+  const themeCounts = {};
+  records.forEach(record => (record.themes || []).forEach(theme => { themeCounts[theme] = (themeCounts[theme] || 0) + 1; }));
+  const dominantThemes = Object.entries(themeCounts).sort((a,b) => b[1] - a[1]).slice(0,2).map(([theme]) => theme);
+  const latest = records[records.length - 1];
+  const earliest = records[0];
+  const pressureDiff = (latest.dims?.tension || 5) - (earliest.dims?.tension || 5);
+  const lightDiff = (latest.dims?.brightness || 5) - (earliest.dims?.brightness || 5);
+  const agencyDiff = (latest.dims?.symmetry || 5) - (earliest.dims?.symmetry || 5);
+
+  let stageName = '潮汐校准期';
+  if (dominantThemes.includes('被落下感') || dominantThemes.includes('比较压力')) stageName = '内部标尺重建期';
+  else if (dominantThemes.includes('方向不确定')) stageName = '方向重新成形期';
+  else if (dominantThemes.includes('价值感摇晃') || dominantThemes.includes('意义感变薄')) stageName = '意义重建期';
+  else if (dominantThemes.includes('被理解需求')) stageName = '关系深度筛选期';
+  else if (dominantThemes.includes('行动阻滞')) stageName = '蓄力与启动期';
+
+  let hiddenNeed = '保留观察自己的空间，不急着给这段时期下结论';
+  if (avg.space < 4.5) hiddenNeed = '扩大呼吸空间，让自己重新拥有选择余地';
+  else if (avg.temp < 4.5) hiddenNeed = '减少自我疏离，恢复对自身感受的照顾';
+  else if (avg.brightness < 4.5) hiddenNeed = '找到一个可验证的小可能，而不是逼迫自己相信宏大未来';
+  else if (avg.symmetry < 4.5) hiddenNeed = '建立一个足够小、能够完成的现实落点';
+
+  let interaction = '适合稳定、尊重边界、不过度催促的互动';
+  if (dominantThemes.includes('被理解需求')) interaction = '适合能接住复杂表达、不急着给答案的人';
+  else if (dominantThemes.includes('比较压力')) interaction = '适合有自己节奏、不会把关系变成竞赛的人';
+  else if (dominantThemes.includes('行动阻滞')) interaction = '适合能陪你把想法缩小并完成第一步的人';
+
+  let tendency = '近期状态仍可能在相近区间波动，重点是观察什么在反复出现';
+  if (pressureDiff >= 2 && agencyDiff <= -1) tendency = '如果压力继续增加，控制感可能进一步变窄，近期不宜同时增加太多任务';
+  else if (lightDiff >= 2 || agencyDiff >= 2) tendency = '未来亮度或控制感正在回升，适合用一个小成果把这种变化固定下来';
+  else if (pressureDiff <= -2) tendency = '压力正在回落，可以观察恢复后的注意力最愿意流向哪里';
+
+  const themeText = dominantThemes.length ? dominantThemes.join('、') : '尚未出现单一主导主题';
+  content.className = 'chart-result';
+  content.innerHTML = `
+    <div class="chart-field"><div class="chart-field-label">本阶段原型</div><div class="chart-field-value">${escapeHtml(stageName)}</div></div>
+    <div class="chart-field"><div class="chart-field-label">反复出现的主题</div><div class="chart-field-value">${escapeHtml(themeText)}</div></div>
+    <div class="chart-field"><div class="chart-field-label">隐藏需求</div><div class="chart-field-value">${escapeHtml(hiddenNeed)}</div></div>
+    <div class="chart-field"><div class="chart-field-label">同频互动</div><div class="chart-field-value">${escapeHtml(interaction)}</div></div>
+    <div class="chart-field"><div class="chart-field-label">近期变化倾向</div><div class="chart-field-value">${escapeHtml(tendency)}</div></div>
+    <div class="chart-field"><div class="chart-field-label">说明</div><div class="chart-field-value">依据最近 5 次记录生成的状态推演，不代表命运预测。</div></div>
+  `;
+}
+
+function drawTrendChart(history) {
+  const panel = document.getElementById('trend-panel');
+  const note = document.getElementById('trend-note');
+  const canvas = document.getElementById('trend-canvas');
+  if (!panel || !note || !canvas) return;
+
+  if (history.length < 2) {
+    panel.style.display = 'none';
+    return;
+  }
+
+  panel.style.display = 'block';
+  note.textContent = history.length >= 5 ? '最近状态已经开始形成轨迹' : `还差 ${5 - history.length} 次，趋势会更稳定`;
+
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  const width = Math.max(320, Math.floor(rect.width || 680));
+  const height = 220;
+  canvas.width = width * dpr;
+  canvas.height = height * dpr;
+  canvas.style.height = height + 'px';
+
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const grid = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.07)';
+  const text = isDark ? 'rgba(255,255,255,0.42)' : 'rgba(0,0,0,0.38)';
+  const records = history.slice(-10);
+  const pad = { left: 28, right: 12, top: 18, bottom: 30 };
+  const chartW = width - pad.left - pad.right;
+  const chartH = height - pad.top - pad.bottom;
+
+  ctx.strokeStyle = grid;
+  ctx.lineWidth = 1;
+  ctx.font = '10px -apple-system, Helvetica Neue, sans-serif';
+  ctx.fillStyle = text;
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+
+  [1, 3, 5, 7, 10].forEach(v => {
+    const y = pad.top + chartH - ((v - 1) / 9) * chartH;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(width - pad.right, y);
+    ctx.stroke();
+    ctx.fillText(String(v), pad.left - 7, y);
+  });
+
+  const series = [
+    { key:'temp', color:'#345c50' },
+    { key:'tension', color:'#b34d4d' },
+    { key:'brightness', color:'#c49a2c' },
+    { key:'space', color:'#4b79a8' },
+    { key:'symmetry', color:'#7b5fa7' }
+  ];
+
+  const xFor = i => pad.left + (records.length === 1 ? chartW / 2 : (i / (records.length - 1)) * chartW);
+  const yFor = value => pad.top + chartH - ((value - 1) / 9) * chartH;
+
+  records.forEach((record, i) => {
+    const x = xFor(i);
+    ctx.fillStyle = text;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    const label = new Date(record.timestamp).toLocaleDateString('zh-CN', { month:'numeric', day:'numeric' });
+    ctx.fillText(label, x, height - pad.bottom + 9);
+  });
+
+  const volatility = records.map((record, i) => {
+    if (i === 0) return 0;
+    const prev = records[i - 1];
+    const diffs = series.map(s => Math.abs((record.dims?.[s.key] || 5) - (prev.dims?.[s.key] || 5)));
+    return diffs.reduce((sum, v) => sum + v, 0) / diffs.length;
+  });
+
+  series.forEach(s => {
+    const pts = records.map((record, i) => ({
+      x: xFor(i),
+      y: yFor(record.dims?.[s.key] || 5)
+    }));
+
+    ctx.beginPath();
+    pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+    ctx.strokeStyle = s.color;
+    ctx.lineWidth = 1.8;
+    ctx.globalAlpha = 0.9;
+    ctx.stroke();
+
+    pts.forEach((p, i) => {
+      ctx.globalAlpha = 1;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 3.2, 0, Math.PI * 2);
+      ctx.fillStyle = s.color;
+      ctx.fill();
+
+      const noiseCount = Math.min(8, Math.round(volatility[i] * 2.2));
+      ctx.globalAlpha = 0.18;
+      for (let n = 0; n < noiseCount; n++) {
+        const angle = (n * 2.399) + i;
+        const radius = 8 + n * 2.4;
+        const nx = p.x + Math.cos(angle) * radius;
+        const ny = p.y + Math.sin(angle) * radius * 0.55;
+        ctx.beginPath();
+        ctx.arc(nx, ny, 1.4, 0, Math.PI * 2);
+        ctx.fillStyle = s.color;
+        ctx.fill();
+      }
+    });
+  });
+
+  ctx.globalAlpha = 1;
+}
+
+function explainTrend() {
+  incrementMetric('trendExplanations');
+  const history = getHistory();
+  const box = document.getElementById('trend-analysis');
+  if (!box) return;
+
+  if (history.length < 2) {
+    box.style.display = 'block';
+    box.textContent = '现在记录还太少。再保存一次后，就能开始看到状态是往哪里动的。';
+    return;
+  }
+
+  const records = history.slice(-10);
+  const first = records[0].dims || {};
+  const last = records[records.length - 1].dims || {};
+  const labels = {
+    temp: '自我温度',
+    tension: '压力强度',
+    brightness: '未来亮度',
+    space: '呼吸空间',
+    symmetry: '控制感'
+  };
+  const keys = Object.keys(labels);
+  const changes = keys.map(key => ({
+    key,
+    label: labels[key],
+    diff: (last[key] || 5) - (first[key] || 5),
+    last: last[key] || 5
+  }));
+
+  const rising = changes.filter(x => x.diff >= 2).map(x => x.label);
+  const falling = changes.filter(x => x.diff <= -2).map(x => x.label);
+
+  const volatility = records.slice(1).map((record, i) => {
+    const prev = records[i];
+    return keys.reduce((sum, key) => sum + Math.abs((record.dims?.[key] || 5) - (prev.dims?.[key] || 5)), 0) / keys.length;
+  });
+  const avgVolatility = volatility.length ? volatility.reduce((a, b) => a + b, 0) / volatility.length : 0;
+
+  const latestThemes = (records[records.length - 1].themes || []).join('、');
+  const lines = [];
+
+  if (rising.length) lines.push(`${rising.join('、')}在最近几次里明显上升。`);
+  if (falling.length) lines.push(`${falling.join('、')}在下降，这可能是最近最值得留意的变化。`);
+  if (!rising.length && !falling.length) lines.push('整体没有剧烈转向，更像是在一个相近的状态区间里来回波动。');
+
+  if (avgVolatility >= 1.8) {
+    lines.push('图上的噪点较多，说明你的状态不是单纯变好或变差，而是有明显扰动。');
+  } else if (avgVolatility >= 0.8) {
+    lines.push('状态有一些波动，但还没有到很失控的程度。');
+  } else {
+    lines.push('状态相对平稳，变化比较慢。');
+  }
+
+  if ((last.tension || 5) >= 7 && (last.space || 5) <= 4) {
+    lines.push('最近压力偏高、呼吸空间偏窄，先不要急着做大决定。');
+  } else if ((last.brightness || 5) >= 7 && (last.symmetry || 5) >= 6) {
+    lines.push('未来亮度和控制感同时偏高，说明你可能正在重新找回一点方向。');
+  } else if ((last.temp || 5) <= 4 && (last.tension || 5) >= 7) {
+    lines.push('你可能离自己有点远，同时又被压力推着走。');
+  }
+
+  if (latestThemes) lines.push(`最近一次最明显的主题是：${latestThemes}。`);
+
+  box.style.display = 'block';
+  box.textContent = lines.join(' ');
+}
+
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// ── Save ──
+function saveThisMoment() {
+  const temp = parseInt(document.getElementById('temp').value);
+  const tension = parseInt(document.getElementById('tension').value);
+  const brightness = parseInt(document.getElementById('brightness').value);
+  const space = parseInt(document.getElementById('space').value);
+  const symmetry = parseInt(document.getElementById('symmetry').value);
+  const prompt = document.getElementById('output').textContent;
+  const reflection = document.getElementById('reflection-text').textContent;
+
+  if (!prompt || document.getElementById('output').classList.contains('placeholder')) return;
+
+  const record = {
+    timestamp: Date.now(),
+    scene: currentScene,
+    intention: currentIntention,
+    themes: getSceneThemes(currentScene),
+    feedback: currentFeedback,
+    dims: { temp, tension, brightness, space, symmetry },
+    reflection,
+    archetype: currentArchetype,
+    prompt,
+    musicPrompt: currentMusicPrompt
+  };
+
+  const history = getHistory();
+  history.push(record);
+  if (history.length > 30) history.shift(); // keep last 30
+  localStorage.setItem('xinxuan_history', JSON.stringify(history));
+  renderHistory();
+
+  const btn = document.getElementById('save-btn');
+  const hint = document.getElementById('save-hint');
+  btn.textContent = '已保存';
+  const leafCount = history.length;
+  const unlockCopy = leafCount < 5 ? ` · 再留下 ${5 - leafCount} 片解锁阶段命盘` : ' · 阶段命盘已解锁';
+  hint.textContent = `第 ${leafCount} 片状态叶子已留下${unlockCopy}${currentFeedback ? ' · 反馈：' + currentFeedback : ''}`;
+  setTimeout(() => {
+    btn.textContent = '保存这次状态';
+    hint.textContent = '';
+  }, 3000);
+}
+
+function generate() {
+  incrementMetric('generations');
+  const temp=parseInt(document.getElementById('temp').value);
+  const tension=parseInt(document.getElementById('tension').value);
+  const brightness=parseInt(document.getElementById('brightness').value);
+  const space=parseInt(document.getElementById('space').value);
+  const symmetry=parseInt(document.getElementById('symmetry').value);
+  const genres=getActive('genre-tags');
+  const moods=getActive('mood-tags');
+  const instruments=getActiveInst();
+  const instrumentNames=getActiveInstNames();
+  const bpm=document.getElementById('adv-bpm').value;
+  const key=document.getElementById('adv-key').value;
+  const rhythm=document.getElementById('adv-rhythm').value;
+
+  let styleParts = [];
+  if (genres.length) styleParts.push(genres.join(', '));
+  if (instruments.length) styleParts.push(instruments.join(', '));
+  else {
+    if (temp<=3) styleParts.push('cold synth pads, sparse piano');
+    else if (temp<=6) styleParts.push('acoustic piano, soft strings');
+    else styleParts.push('warm strings, rich brass');
+  }
+  if (bpm) styleParts.push(bpm);
+  if (key) styleParts.push(key);
+  if (rhythm) styleParts.push(rhythm);
+
+  let moodParts = [];
+  if (moods.length) moodParts.push(moods.join(', '));
+
+  if (tension<=3) moodParts.push('slow tempo, quiet, minimal');
+  else if (tension<=5) moodParts.push('moderate tempo, mid dynamics');
+  else if (tension<=7) moodParts.push('building intensity, dynamic arrangement');
+  else moodParts.push('high energy, dramatic peaks, intense');
+
+  if (brightness<=3) moodParts.push('minor key, dark, heavy reverb');
+  else if (brightness<=6) moodParts.push('neutral tonality, slight minor');
+  else moodParts.push('bright major key, uplifting, clear mix');
+
+  if (space<=3) moodParts.push('dry intimate mix');
+  else if (space<=6) moodParts.push('moderate reverb, balanced space');
+  else moodParts.push('vast reverb, wide stereo, cinematic space');
+
+  if (symmetry<=3) moodParts.push('fragmented, irregular phrases');
+  else if (symmetry<=6) moodParts.push('loose structure, natural flow');
+  else moodParts.push('clear structure, steady rhythm');
+
+  if (activeArc && arcPrompts[activeArc]) moodParts.push(arcPrompts[activeArc]);
+
+  // Intention affects mood
+  if (currentIntention === 'slow') moodParts.push('slow, unhurried, give space to breathe');
+  else if (currentIntention === 'understood') moodParts.push('intimate, emotionally resonant, felt but not fixed');
+  else if (currentIntention === 'release') moodParts.push('gradual release, tension resolving, exhale quality');
+  else if (currentIntention === 'focus') moodParts.push('gentle clarity, mild direction, grounding quality');
+
+  const styleText = styleParts.join(', ');
+  let moodText = moodParts.join(', ');
+
+  const sceneAtm = getSceneAtmosphere(currentScene);
+  if (sceneAtm) {
+    moodText = 'Inspired by ' + sceneAtm + '. ' + moodText;
+  }
+
+  moodText = moodText + ', avoid real-world background noise or environmental sound effects';
+
+  const fullPrompt = (styleText ? styleText + '. ' : '') + moodText;
+  currentMusicPrompt = fullPrompt;
+  const soundReflection = buildSoundReflection(temp, tension, brightness, space, symmetry, currentScene, currentIntention, instrumentNames);
+
+  const outEl = document.getElementById('output');
+  outEl.textContent = soundReflection;
+  outEl.classList.remove('placeholder');
+  document.getElementById('output-chars').textContent = '';
+  const resultShell = document.getElementById('result-shell');
+  resultShell.style.display = 'block';
+
+  checkHarmony(temp, tension, brightness, space, symmetry);
+  drawRadar([temp,tension,brightness,space,symmetry]);
+  document.getElementById('emotion-summary').textContent = getEmotionSummary([temp,tension,brightness,space,symmetry]);
+
+  // Reflection
+  const reflText = buildReflection(temp, tension, brightness, space, symmetry, currentScene, currentIntention);
+  document.getElementById('reflection-text').textContent = reflText;
+  document.getElementById('reflection-block').style.display = 'block';
+  document.getElementById('feedback-row').style.display = 'flex';
+  currentFeedback = '';
+  document.querySelectorAll('.feedback-btn').forEach(b => b.classList.remove('active'));
+
+  // Current state archetype
+  renderArchetype(buildArchetype(temp, tension, brightness, space, symmetry, currentScene));
+
+  // Trajectory
+  const trajText = buildTrajectory({ temp, tension, brightness, space, symmetry, scene: currentScene });
+  if (trajText) {
+    document.getElementById('trajectory-text').textContent = trajText;
+    document.getElementById('trajectory-block').style.display = 'block';
+  }
+
+  // Small return point
+  document.getElementById('return-text').textContent = buildReturnStep(currentScene, currentIntention);
+  document.getElementById('return-block').style.display = 'block';
+
+  // Show save button
+  document.getElementById('save-btn').style.display = 'inline-block';
+  document.getElementById('save-btn').textContent = '保存这次状态';
+  document.getElementById('save-hint').textContent = '';
+  requestAnimationFrame(() => {
+    document.getElementById('reflection-block').scrollIntoView({ behavior:'smooth', block:'start' });
+  });
+}
+
+function copyPrompt() {
+  const el = document.getElementById('output');
+  if (el.classList.contains('placeholder')) return;
+  incrementMetric('musicCopies');
+  navigator.clipboard.writeText(currentMusicPrompt || el.textContent).then(() => {
+    document.getElementById('hint').textContent = '已复制 — 粘贴到 Suno、Udio 或任意AI音乐工具';
+    setTimeout(() => document.getElementById('hint').textContent = '', 3000);
+  }).catch(() => {
+    const range = document.createRange(); range.selectNode(el);
+    window.getSelection().removeAllRanges(); window.getSelection().addRange(range);
+    document.getElementById('hint').textContent = '请手动按 Ctrl+C 复制';
+  });
+}
+
+function exportAnonymousFeedback() {
+  const history = getHistory();
+  const metrics = getUsageMetrics();
+  const comment = document.getElementById('anonymous-comment').value.trim();
+  const feedbackCounts = { '像我':0, '有一点准':0, '不太像':0, '未选择':0 };
+
+  history.forEach(record => {
+    const key = record.feedback && feedbackCounts.hasOwnProperty(record.feedback) ? record.feedback : '未选择';
+    feedbackCounts[key]++;
+  });
+
+  const report = [
+    '心旋匿名测试反馈',
+    '================',
+    `导出日期：${new Date().toLocaleDateString('zh-CN')}`,
+    '',
+    '一、匿名使用概况',
+    `保存状态次数：${history.length}`,
+    `生成状态镜像次数：${metrics.generations || 0}`,
+    `查看同频对象画像次数：${metrics.resonanceViews || 0}`,
+    `解析趋势图次数：${metrics.trendExplanations || 0}`,
+    `复制音乐提示词次数：${metrics.musicCopies || 0}`,
+    `是否解锁阶段命盘：${history.length >= 5 ? '是' : '否'}`,
+    '',
+    '二、状态镜像反馈',
+    `像我：${feedbackCounts['像我']}`,
+    `有一点准：${feedbackCounts['有一点准']}`,
+    `不太像：${feedbackCounts['不太像']}`,
+    `未选择：${feedbackCounts['未选择']}`,
+    '',
+    '三、使用者自愿填写的意见',
+    comment || '未填写',
+    '',
+    '隐私说明：本报告不包含状态原文、状态镜像、主题标签、状态维度、同频画像、趋势内容或阶段命盘。'
+  ].join('\n');
+
+  const blob = new Blob([report], { type:'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `心旋-匿名测试反馈-${new Date().toISOString().slice(0,10)}.txt`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+
+  const status = document.getElementById('export-status');
+  status.textContent = '匿名反馈已下载，请由你决定是否发送。';
+  setTimeout(() => { status.textContent = ''; }, 5000);
+}
+
+drawRadar([5,5,5,5,5]);
+renderHistory();
+window.addEventListener('resize', () => drawTrendChart(getHistory()));
+</script>
+</body>
+</html>
