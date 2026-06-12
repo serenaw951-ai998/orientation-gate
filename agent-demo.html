@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orienta Reference Agent Sandbox</title>
+<style>
+  :root {
+    --bg: #0b0d10;
+    --panel: #13171d;
+    --panel-2: #0d1116;
+    --border: #29323d;
+    --text: #edf2f7;
+    --muted: #98a6b5;
+    --blue: #5cc8ff;
+    --green: #3ddc97;
+    --yellow: #f2c94c;
+    --orange: #ff8a5b;
+    --violet: #b58cff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    color: var(--text);
+    background: var(--bg);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: .16;
+    background-image: linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+  .app { width: min(1240px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 40px; position: relative; }
+  nav { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 40px; }
+  .brand { color: var(--text); font-size: 15px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+  .back { color: var(--muted); text-decoration: none; border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-size: 13px; }
+  header { display: grid; grid-template-columns: 1.2fr .8fr; gap: 28px; align-items: end; margin-bottom: 28px; }
+  .eyebrow { color: var(--blue); text-transform: uppercase; font-size: 12px; font-weight: 800; letter-spacing: .12em; margin-bottom: 12px; }
+  h1 { margin: 0; max-width: 760px; font-size: clamp(36px, 5vw, 66px); line-height: 1.02; }
+  .subtitle { color: var(--muted); line-height: 1.65; margin: 16px 0 0; max-width: 700px; }
+  .flow { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .flow div { padding: 15px; background: rgba(19,23,29,.86); border-left: 1px solid var(--border); }
+  .flow div:first-child { border-left: 0; }
+  .flow strong { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+  .flow span { font-size: 13px; }
+  .workspace { display: grid; grid-template-columns: minmax(320px,.82fr) minmax(440px,1.18fr); gap: 20px; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 22px; }
+  .panel-title { margin: 0 0 18px; font-size: 13px; text-transform: uppercase; letter-spacing: .1em; }
+  label { display: block; margin: 18px 0 8px; color: var(--muted); font-size: 12px; font-weight: 700; }
+  textarea { width: 100%; min-height: 130px; resize: vertical; border: 1px solid var(--border); border-radius: 8px; padding: 13px; background: var(--panel-2); color: var(--text); font: inherit; line-height: 1.55; }
+  textarea:focus { outline: none; border-color: var(--blue); }
+  button { width: 100%; margin-top: 18px; padding: 14px; border: 1px solid #43b9ef; border-radius: 8px; background: #1f82b3; color: #fff; font: inherit; font-weight: 800; cursor: pointer; }
+  button:disabled { opacity: .55; cursor: wait; }
+  .hint { margin-top: 12px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+  .state { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 18px; }
+  .badge { border: 1px solid var(--border); border-radius: 999px; padding: 8px 12px; font-size: 12px; font-weight: 800; color: var(--muted); }
+  .badge.PROCEED { color: var(--green); border-color: rgba(61,220,151,.45); }
+  .badge.ADJUST { color: var(--yellow); border-color: rgba(242,201,76,.45); }
+  .badge.REVIEW, .badge.ESCALATE { color: var(--violet); border-color: rgba(181,140,255,.45); }
+  .status { color: var(--muted); font-size: 12px; }
+  .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .result { min-height: 170px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel-2); padding: 16px; }
+  .result.final { border-color: rgba(61,220,151,.38); }
+  .result h2, .audit h2 { margin: 0 0 12px; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .1em; }
+  .reply { white-space: pre-wrap; line-height: 1.65; font-size: 14px; }
+  .governance { margin-top: 14px; padding: 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel-2); }
+  .governance-row { display: grid; grid-template-columns: 150px 1fr; gap: 14px; padding: 8px 0; border-top: 1px solid rgba(41,50,61,.65); font-size: 13px; line-height: 1.5; }
+  .governance-row:first-child { border-top: 0; }
+  .governance-row span:first-child { color: var(--muted); }
+  .audit { margin-top: 14px; padding: 16px; border: 1px solid var(--border); border-radius: 8px; }
+  .audit-copy { color: var(--muted); font-size: 13px; line-height: 1.6; }
+  .error { color: var(--orange); }
+  @media (max-width: 850px) {
+    header, .workspace { grid-template-columns: 1fr; }
+    .flow { grid-template-columns: 1fr; }
+    .flow div { border-left: 0; border-top: 1px solid var(--border); }
+    .flow div:first-child { border-top: 0; }
+    .result-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<main class="app">
+  <nav>
+    <div class="brand">Orienta</div>
+    <a class="back" href="index.html">Governance Workbench</a>
+  </nav>
+
+  <header>
+    <div>
+      <div class="eyebrow">Reference Agent Sandbox</div>
+      <h1>See Orienta change an AI action before it reaches a customer.</h1>
+      <p class="subtitle">A simulated customer-support workflow showing how an external AI agent can call Orienta before responding. The agent drafts a reply, Orienta reviews it, and unsafe actions are rewritten or held for human review.</p>
+    </div>
+    <div class="flow" aria-label="Agent flow">
+      <div><strong>1. Draft</strong><span>Agent prepares a reply</span></div>
+      <div><strong>2. Audit</strong><span>Orienta checks the action</span></div>
+      <div><strong>3. Act</strong><span>Approve or rewrite</span></div>
+    </div>
+  </header>
+
+  <section class="workspace">
+    <form class="panel" id="agent-form">
+      <h2 class="panel-title">Simulated Business Scenario</h2>
+      <label for="business-goal">Business goal</label>
+      <textarea id="business-goal" required>Reduce refund requests while preserving customer trust and valid refund rights.</textarea>
+
+      <label for="customer-message">Customer message</label>
+      <textarea id="customer-message" required>I want a refund because the store agent was impatient, requested my ID before explaining the process, and did not listen to what happened.</textarea>
+
+      <button id="run-button" type="submit">Run Reference Agent</button>
+      <div class="hint">This is a fictional integration sandbox, not Orienta customer support. The backend uses Gemini when available, and every completed run is saved to MongoDB as an agent audit record.</div>
+    </form>
+
+    <section class="panel" aria-live="polite">
+      <div class="state">
+        <h2 class="panel-title" style="margin:0">Agent Execution</h2>
+        <div class="badge" id="decision">READY</div>
+      </div>
+      <div class="status" id="status">Enter a scenario and run the agent.</div>
+
+      <div class="result-grid" style="margin-top:18px">
+        <article class="result">
+          <h2>Original Agent Draft</h2>
+          <div class="reply" id="draft">Waiting for the agent to draft a reply.</div>
+        </article>
+        <article class="result final">
+          <h2>Final Governed Reply</h2>
+          <div class="reply" id="final">Waiting for Orienta to approve or rewrite the action.</div>
+        </article>
+      </div>
+
+      <div class="governance">
+        <div class="governance-row"><span>Action taken</span><strong id="action">Not run</strong></div>
+        <div class="governance-row"><span>Risk score</span><strong id="risk">--</strong></div>
+        <div class="governance-row"><span>Risk flags</span><strong id="flags">--</strong></div>
+        <div class="governance-row"><span>Governance direction</span><div id="direction">--</div></div>
+      </div>
+
+      <div class="audit">
+        <h2>Audit Record</h2>
+        <div class="audit-copy" id="audit">The MongoDB run ID and collection will appear here.</div>
+      </div>
+    </section>
+  </section>
+</main>
+
+<script>
+const form = document.getElementById("agent-form");
+const button = document.getElementById("run-button");
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  button.disabled = true;
+  button.textContent = "Agent drafting and Orienta reviewing...";
+  setText("status", "Running the complete pre-execution governance workflow...");
+
+  try {
+    const response = await fetch("/api/customer-agent", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        business_goal: document.getElementById("business-goal").value.trim(),
+        customer_message: document.getElementById("customer-message").value.trim()
+      })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "The agent request failed.");
+
+    const decision = data.governance.decision;
+    const badge = document.getElementById("decision");
+    badge.className = `badge ${decision}`;
+    badge.textContent = decision;
+    setText("draft", data.draft_reply);
+    setText("final", data.final_reply);
+    const actionLabels = {
+      HELD_FOR_HUMAN_REVIEW: "Execution paused; routed to human review",
+      REWRITTEN_BEFORE_EXECUTION: "Original blocked; safer reply generated",
+      APPROVED_FOR_EXECUTION: "Approved for execution"
+    };
+    setText("action", actionLabels[data.action_taken] || data.action_taken);
+    setText("risk", `${Math.round(data.governance.risk_score * 100)}/100`);
+    setText("flags", data.governance.risk_flags.join(", ") || "No major structural risk detected");
+    setText("direction", data.governance.recommended_action);
+    setText("audit", `Saved to ${data.saved_to.database}.${data.saved_to.collection}\nRun ID: ${data.run_id}`);
+    setText("status", "Workflow complete. Compare the original draft with the final governed reply.");
+  } catch (error) {
+    document.getElementById("status").innerHTML = `<span class="error">Agent failed: ${escapeHtml(error.message)}</span>`;
+  } finally {
+    button.disabled = false;
+    button.textContent = "Run Reference Agent";
+  }
+});
+
+function setText(id, value) {
+  document.getElementById(id).textContent = value;
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+  })[char]);
+}
+</script>
+</body>
+</html>
