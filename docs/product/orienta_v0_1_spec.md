@@ -18,6 +18,12 @@ and:
 governance-aware execution
 ```
 
+The commercial promise is:
+
+```text
+reduce risk without giving up automation efficiency.
+```
+
 ## Core Product Goal
 
 Build a lightweight demo that:
@@ -27,6 +33,8 @@ Build a lightweight demo that:
 - returns a decision, risk flags, scores, and safer instruction
 - optionally compares an unconstrained AI response with an Orienta-governed response
 - logs interaction data for future evaluation and refinement
+
+This should make Orienta feel like a pre-execution decision layer, not only a report. The system should help decide whether an AI action should proceed, be adjusted, or be escalated before it reaches the user or a tool.
 
 ## User Flow A: Objective Evaluation
 
@@ -82,6 +90,21 @@ A simulated customer support agent:
 5. saves an audit record to MongoDB
 
 This demonstrates that Orienta can sit inside an agent workflow rather than only inside a manual dashboard.
+
+## User Flow D: Customer Support Governance Demo
+
+A focused customer support demo shows one commercial wedge:
+
+```text
+AI support agents reducing refunds, cancellations, or escalations
+without damaging valid customer rights, trust, or long-term retention.
+```
+
+The demo should make three outcomes visible:
+
+- risk reduction
+- safer automatic judgment
+- preserved efficiency or business value
 
 ## Current Product Components
 
@@ -161,6 +184,13 @@ Future functions:
 - escalation routing
 - response constraint generation
 - evaluation dashboards
+
+Longer-term functions:
+
+- multi-agent checkpoint support
+- tool-call and permission review
+- workflow continuation approval
+- company-specific escalation routing
 
 ## Initial Governance Domains
 

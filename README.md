@@ -10,6 +10,14 @@ Should this AI objective or action be pursued as written?
 
 Orienta is not another chatbot. It sits before an agent acts, checks the direction of the goal and the proposed behavior, then returns a governance decision.
 
+Business value:
+
+```text
+Reduce automation risk.
+Preserve efficiency.
+Protect customer trust and business outcomes.
+```
+
 ## Core Example
 
 ```text
@@ -72,6 +80,18 @@ Is this objective or planned action safe to execute?
 ```
 
 This matters as AI systems move from answering questions to taking actions through agents, tools, workflows, and automation.
+
+In a multi-agent workflow, Orienta can act as a shared governance checkpoint before high-impact steps:
+
+```text
+Customer request
+  -> support / billing / sales / policy agents
+  -> Orienta governance check
+  -> proceed / adjust / escalate / block
+  -> reply, tool call, refund action, or human review
+```
+
+The goal is not to slow down every automation. Low-risk actions can continue, while risky actions are adjusted or routed to human review.
 
 ## Run Locally
 
