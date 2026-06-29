@@ -28,10 +28,13 @@ Read these files in order:
 3. [hse-state-aware-ai-relationship.md](./hse-state-aware-ai-relationship.md)  
    How HSE implements the broader State-Aware AI direction.
 
-4. [hse-api-v0.1.md](./hse-api-v0.1.md)  
+4. [state-matching.md](./state-matching.md)  
+   A consumer-facing product pattern for matching people, agents, or experiences by current state.
+
+5. [hse-api-v0.1.md](./hse-api-v0.1.md)  
    A minimal API draft with request/response fields and validation ideas.
 
-5. [senux-middleware-overview.md](./senux-middleware-overview.md)  
+6. [senux-middleware-overview.md](./senux-middleware-overview.md)  
    How HSE fits into the broader Senux middleware architecture alongside Orienta.
 
 ## Examples
