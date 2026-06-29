@@ -61,6 +61,17 @@
     font-weight: 700;
   }
 
+  .demo-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .demo-links .agent-demo-link {
+    margin-top: 0;
+  }
+
   header {
     display: grid;
     grid-template-columns: 1.25fr 0.75fr;
@@ -526,7 +537,10 @@
       <p class="subtitle">
         Paste an AI objective or proposed agent action. Orienta returns a decision, risk flags, and a safer instruction you can send back to your AI system.
       </p>
-      <a class="agent-demo-link" href="agent-demo.html">Open Reference Agent Sandbox</a>
+      <div class="demo-links">
+        <a class="agent-demo-link" href="customer-support-demo.html">Open Customer Support Demo</a>
+        <a class="agent-demo-link" href="agent-demo.html">Open Reference Agent Sandbox</a>
+      </div>
     </section>
     <aside class="status-strip" aria-label="Demo status">
       <div class="status-item">

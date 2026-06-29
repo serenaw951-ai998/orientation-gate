@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orienta for AI Customer Support Agents</title>
+<style>
+  :root {
+    --bg: #0b0d10;
+    --panel: #13171d;
+    --panel-2: #0f141a;
+    --border: #29323d;
+    --text: #edf2f7;
+    --muted: #99a7b6;
+    --blue: #5cc8ff;
+    --green: #3ddc97;
+    --yellow: #f2c94c;
+    --orange: #ff8a5b;
+    --violet: #b58cff;
+    --red: #ff6b6b;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    color: var(--text);
+    background: var(--bg);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    letter-spacing: 0;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.16;
+    background-image: linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  .app {
+    width: min(1240px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 28px 0 42px;
+    position: relative;
+  }
+
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 42px;
+  }
+
+  .brand {
+    font-size: 14px;
+    font-weight: 850;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 13px;
+  }
+
+  header {
+    display: grid;
+    grid-template-columns: 1.06fr 0.94fr;
+    gap: 28px;
+    align-items: end;
+    margin-bottom: 24px;
+  }
+
+  .eyebrow {
+    color: var(--blue);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  h1 {
+    margin: 0;
+    max-width: 760px;
+    font-size: clamp(34px, 5vw, 62px);
+    line-height: 1.04;
+  }
+
+  .subtitle {
+    margin: 16px 0 0;
+    color: var(--muted);
+    line-height: 1.65;
+    max-width: 720px;
+  }
+
+  .business-strip {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .business-strip div {
+    padding: 16px;
+    background: rgba(19, 23, 29, 0.85);
+    border-left: 1px solid var(--border);
+  }
+
+  .business-strip div:first-child { border-left: 0; }
+
+  .business-strip strong {
+    display: block;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 7px;
+  }
+
+  .business-strip span {
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .workspace {
+    display: grid;
+    grid-template-columns: minmax(320px, 0.86fr) minmax(430px, 1.14fr);
+    gap: 20px;
+  }
+
+  .panel {
+    border: 1px solid var(--border);
+    background: var(--panel);
+    border-radius: 8px;
+    padding: 22px;
+  }
+
+  .panel-title {
+    margin: 0 0 16px;
+    font-size: 13px;
+    font-weight: 850;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  label {
+    display: block;
+    margin: 16px 0 8px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 750;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 112px;
+    resize: vertical;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 13px;
+    background: var(--panel-2);
+    color: var(--text);
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  textarea:focus {
+    outline: none;
+    border-color: var(--blue);
+  }
+
+  .primary {
+    width: 100%;
+    margin-top: 18px;
+    border: 1px solid #45b9ec;
+    border-radius: 8px;
+    background: #1f82b3;
+    color: #fff;
+    padding: 14px;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 850;
+  }
+
+  .primary:disabled {
+    opacity: 0.58;
+    cursor: wait;
+  }
+
+  .note {
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  .output-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .badge {
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 12px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 850;
+    letter-spacing: 0.08em;
+  }
+
+  .badge.PROCEED { color: var(--green); border-color: rgba(61,220,151,0.45); }
+  .badge.REVIEW { color: var(--blue); border-color: rgba(92,200,255,0.45); }
+  .badge.ADJUST { color: var(--yellow); border-color: rgba(242,201,76,0.48); }
+  .badge.ESCALATE { color: var(--violet); border-color: rgba(181,140,255,0.48); }
+
+  .status {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 16px;
+  }
+
+  .card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel-2);
+    padding: 16px;
+    min-height: 160px;
+  }
+
+  .card.good { border-color: rgba(61,220,151,0.34); }
+  .card.warn { border-color: rgba(255,138,91,0.34); }
+
+  .card h2 {
+    margin: 0 0 12px;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .card p,
+  .card div {
+    margin: 0;
+    line-height: 1.65;
+    white-space: pre-wrap;
+  }
+
+  .governance {
+    margin-top: 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel-2);
+    padding: 16px;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 145px 1fr;
+    gap: 14px;
+    border-top: 1px solid rgba(41,50,61,0.68);
+    padding: 9px 0;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .row:first-child { border-top: 0; padding-top: 0; }
+  .row:last-child { padding-bottom: 0; }
+  .row span:first-child { color: var(--muted); }
+  .error { color: var(--orange); }
+
+  .share-box {
+    margin-top: 20px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    color: var(--muted);
+    line-height: 1.55;
+    font-size: 13px;
+  }
+
+  @media (max-width: 900px) {
+    header,
+    .workspace,
+    .comparison {
+      grid-template-columns: 1fr;
+    }
+
+    .business-strip {
+      grid-template-columns: 1fr;
+    }
+
+    .business-strip div {
+      border-left: 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .business-strip div:first-child { border-top: 0; }
+  }
+</style>
+</head>
+<body>
+<main class="app">
+  <nav>
+    <div class="brand">Orienta</div>
+    <div class="nav-links">
+      <a href="index.html">Workbench</a>
+      <a href="agent-demo.html">Agent Sandbox</a>
+      <a href="https://github.com/serenaw951-ai998/orientation-gate">GitHub</a>
+    </div>
+  </nav>
+
+  <header>
+    <section>
+      <div class="eyebrow">AI Customer Support Governance</div>
+      <h1>Review refund and escalation actions before your AI support agent replies.</h1>
+      <p class="subtitle">This focused demo shows how Orienta can reduce automation risk while preserving customer trust, valid refund rights, and human escalation paths.</p>
+    </section>
+    <aside class="business-strip" aria-label="Business value">
+      <div><strong>Lower Risk</strong><span>Catch refund obstruction and escalation suppression before the reply is sent.</span></div>
+      <div><strong>Improve Efficiency</strong><span>Let safe automation continue while routing risky cases to review.</span></div>
+      <div><strong>Protect Revenue</strong><span>Reduce preventable refunds without damaging trust or valid rights.</span></div>
+    </aside>
+  </header>
+
+  <section class="workspace">
+    <form class="panel" id="demo-form">
+      <h2 class="panel-title">Support Scenario</h2>
+
+      <label for="business-goal">Business goal</label>
+      <textarea id="business-goal">Reduce refund requests by 20% while preserving customer trust and valid refund rights.</textarea>
+
+      <label for="customer-message">Customer message</label>
+      <textarea id="customer-message">I want to cancel my subscription and request a refund because the product did not work for me.</textarea>
+
+      <label for="proposed-action">Proposed AI action</label>
+      <textarea id="proposed-action">Tell the customer refunds are not available, offer a discount if they stay, and avoid escalating to a human agent.</textarea>
+
+      <button class="primary" id="run-button" type="submit">Run Customer Support Governance Check</button>
+      <div class="note">This page calls the existing Orienta review API and saves an audit log when the Vercel backend is available.</div>
+    </form>
+
+    <section class="panel" aria-live="polite">
+      <div class="output-head">
+        <h2 class="panel-title" style="margin:0">Governance Output</h2>
+        <div class="badge" id="decision">READY</div>
+      </div>
+      <div class="status" id="status">Run the scenario to see whether the AI support action should proceed, adjust, or escalate.</div>
+
+      <div class="comparison">
+        <article class="card warn">
+          <h2>Before Orienta</h2>
+          <div id="before">The proposed AI action may be optimized for refund reduction before user rights and escalation are checked.</div>
+        </article>
+        <article class="card good">
+          <h2>After Orienta</h2>
+          <div id="after">A safer action path will appear here after the governance check.</div>
+        </article>
+      </div>
+
+      <div class="governance">
+        <div class="row"><span>Risk score</span><strong id="risk-score">--</strong></div>
+        <div class="row"><span>Risk flags</span><strong id="risk-flags">--</strong></div>
+        <div class="row"><span>Why it matters</span><div id="reason">--</div></div>
+        <div class="row"><span>Recommended action</span><div id="recommended">--</div></div>
+        <div class="row"><span>Audit log</span><div id="audit">--</div></div>
+      </div>
+
+      <div class="share-box">
+        Share prompt: Ask a builder to replace the business goal, customer message, and proposed action with one from their own AI support workflow.
+      </div>
+    </section>
+  </section>
+</main>
+
+<script>
+const VERCEL_API_BASE = "https://orientation-gate-khaki.vercel.app";
+const API_BASE = location.hostname.endsWith("vercel.app") ? "" : VERCEL_API_BASE;
+
+document.getElementById("demo-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const button = document.getElementById("run-button");
+  button.disabled = true;
+  button.textContent = "Reviewing support action...";
+  setText("status", "Calling Orienta before the AI support action is executed...");
+
+  const payload = {
+    business_goal: value("business-goal"),
+    customer_message: value("customer-message"),
+    proposed_ai_action: value("proposed-action"),
+    domain: "Customer Support",
+    constraints: [
+      "Preserve valid refund rights",
+      "Preserve transparent cancellation paths",
+      "Preserve human escalation when eligibility is unclear",
+      "Do not misrepresent refund policy"
+    ]
+  };
+
+  try {
+    const response = await fetch(`${API_BASE}/api/review`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || `Request failed with ${response.status}`);
+
+    renderResult(payload, data);
+  } catch (error) {
+    document.getElementById("status").innerHTML = `<span class="error">Review failed: ${escapeHtml(error.message)}</span>`;
+  } finally {
+    button.disabled = false;
+    button.textContent = "Run Customer Support Governance Check";
+  }
+});
+
+function renderResult(payload, data) {
+  const baseline = data.baseline || {};
+  const decision = data.decision || baseline.decision || "REVIEW";
+  const badge = document.getElementById("decision");
+  badge.className = `badge ${decision}`;
+  badge.textContent = decision;
+
+  setText("status", "Governance check complete. Compare the risky proposed action with the safer action path.");
+  setText("before", payload.proposed_ai_action);
+  setText("after", saferActionText(decision, baseline));
+  setText("risk-score", baseline.risk_score != null ? `${Math.round(baseline.risk_score * 100)}/100` : "--");
+  setText("risk-flags", Array.isArray(baseline.risk_flags) && baseline.risk_flags.length ? baseline.risk_flags.join(", ") : "No major structural risk detected");
+  setText("reason", Array.isArray(baseline.reasoning) && baseline.reasoning.length ? baseline.reasoning.join(" ") : "No detailed reason returned.");
+  setText("recommended", baseline.recommended_action || "Proceed with standard monitoring.");
+  setText("audit", data.audit_id ? `Saved to ${data.saved_to.database}.${data.saved_to.collection}\nAudit ID: ${data.audit_id}` : "No audit ID returned.");
+}
+
+function saferActionText(decision, baseline) {
+  const recommendation = baseline.recommended_action || "Proceed with standard monitoring.";
+  if (decision === "PROCEED") {
+    return "Proceed with the support action while monitoring customer satisfaction and escalation signals.";
+  }
+  if (decision === "ESCALATE") {
+    return `Pause automatic execution and route the case to human review.\n\n${recommendation}`;
+  }
+  if (decision === "ADJUST") {
+    return `Revise the reply before sending. Check refund eligibility, explain options transparently, preserve appeal and cancellation paths, and offer human escalation when needed.\n\n${recommendation}`;
+  }
+  return `Ask for missing context or human confirmation before sending.\n\n${recommendation}`;
+}
+
+function value(id) {
+  return document.getElementById(id).value.trim();
+}
+
+function setText(id, text) {
+  document.getElementById(id).textContent = text;
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  })[char]);
+}
+</script>
+</body>
+</html>
