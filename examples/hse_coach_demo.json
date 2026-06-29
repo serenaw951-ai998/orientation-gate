@@ -1,0 +1,44 @@
+{
+  "use_case": "ai_coach",
+  "input": {
+    "user_message": "I know what I should do, but I cannot start.",
+    "recent_context": [
+      {
+        "role": "user",
+        "content": "I have been feeling tired lately."
+      }
+    ],
+    "product_context": {
+      "type": "coach",
+      "relationship_mode": "supportive",
+      "locale": "en-US"
+    }
+  },
+  "hse_output": {
+    "human_state": {
+      "primary_state": "activation_block",
+      "secondary_states": ["fatigue", "self_pressure"],
+      "emotional_intensity": 0.62,
+      "self_connection": 0.44,
+      "pressure_level": 0.71,
+      "future_orientation": 0.48,
+      "agency": 0.36,
+      "confidence": 0.74
+    },
+    "memory_signal": {
+      "memory_weight": 0.67,
+      "recurrence": "possible_repeated_theme",
+      "sensitivity": "medium",
+      "save_recommendation": true,
+      "summary": "User often knows what to do but feels blocked at initiation."
+    },
+    "response_strategy": {
+      "needed_response": "understand_then_small_step",
+      "tone": "warm_grounded",
+      "suggestion_level": "minimal",
+      "boundary_level": "light",
+      "avoid": ["empty motivation", "discipline framing", "too many action items"],
+      "llm_instruction": "Validate the activation block, reduce shame, and offer one action small enough to begin within two minutes."
+    }
+  }
+}

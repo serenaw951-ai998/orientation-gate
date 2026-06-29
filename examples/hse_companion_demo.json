@@ -1,0 +1,33 @@
+{
+  "use_case": "ai_companion",
+  "input": {
+    "user_message": "I don't want to do anything today.",
+    "recent_context": [],
+    "product_context": {
+      "type": "companion",
+      "relationship_mode": "warm",
+      "locale": "en-US"
+    }
+  },
+  "hse_output": {
+    "human_state": {
+      "primary_state": "low_energy_with_possible_withdrawal",
+      "secondary_states": ["fatigue", "need_for_presence"],
+      "emotional_intensity": 0.55,
+      "agency": 0.32
+    },
+    "memory_signal": {
+      "memory_weight": 0.52,
+      "recurrence": "unknown",
+      "sensitivity": "medium",
+      "save_recommendation": false
+    },
+    "response_strategy": {
+      "needed_response": "gentle_presence",
+      "tone": "soft",
+      "suggestion_level": "none_or_tiny",
+      "avoid": ["productivity pressure", "quick fixing"],
+      "llm_instruction": "Do not push productivity. Acknowledge low energy without labeling it as failure. Offer quiet companionship or one tiny grounding action."
+    }
+  }
+}

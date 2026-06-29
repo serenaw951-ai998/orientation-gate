@@ -1,0 +1,38 @@
+{
+  "use_case": "ai_tutor",
+  "input": {
+    "user_message": "Am I just stupid?",
+    "recent_context": [
+      {
+        "role": "user",
+        "content": "I still don't understand this math problem."
+      }
+    ],
+    "product_context": {
+      "type": "tutor",
+      "relationship_mode": "supportive",
+      "locale": "en-US"
+    }
+  },
+  "hse_output": {
+    "human_state": {
+      "primary_state": "self_doubt",
+      "secondary_states": ["learning_friction", "shame_signal"],
+      "emotional_intensity": 0.72,
+      "agency": 0.41
+    },
+    "memory_signal": {
+      "memory_weight": 0.61,
+      "recurrence": "possible_repeated_theme",
+      "sensitivity": "medium",
+      "save_recommendation": true
+    },
+    "response_strategy": {
+      "needed_response": "reframe_then_teach",
+      "tone": "calm_encouraging",
+      "suggestion_level": "light",
+      "avoid": ["generic praise", "hard correction"],
+      "llm_instruction": "Separate difficulty from identity. Then explain the concept in a smaller step. Avoid saying only 'you are not stupid' without evidence."
+    }
+  }
+}
