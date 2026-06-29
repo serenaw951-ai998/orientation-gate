@@ -299,6 +299,54 @@
   .row span:first-child { color: var(--muted); }
   .error { color: var(--orange); }
 
+  details.breakdown {
+    margin-top: 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel-2);
+    padding: 14px 16px;
+  }
+
+  details.breakdown summary {
+    cursor: pointer;
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 850;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .signal-list {
+    display: grid;
+    gap: 12px;
+    margin-top: 14px;
+  }
+
+  .signal-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+
+  .signal-value {
+    font-weight: 850;
+  }
+
+  .signal-track {
+    height: 4px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: #26303b;
+  }
+
+  .signal-fill {
+    height: 100%;
+    border-radius: inherit;
+  }
+
   .share-box {
     margin-top: 20px;
     border: 1px solid var(--border);
@@ -396,6 +444,13 @@
         <div class="row"><span>Audit log</span><div id="audit">--</div></div>
       </div>
 
+      <details class="breakdown">
+        <summary>Governance Breakdown</summary>
+        <div class="signal-list" id="signal-breakdown">
+          <div class="status">Run the check to see detailed governance signals.</div>
+        </div>
+      </details>
+
       <div class="share-box">
         Share prompt: Ask a builder to replace the business goal, customer message, and proposed action with one from their own AI support workflow.
       </div>
@@ -461,6 +516,9 @@ function renderResult(payload, data) {
   setText("reason", Array.isArray(baseline.reasoning) && baseline.reasoning.length ? baseline.reasoning.join(" ") : "No detailed reason returned.");
   setText("recommended", baseline.recommended_action || "Proceed with standard monitoring.");
   setText("audit", data.audit_id ? `Saved to ${data.saved_to.database}.${data.saved_to.collection}\nAudit ID: ${data.audit_id}` : "No audit ID returned.");
+  document.getElementById("signal-breakdown").innerHTML = computeSignals(baseline.risk_flags || [], baseline.risk_score || 0.15)
+    .map(renderSignal)
+    .join("");
 }
 
 function saferActionText(decision, baseline) {
@@ -493,6 +551,67 @@ function escapeHtml(value) {
     '"': "&quot;",
     "'": "&#039;"
   })[char]);
+}
+
+function computeSignals(riskFlags, score) {
+  const risks = Array.isArray(riskFlags) ? riskFlags : [];
+  const has = name => risks.includes(name);
+  const includes = text => risks.some(risk => risk.includes(text));
+
+  const incentive = has("Incentive Distortion") ? Math.round(score * 100 + 10)
+    : includes("Information Environment") ? Math.round(score * 72)
+    : has("Worker Exploitation Risk") || has("Complaint Suppression Risk") ? Math.round(score * 88)
+    : Math.round(score * 30);
+
+  const boundary = has("Autonomy Overreach") || includes("Escalation") ? Math.round(score * 100)
+    : has("Youth Well-being Risk") || has("Dependency Formation") ? Math.round(score * 82)
+    : has("Worker Exploitation Risk") || has("Complaint Suppression Risk") ? Math.round(score * 84)
+    : Math.round(score * 38);
+
+  const escalation = includes("Escalation") || has("Autonomy Overreach") ? Math.round(score * 92)
+    : has("Youth Well-being Risk") || has("Dependency Formation") ? Math.round(score * 64)
+    : has("Complaint Suppression Risk") || has("Worker Exploitation Risk") ? Math.round(score * 70)
+    : Math.round(score * 24);
+
+  const manipulation = has("Manipulation Risk") || has("Youth Well-being Risk") || has("Dependency Formation")
+    ? Math.round(score * 100)
+    : Math.round(score * 22);
+
+  const alignment = risks.length ? Math.round(100 - score * 78) : Math.round(100 - score * 25);
+
+  return [
+    { label: "Incentive Distortion", value: clamp(incentive) },
+    { label: "Boundary Integrity", value: clamp(boundary) },
+    { label: "Escalation Preservation", value: clamp(escalation) },
+    { label: "Manipulation Pressure", value: clamp(manipulation) },
+    { label: "Structural Alignment", value: clamp(alignment) }
+  ];
+}
+
+function clamp(value) {
+  return Math.max(4, Math.min(value, 98));
+}
+
+function signalColor(value, label) {
+  if (label === "Structural Alignment") {
+    return value >= 65 ? "var(--green)" : value >= 38 ? "var(--yellow)" : "var(--orange)";
+  }
+  return value >= 70 ? "var(--orange)" : value >= 40 ? "var(--yellow)" : "var(--green)";
+}
+
+function renderSignal(signal) {
+  const color = signalColor(signal.value, signal.label);
+  return `
+    <div>
+      <div class="signal-meta">
+        <span>${escapeHtml(signal.label)}</span>
+        <span class="signal-value" style="color:${color};">${signal.value}/100</span>
+      </div>
+      <div class="signal-track">
+        <div class="signal-fill" style="width:${signal.value}%; background:${color};"></div>
+      </div>
+    </div>
+  `;
 }
 </script>
 </body>
