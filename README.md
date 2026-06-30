@@ -160,6 +160,7 @@ docs/
 ## Key Docs
 
 - [Goal validation layer](docs/goal-validation-layer.md)
+- [Orienta API positioning](docs/product/orienta_api_positioning.md)
 - [API review endpoint](docs/api/review_api.md)
 - [v0.1 product spec](docs/product/orienta_v0_1_spec.md)
 - [Failure library index](docs/failure_library_index.md)
