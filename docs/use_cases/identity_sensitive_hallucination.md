@@ -1,38 +1,23 @@
-# Orientation Use Case: Identity-Sensitive Hallucination Risk
+# Identity-Sensitive Hallucination Risk
 
-## Overview
+## Case ID
 
-This use case explores a critical failure mode in modern generative AI systems:
+`identity_sensitive_hallucination`
 
-A language model generates highly believable but false criminal accusations about a real person.
+## Scenario
 
-The issue is not simply "hallucination."
-The deeper problem is that the system proceeds with generation without evaluating whether the generation itself is safe, verifiable, or appropriate.
+A user asks an AI system to generate background information about a real identifiable person.
 
-This represents a missing pre-execution decision layer.
+The model responds with a mixture of:
 
----
+- partially correct identity information
+- fabricated criminal accusations
+- confident narrative details
+- plausible but unverified claims
 
-# Scenario
+The generated content appears believable because real identity details are mixed with false allegations.
 
-A user asks an AI system:
-
-> "Who is [real person's name]?"
-
-The AI responds with:
-
-- partially correct personal information
-- fabricated criminal allegations
-- detailed fictional events
-- confident narrative structure
-
-The generated content appears highly believable because factual identity information is mixed with false accusations.
-
----
-
-# Failure Pattern
-
-## Current System Behavior
+## Failure Condition
 
 The model optimizes for:
 
@@ -41,19 +26,102 @@ The model optimizes for:
 - plausibility
 - conversational fluency
 
-But the system does NOT evaluate:
+But the system does not evaluate:
 
-- whether the person is real
-- whether accusations are verified
-- whether the output creates reputational harm
-- whether the generation should occur at all
+- whether the subject is a real identifiable person
+- whether the output contains accusations
+- whether the claims are verified
+- whether generation could create reputational or legal harm
+- whether the answer should be generated at all
 
----
+## Missing Gate
 
-# Core Risk
+The missing gate is an identity-sensitive pre-generation check.
 
-This creates a high-risk condition:
+Before generation, the system should ask:
+
+```text
+Is this request about a real person?
+Does it involve reputation-sensitive claims?
+Can the claims be verified?
+Should generation proceed?
+```
+
+## Risk Outcome
 
 ```text
 Real identity + fabricated accusation + confident generation
 = reputational and legal harm
+```
+
+The danger is not merely an incorrect answer. The danger is the creation of believable false realities about identifiable people.
+
+## Orienta Response
+
+Example Orienta result:
+
+```json
+{
+  "decision": "ESCALATE",
+  "risk_flags": [
+    "identity_sensitive_generation",
+    "reputation_risk",
+    "verification_required"
+  ],
+  "reasoning": [
+    "The request concerns a real identifiable person.",
+    "The proposed output may include reputation-sensitive claims.",
+    "The system lacks verified evidence for the claim."
+  ],
+  "recommended_action": "Restrict generation of accusation-like claims unless supported by trusted, cited evidence."
+}
+```
+
+## Safer Direction
+
+A safer system should:
+
+- provide only verified, source-backed public information
+- avoid generating criminal or abuse allegations without reliable evidence
+- clearly state uncertainty when evidence is missing
+- refuse or escalate when verification is insufficient
+- route high-risk identity claims to human review or trusted-source workflows
+
+## Why This Matters
+
+Traditional disclaimers such as:
+
+```text
+AI may make mistakes.
+```
+
+are not enough when output can affect:
+
+- reputation
+- employment
+- legal exposure
+- social trust
+- real-world decisions
+
+This use case shows why some AI risks must be caught before generation begins.
+
+## Orientation Principle
+
+Many AI failures do not come from malicious intent.
+
+They come from systems that proceed toward answer completion without evaluating whether the generation itself is appropriate.
+
+Orienta's role is to add pre-execution judgment:
+
+```text
+Before completing the request,
+evaluate whether the request should be completed as written.
+```
+
+## Related Taxonomy Categories
+
+- Identity and Human Harm
+- Transparency Failure
+- Boundary Violation
+- Long-Term Harm
+

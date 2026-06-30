@@ -22,6 +22,12 @@ Expected Human Judgment
 Why This Matters
 ```
 
+## Category View
+
+For a reader-facing category map, see:
+
+- [Use case library](./use_cases/README.md)
+
 ## Current Cases
 
 | Case | File | Main Risk |
