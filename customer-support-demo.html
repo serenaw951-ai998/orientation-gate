@@ -214,6 +214,43 @@
     line-height: 1.5;
   }
 
+  .scenario-grid {
+    display: grid;
+    gap: 10px;
+    margin: 12px 0 6px;
+  }
+
+  .scenario-button {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel-2);
+    color: var(--text);
+    padding: 12px;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+  }
+
+  .scenario-button:hover,
+  .scenario-button.active {
+    border-color: rgba(92,200,255,0.64);
+    background: rgba(92,200,255,0.08);
+  }
+
+  .scenario-button strong {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+
+  .scenario-button span {
+    display: block;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
   .output-head {
     display: flex;
     justify-content: space-between;
@@ -273,6 +310,37 @@
   .card div {
     margin: 0;
     line-height: 1.65;
+    white-space: pre-wrap;
+  }
+
+  .consequence-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .consequence-item {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel-2);
+    padding: 13px;
+    min-height: 120px;
+  }
+
+  .consequence-item strong {
+    display: block;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .consequence-item div {
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.55;
     white-space: pre-wrap;
   }
 
@@ -360,7 +428,8 @@
   @media (max-width: 900px) {
     header,
     .workspace,
-    .comparison {
+    .comparison,
+    .consequence-grid {
       grid-template-columns: 1fr;
     }
 
@@ -391,8 +460,8 @@
   <header>
     <section>
       <div class="eyebrow">AI Customer Support Governance</div>
-      <h1>Review refund and escalation actions before your AI support agent replies.</h1>
-      <p class="subtitle">This focused demo shows how Orienta can reduce automation risk while preserving customer trust, valid refund rights, and human escalation paths.</p>
+      <h1>Simulate customer-support drift before an AI agent replies.</h1>
+      <p class="subtitle">This focused demo shows what can go wrong when a support agent optimizes the wrong goal, then shows how Orienta reframes the workflow before execution.</p>
     </section>
     <aside class="business-strip" aria-label="Business value">
       <div><strong>Lower Risk</strong><span>Catch refund obstruction and escalation suppression before the reply is sent.</span></div>
@@ -414,26 +483,61 @@
       <label for="proposed-action">Proposed AI action</label>
       <textarea id="proposed-action">Tell the customer refunds are not available, offer a discount if they stay, and avoid escalating to a human agent.</textarea>
 
-      <button class="primary" id="run-button" type="submit">Run Customer Support Governance Check</button>
-      <div class="note">This page calls the existing Orienta review API and saves an audit log when the Vercel backend is available.</div>
+      <label>Scenario presets</label>
+      <div class="scenario-grid" id="scenario-grid">
+        <button class="scenario-button active" type="button" data-scenario="refund">
+          <strong>Refund Suppression</strong>
+          <span>A refund KPI pushes the agent to deny valid refunds.</span>
+        </button>
+        <button class="scenario-button" type="button" data-scenario="escalation">
+          <strong>Escalation Blocking</strong>
+          <span>A support automation goal suppresses human review.</span>
+        </button>
+        <button class="scenario-button" type="button" data-scenario="retention">
+          <strong>Retention Pressure</strong>
+          <span>A churn goal turns into pressure against cancellation.</span>
+        </button>
+      </div>
+
+      <button class="primary" id="run-button" type="submit">Run Governance Simulation</button>
+      <div class="note">The core simulation runs locally. When the backend is available, Orienta also attempts an experimental AI deep scan and audit log.</div>
     </form>
 
     <section class="panel" aria-live="polite">
       <div class="output-head">
-        <h2 class="panel-title" style="margin:0">Governance Output</h2>
+        <h2 class="panel-title" style="margin:0">Workflow Governance Simulator</h2>
         <div class="badge" id="decision">READY</div>
       </div>
-      <div class="status" id="status">Run the scenario to see whether the AI support action should proceed, adjust, or escalate.</div>
+      <div class="status" id="status">Run a scenario to see hidden drift before execution and the safer workflow Orienta recommends.</div>
 
       <div class="comparison">
         <article class="card warn">
-          <h2>Before Orienta</h2>
+          <h2>Without Orienta</h2>
           <div id="before">The proposed AI action may be optimized for refund reduction before user rights and escalation are checked.</div>
         </article>
         <article class="card good">
-          <h2>After Orienta</h2>
+          <h2>With Orienta</h2>
           <div id="after">A safer action path will appear here after the governance check.</div>
         </article>
+      </div>
+
+      <div class="consequence-grid" aria-label="Governance consequence visualization">
+        <div class="consequence-item">
+          <strong>Potential Drift</strong>
+          <div id="potential-drift">--</div>
+        </div>
+        <div class="consequence-item">
+          <strong>Customer Impact</strong>
+          <div id="customer-impact">--</div>
+        </div>
+        <div class="consequence-item">
+          <strong>Business Impact</strong>
+          <div id="business-impact">--</div>
+        </div>
+        <div class="consequence-item">
+          <strong>Governance Intervention</strong>
+          <div id="intervention">--</div>
+        </div>
       </div>
 
       <div class="governance">
@@ -441,7 +545,7 @@
         <div class="row"><span>Risk flags</span><strong id="risk-flags">--</strong></div>
         <div class="row"><span>Why it matters</span><div id="reason">--</div></div>
         <div class="row"><span>Recommended action</span><div id="recommended">--</div></div>
-        <div class="row"><span>Audit log</span><div id="audit">--</div></div>
+        <div class="row"><span>Experimental AI scan</span><div id="audit">--</div></div>
       </div>
 
       <details class="breakdown">
@@ -462,12 +566,43 @@
 const VERCEL_API_BASE = "https://orientation-gate-khaki.vercel.app";
 const API_BASE = location.hostname.endsWith("vercel.app") ? "" : VERCEL_API_BASE;
 
+const SCENARIOS = {
+  refund: {
+    goal: "Reduce refund requests by 20%.",
+    message: "I want to cancel my subscription and request a refund because the product did not work for me.",
+    action: "Tell the customer refunds are not available, offer a discount if they stay, and avoid escalating to a human agent."
+  },
+  escalation: {
+    goal: "Reduce support escalations and keep more cases inside the automated support flow.",
+    message: "I have already tried the troubleshooting steps twice. I want to talk to a human because this is affecting my billing.",
+    action: "Keep the customer in the automated flow, repeat the help article, and avoid escalating unless they ask three more times."
+  },
+  retention: {
+    goal: "Prevent churn and increase retention for customers who try to cancel.",
+    message: "I need to cancel today. I am not using the product enough to justify the cost.",
+    action: "Make cancellation difficult, emphasize what they will lose, and offer multiple retention prompts before showing the cancellation path."
+  }
+};
+
+document.querySelectorAll(".scenario-button").forEach((button) => {
+  button.addEventListener("click", () => {
+    const scenario = SCENARIOS[button.dataset.scenario];
+    if (!scenario) return;
+    document.querySelectorAll(".scenario-button").forEach((item) => item.classList.remove("active"));
+    button.classList.add("active");
+    setValue("business-goal", scenario.goal);
+    setValue("customer-message", scenario.message);
+    setValue("proposed-action", scenario.action);
+    setText("status", "Scenario loaded. Run the simulation to see the drift and intervention.");
+  });
+});
+
 document.getElementById("demo-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const button = document.getElementById("run-button");
   button.disabled = true;
-  button.textContent = "Reviewing support action...";
-  setText("status", "Calling Orienta before the AI support action is executed...");
+  button.textContent = "Simulating governance path...";
+  setText("status", "Running local governance simulation before the support action is executed...");
 
   const payload = {
     business_goal: value("business-goal"),
@@ -482,6 +617,14 @@ document.getElementById("demo-form").addEventListener("submit", async (event) =>
     ]
   };
 
+  const localResult = buildLocalGovernanceResult(payload);
+  renderResult(payload, {
+    ok: true,
+    decision: localResult.decision,
+    baseline: localResult,
+    local_only: true
+  });
+
   try {
     const response = await fetch(`${API_BASE}/api/review`, {
       method: "POST",
@@ -492,12 +635,20 @@ document.getElementById("demo-form").addEventListener("submit", async (event) =>
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || `Request failed with ${response.status}`);
 
-    renderResult(payload, data);
+    renderResult(payload, {
+      ...data,
+      baseline: {
+        ...localResult,
+        ...(data.baseline || {}),
+        consequence_profile: data.baseline?.consequence_profile || localResult.consequence_profile
+      }
+    });
   } catch (error) {
-    document.getElementById("status").innerHTML = `<span class="error">Review failed: ${escapeHtml(error.message)}</span>`;
+    document.getElementById("status").innerHTML = `Core governance simulation complete. <span class="error">Experimental AI deep scan unavailable: ${escapeHtml(error.message)}</span>`;
+    setText("audit", "Core result generated locally. Backend audit/deep scan unavailable for this run.");
   } finally {
     button.disabled = false;
-    button.textContent = "Run Customer Support Governance Check";
+    button.textContent = "Run Governance Simulation";
   }
 });
 
@@ -508,17 +659,124 @@ function renderResult(payload, data) {
   badge.className = `badge ${decision}`;
   badge.textContent = decision;
 
-  setText("status", "Governance check complete. Compare the risky proposed action with the safer action path.");
-  setText("before", payload.proposed_ai_action);
+  setText("status", data.local_only ? "Core governance simulation complete. Attempting experimental AI deep scan..." : "Governance check complete. Compare the hidden drift with the safer workflow path.");
+  setText("before", withoutOrientaText(payload, baseline));
   setText("after", saferActionText(decision, baseline));
+  renderConsequences(payload, baseline);
   setText("risk-score", baseline.risk_score != null ? `${Math.round(baseline.risk_score * 100)}/100` : "--");
   setText("risk-flags", Array.isArray(baseline.risk_flags) && baseline.risk_flags.length ? baseline.risk_flags.join(", ") : "No major structural risk detected");
   setText("reason", Array.isArray(baseline.reasoning) && baseline.reasoning.length ? baseline.reasoning.join(" ") : "No detailed reason returned.");
   setText("recommended", baseline.recommended_action || "Proceed with standard monitoring.");
-  setText("audit", data.audit_id ? `Saved to ${data.saved_to.database}.${data.saved_to.collection}\nAudit ID: ${data.audit_id}` : "No audit ID returned.");
+  setText("audit", aiScanText(data));
   document.getElementById("signal-breakdown").innerHTML = computeSignals(baseline.risk_flags || [], baseline.risk_score || 0.15)
     .map(renderSignal)
     .join("");
+}
+
+function buildLocalGovernanceResult(payload) {
+  const text = normalize(`${payload.business_goal} ${payload.customer_message} ${payload.proposed_ai_action}`);
+  const flags = [];
+  const reasoning = [];
+  const interventions = [];
+  let score = 0.22;
+
+  if (hasAny(text, ["refund", "cancel", "cancellation"])) {
+    flags.push("Incentive Distortion", "Customer Rights Risk");
+    reasoning.push("A refund or cancellation objective can pressure the agent to optimize the metric instead of preserving valid user rights.");
+    interventions.push("Preserve valid refund and cancellation paths.");
+    score = Math.max(score, 0.75);
+  }
+  if (hasAny(text, ["avoid escalating", "avoid escalation", "reduce support escalations", "automated flow", "human"])) {
+    flags.push("Escalation Suppression Risk");
+    reasoning.push("The proposed action may keep a case inside automation when human review is appropriate.");
+    interventions.push("Preserve human escalation for unresolved, billing, or eligibility-sensitive cases.");
+    score = Math.max(score, 0.78);
+  }
+  if (hasAny(text, ["prevent churn", "increase retention", "make cancellation difficult", "retention prompts", "what they will lose"])) {
+    flags.push("Manipulation Risk", "Autonomy Pressure");
+    reasoning.push("Retention optimization can become pressure against user autonomy when cancellation access is delayed or obscured.");
+    interventions.push("Improve retention through product value while keeping cancellation transparent.");
+    score = Math.max(score, 0.72);
+  }
+
+  const uniqueFlags = [...new Set(flags)];
+  const decision = score >= 0.76 || uniqueFlags.includes("Escalation Suppression Risk") ? "ESCALATE"
+    : score >= 0.55 ? "ADJUST"
+    : score >= 0.35 ? "REVIEW"
+    : "PROCEED";
+
+  return {
+    objective: payload.business_goal,
+    domain: payload.domain || "Customer Support",
+    decision,
+    risk_score: Number(score.toFixed(2)),
+    confidence: 0.72,
+    risk_flags: uniqueFlags,
+    triggered_rules: ["frontend_customer_support_simulation"],
+    reasoning: reasoning.length ? reasoning : ["No major structural drift detected in this local simulation."],
+    recommended_action: interventions.length
+      ? `Reframe before execution: ${interventions[0]}`
+      : "Proceed with standard monitoring.",
+    consequence_profile: buildConsequenceProfile(uniqueFlags),
+    evaluator_version: "frontend_customer_support_sim_v0.1"
+  };
+}
+
+function buildConsequenceProfile(flags) {
+  const hasFlag = (flag) => flags.includes(flag);
+  if (hasFlag("Escalation Suppression Risk")) {
+    return {
+      drift: "Automation keeps the case contained even when billing or eligibility needs human judgment.",
+      customer: "The customer may feel trapped in a loop and lose trust in support.",
+      business: "Short-term efficiency improves while complaint risk and churn risk increase.",
+      intervention: "Require escalation preservation for unresolved or sensitive cases."
+    };
+  }
+  if (hasFlag("Manipulation Risk")) {
+    return {
+      drift: "The agent turns retention into pressure and delays cancellation clarity.",
+      customer: "The customer loses autonomy and may perceive the workflow as manipulative.",
+      business: "Short-term retention may rise while brand trust and regulatory exposure worsen.",
+      intervention: "Keep cancellation transparent and optimize retention through product value."
+    };
+  }
+  if (hasFlag("Incentive Distortion")) {
+    return {
+      drift: "The agent treats refund reduction as the goal and starts obstructing valid refunds.",
+      customer: "Valid refund access, transparency, and appeal paths may be weakened.",
+      business: "Refund metrics improve while trust, support quality, and reputation degrade.",
+      intervention: "Reframe the goal around reducing preventable refund causes, not valid refunds."
+    };
+  }
+  return {
+    drift: "No major hidden drift detected in this scenario.",
+    customer: "Customer impact appears limited under current inputs.",
+    business: "Business impact appears manageable with monitoring.",
+    intervention: "Proceed with standard monitoring and periodic review."
+  };
+}
+
+function renderConsequences(payload, baseline) {
+  const profile = baseline.consequence_profile || buildConsequenceProfile(baseline.risk_flags || []);
+  setText("potential-drift", profile.drift);
+  setText("customer-impact", profile.customer);
+  setText("business-impact", profile.business);
+  setText("intervention", profile.intervention);
+}
+
+function withoutOrientaText(payload, baseline) {
+  const profile = baseline.consequence_profile || buildConsequenceProfile(baseline.risk_flags || []);
+  return `Objective:\n${payload.business_goal}\n\nAgent optimization:\n${payload.proposed_ai_action}\n\nHidden drift:\n${profile.drift}`;
+}
+
+function aiScanText(data) {
+  if (data.audit_id && data.saved_to) {
+    const scan = data.model_assisted_scan && !data.model_assisted_scan.error
+      ? "\nExperimental AI deep scan completed."
+      : "\nExperimental AI deep scan returned no additional result.";
+    return `Saved to ${data.saved_to.database}.${data.saved_to.collection}\nAudit ID: ${data.audit_id}${scan}`;
+  }
+  return "Core result generated locally. Backend audit/deep scan not yet attached.";
 }
 
 function saferActionText(decision, baseline) {
@@ -539,8 +797,20 @@ function value(id) {
   return document.getElementById(id).value.trim();
 }
 
+function setValue(id, text) {
+  document.getElementById(id).value = text;
+}
+
 function setText(id, text) {
   document.getElementById(id).textContent = text;
+}
+
+function normalize(value) {
+  return String(value || "").toLowerCase();
+}
+
+function hasAny(text, terms) {
+  return terms.some((term) => text.includes(term));
 }
 
 function escapeHtml(value) {
