@@ -159,9 +159,12 @@ docs/
 
 ## Key Docs
 
+- [Goal validation layer](docs/goal-validation-layer.md)
 - [API review endpoint](docs/api/review_api.md)
 - [v0.1 product spec](docs/product/orienta_v0_1_spec.md)
 - [Failure library index](docs/failure_library_index.md)
+- [Customer service KPI distortion case](docs/use_cases/customer_service_kpi_distortion.md)
+- [AI engineering case studies](docs/ai_engineering_case_studies.md)
 - [Product roadmap](ORIENTA_PRODUCT_ROADMAP.md)
 - [Vision note](ORIENTA_VISION_NOTE.md)
 - [Risk taxonomy](docs/risk_taxonomy.md)
