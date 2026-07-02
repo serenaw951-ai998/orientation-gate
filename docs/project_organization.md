@@ -51,11 +51,11 @@ These are related to broader Senux/HSE/music/narrative exploration, but they are
 
 - `心旋 - HSE Human State Engine.md`
 - `心旋 - HSE API v0.1.md`
-- `docs/hse-concept.md`
-- `docs/hse-api-v0.1.md`
-- `tools/music/`
-- `tools/narrative/`
-- `tools/emotion-portrait-*.html`
+- `_senux_other_products/docs-hse/hse-concept.md`
+- `_senux_other_products/docs-hse/hse-api-v0.1.md`
+- `_senux_other_products/tools/music/`
+- `_senux_other_products/tools/narrative/`
+- `_senux_other_products/tools/emotion-portrait-*.html`
 
 They may become relevant later, but they should not be mixed into the main Orienta README.
 

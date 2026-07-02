@@ -1,7 +1,7 @@
 {
   "name": "orientation-gate",
   "version": "0.1.0",
-  "description": "A pre-execution AI governance demo for evaluating objectives before optimization.",
+  "description": "Orienta (Orientation Gate): a pre-execution governance layer that evaluates AI objectives and planned actions before they run.",
   "main": "src/orientation_engine.js",
   "scripts": {
     "demo": "node src/gate_node.js examples/customer_support_demo_input.json",
@@ -12,7 +12,7 @@
     "vercel:dev": "vercel dev"
   },
   "dependencies": {
-    "mongodb": "^6.20.0"
+    "mongodb": "^6.21.0"
   },
   "devDependencies": {
     "vercel": "^48.0.0"

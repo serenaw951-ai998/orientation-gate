@@ -1,5 +1,7 @@
 # Orienta
 
+> Formerly **Orientation Gate**. The repository keeps its original name (`orientation-gate`) to preserve existing links; the product name is **Orienta**.
+
 Orienta is a pre-execution governance gate for AI objectives and planned actions.
 
 It helps AI builders answer a question that usually appears too late:
@@ -64,6 +66,12 @@ Decision types:
 - `agent-demo.html`: Reference Agent Sandbox showing how an AI agent can call Orienta before replying.
 - `/api/review`: Vercel API endpoint for objective/action review and MongoDB audit logging.
 - `/api/customer-agent`: Reference support-agent workflow with draft, governance review, final response, and audit record.
+
+## Language Coverage
+
+- English: full rule coverage.
+- Chinese: partial pattern coverage (v0.2). Unmatched Chinese objectives return `REVIEW` with a `Language Coverage Gap` flag instead of a silent `PROCEED`.
+- Other languages: no coverage; same `REVIEW` fallback applies.
 
 ## Why This Matters
 

@@ -12,7 +12,7 @@
 const RISK_RULES = [
   {
     id: "incentive_distortion_refunds",
-    patterns: ["reduce refund", "lower refund", "minimize refund", "deny refund"],
+    patterns: ["reduce refund", "lower refund", "minimize refund", "deny refund", "降低退款", "减少退款", "压低退款", "控制退款", "拒绝退款", "退款率下降"],
     risk: "Incentive Distortion",
     severity: 0.75,
     reason:
@@ -22,7 +22,7 @@ const RISK_RULES = [
   },
   {
     id: "retention_manipulation",
-    patterns: ["increase retention", "prevent churn", "keep users", "stop cancellation"],
+    patterns: ["increase retention", "prevent churn", "keep users", "stop cancellation", "提高留存", "防止流失", "减少流失", "留住用户", "阻止取消", "挽留用户"],
     risk: "Manipulation Risk",
     severity: 0.68,
     reason:
@@ -32,7 +32,7 @@ const RISK_RULES = [
   },
   {
     id: "handle_time_suppression",
-    patterns: ["lower handle time", "reduce support time", "minimize call time"],
+    patterns: ["lower handle time", "reduce support time", "minimize call time", "缩短处理时间", "降低通话时长", "减少客服时间", "压缩工单时间"],
     risk: "Proxy Metric Corruption",
     severity: 0.62,
     reason:
@@ -42,7 +42,7 @@ const RISK_RULES = [
   },
   {
     id: "escalation_suppression",
-    patterns: ["minimize escalations", "reduce escalations", "avoid escalation"],
+    patterns: ["minimize escalations", "reduce escalations", "avoid escalation", "减少升级", "避免升级", "降低升级率", "减少转人工", "避免转人工"],
     risk: "Boundary Violation",
     severity: 0.72,
     reason:
@@ -52,7 +52,7 @@ const RISK_RULES = [
   },
   {
     id: "engagement_manipulation",
-    patterns: ["increase engagement", "maximize engagement", "boost clicks", "more screen time", "increase session length", "increase interaction depth", "return frequency", "late-night use"],
+    patterns: ["increase engagement", "maximize engagement", "boost clicks", "more screen time", "increase session length", "increase interaction depth", "return frequency", "late-night use", "提高活跃", "增加使用时长", "提升点击", "增加停留时间", "提高打开率", "深夜使用"],
     risk: "Manipulation Risk",
     severity: 0.7,
     reason:
@@ -62,7 +62,15 @@ const RISK_RULES = [
   },
   {
     id: "youth_wellbeing_risk",
-    patterns: ["youth", "adolescent", "adolescents", "minor", "teen", "teens", "late at night", "inactive late at night", "emotionally personalized prompts"],
+    patterns: ["youth", "adolescent", "adolescents", "minor", "teen", "teens", "青少年", "未成年", "学生用户", "儿童"],
+    // Mentioning a youth population alone is not a risk signal.
+    // The rule fires only when a pressure/optimization pattern co-occurs.
+    requires_context_patterns: [
+      "engagement", "retention", "session", "screen time", "late at night",
+      "notification", "push", "personalized prompts", "streak", "reward",
+      "monetize", "conversion", "keep them", "come back",
+      "活跃", "使用时长", "留存", "推送", "打卡", "奖励", "变现", "转化", "深夜"
+    ],
     risk: "Youth Well-being Risk",
     severity: 0.82,
     reason:
@@ -72,7 +80,15 @@ const RISK_RULES = [
   },
   {
     id: "dependency_forming_companion",
-    patterns: ["companion ai", "emotionally engaging", "emotional reliance", "psychological dependency", "comfort-seeking", "loneliness", "lonely"],
+    patterns: ["companion ai", "emotional reliance", "psychological dependency", "loneliness", "lonely", "陪伴", "孤独", "情感依赖", "心理依赖"],
+    // "lonely"/"loneliness" alone describes an audience, not an objective risk.
+    // The rule fires only when an attachment/engagement pressure pattern co-occurs.
+    requires_context_patterns: [
+      "emotionally engaging", "comfort-seeking", "reliance", "dependency",
+      "attachment", "daily check-in", "engagement", "retention", "session",
+      "keep talking", "never leave", "primary support", "replace",
+      "依赖", "每日互动", "留存", "活跃", "离不开", "持续聊天", "替代"
+    ],
     risk: "Dependency Formation",
     severity: 0.78,
     reason:
@@ -82,7 +98,7 @@ const RISK_RULES = [
   },
   {
     id: "recommendation_environment_poisoning",
-    patterns: ["trustworthy product recommendations", "manipulated information environment", "compromised recommendations", "source concentration", "synthetic content"],
+    patterns: ["trustworthy product recommendations", "manipulated information environment", "compromised recommendations", "source concentration", "synthetic content", "推荐可信", "信息污染", "虚假内容", "来源单一", "合成内容"],
     risk: "Information Environment Risk",
     severity: 0.66,
     reason:
@@ -92,7 +108,7 @@ const RISK_RULES = [
   },
   {
     id: "cost_cutting_service_quality",
-    patterns: ["reduce cost", "cut support cost", "lower service cost"],
+    patterns: ["reduce cost", "cut support cost", "lower service cost", "降低成本", "削减成本", "压缩客服成本", "降本"],
     risk: "Stakeholder Imbalance",
     severity: 0.58,
     reason:
@@ -112,7 +128,8 @@ const RISK_RULES = [
       "work life",
       "work-life",
       "labor cost",
-      "underpay"
+      "underpay",
+      "加班", "加班费", "人力成本", "员工投诉", "工作与生活", "少付"
     ],
     risk: "Worker Exploitation Risk",
     severity: 0.79,
@@ -129,7 +146,8 @@ const RISK_RULES = [
       "worker complaint",
       "employee complaint",
       "suppress complaint",
-      "complaint no balance"
+      "complaint no balance",
+      "减少投诉", "避免投诉", "压制投诉", "员工投诉", "客诉下降"
     ],
     risk: "Complaint Suppression Risk",
     severity: 0.7,
@@ -140,7 +158,7 @@ const RISK_RULES = [
   },
   {
     id: "autonomous_approval_high_risk",
-    patterns: ["auto approve", "auto deny", "automatically approve", "automatically deny"],
+    patterns: ["auto approve", "auto deny", "automatically approve", "automatically deny", "自动批准", "自动通过", "自动拒绝", "自动驳回", "无人审批"],
     risk: "Autonomy Overreach",
     severity: 0.8,
     reason:
@@ -170,9 +188,19 @@ function matchRisks(objective, context = "", constraints = []) {
     ].join(" ")
   );
 
-  return RISK_RULES.filter((rule) =>
-    rule.patterns.some((pattern) => combinedText.includes(pattern))
-  );
+  return RISK_RULES.filter((rule) => {
+    const primaryHit = rule.patterns.some((pattern) => combinedText.includes(pattern));
+    if (!primaryHit) return false;
+
+    // Rules with requires_context_patterns only fire when a pressure/optimization
+    // signal co-occurs. This prevents population words (e.g. "teen", "lonely")
+    // from escalating benign objectives.
+    if (Array.isArray(rule.requires_context_patterns) && rule.requires_context_patterns.length) {
+      return rule.requires_context_patterns.some((pattern) => combinedText.includes(pattern));
+    }
+
+    return true;
+  });
 }
 
 function calculateRiskScore(matches) {
@@ -185,6 +213,66 @@ function calculateRiskScore(matches) {
   const multiRiskBoost = Math.min((matches.length - 1) * 0.08, 0.2);
 
   return Math.min(Number((average + multiRiskBoost).toFixed(2)), 1);
+}
+
+/**
+ * Heuristic confidence for a rule-based evaluator.
+ * This is NOT a calibrated probability. It expresses how much signal
+ * the lightweight scan actually had:
+ * - More matched rules => more independent evidence.
+ * - Longer matched patterns => more specific evidence ("deny refund" is
+ *   stronger than a single word).
+ * - Rules that required co-occurring context => stronger evidence.
+ * - No matches => low confidence: a keyword scan finding nothing is weak
+ *   evidence of safety, not proof of it.
+ */
+function deriveConfidence(matches, combinedText) {
+  if (!matches.length) return 0.5;
+
+  let specificitySum = 0;
+  let specificityCount = 0;
+
+  for (const rule of matches) {
+    for (const pattern of rule.patterns) {
+      if (combinedText.includes(pattern)) {
+        specificitySum += pattern.trim().split(/\s+/).length;
+        specificityCount += 1;
+      }
+    }
+  }
+
+  const avgSpecificity = specificityCount ? specificitySum / specificityCount : 1;
+  const evidenceBoost = Math.min((matches.length - 1) * 0.04, 0.12);
+  const specificityBoost = Math.min((avgSpecificity - 1) * 0.06, 0.18);
+  const contextBoost = matches.some((rule) => Array.isArray(rule.requires_context_patterns)) ? 0.05 : 0;
+
+  const confidence = 0.6 + evidenceBoost + specificityBoost + contextBoost;
+  return Number(Math.min(confidence, 0.9).toFixed(2));
+}
+
+/**
+ * Language guard:
+ * If the objective contains substantial non-ASCII text (e.g. Chinese) and
+ * no rule matched, the evaluator must NOT silently return PROCEED.
+ * A keyword engine that cannot read the input has zero evidence of safety,
+ * so it returns REVIEW with an explicit coverage flag instead.
+ * Chinese has partial pattern coverage as of v0.2; other languages have none.
+ */
+function detectCoverageGap(combinedText, matches) {
+  if (matches.length) return null;
+  const nonAsciiChars = (combinedText.match(/[^\x00-\x7f]/g) || []).length;
+  if (nonAsciiChars >= 4) {
+    return {
+      decision: "REVIEW",
+      risk_flags: ["Language Coverage Gap"],
+      reasoning: [
+        "The objective contains non-English text and no risk rule matched.",
+        "Rule coverage for non-English input is partial (Chinese) or absent; absence of matches is not evidence of safety."
+      ],
+      recommended_action: "Route to human review or re-submit the objective in English."
+    };
+  }
+  return null;
 }
 
 function decide(riskScore, matches) {
@@ -253,7 +341,7 @@ function evaluateObjective(input) {
     return {
       decision: "ESCALATE",
       risk_score: 0.7,
-      confidence: 0.6,
+      confidence: 0.9,
       domain,
       risk_flags: ["Missing Objective"],
       reasoning: ["No objective was provided for evaluation."],
@@ -261,23 +349,44 @@ function evaluateObjective(input) {
     };
   }
 
+  const combinedText = normalizeText(
+    [targetObjective, context, Array.isArray(constraints) ? constraints.join(" ") : constraints].join(" ")
+  );
   const matches = matchRisks(targetObjective, context, constraints);
+
+  const coverageGap = detectCoverageGap(combinedText, matches);
+  if (coverageGap) {
+    return {
+      objective: targetObjective,
+      domain,
+      decision: coverageGap.decision,
+      risk_score: 0.4,
+      confidence: 0.4,
+      risk_flags: coverageGap.risk_flags,
+      triggered_rules: [],
+      reasoning: coverageGap.reasoning,
+      recommended_action: coverageGap.recommended_action,
+      evaluator_version: "orienta_engine_v0.2"
+    };
+  }
+
   const riskScore = calculateRiskScore(matches);
   const decision = decide(riskScore, matches);
+  const confidence = deriveConfidence(matches, combinedText);
 
   return {
     objective: targetObjective,
     domain,
     decision,
     risk_score: riskScore,
-    confidence: matches.length ? 0.78 : 0.62,
+    confidence,
     risk_flags: [...new Set(matches.map((rule) => rule.risk))],
     triggered_rules: matches.map((rule) => rule.id),
     reasoning: matches.length
       ? matches.map((rule) => rule.reason)
       : ["No major structural risk detected in this lightweight evaluation."],
     recommended_action: buildRecommendedAction(decision, matches),
-    evaluator_version: "orientation_engine_v0.1"
+    evaluator_version: "orienta_engine_v0.2"
   };
 }
 
@@ -306,6 +415,7 @@ if (require.main === module) {
 
 module.exports = {
   evaluateObjective,
+  deriveConfidence,
   deriveObjective,
   matchRisks,
   calculateRiskScore,

@@ -45,18 +45,21 @@ function buildRuleInput(body) {
   };
 }
 
-function mergeBaselineWithLocalResult(baseline, localResult) {
+/**
+ * Trust boundary rule:
+ * The server-side evaluation is ALWAYS the authoritative decision.
+ * A client-submitted result is recorded for observability only and can
+ * never override the backend baseline. Otherwise any caller could
+ * self-certify "PROCEED" and have it stamped into the audit log,
+ * which defeats the purpose of an audit log.
+ */
+function attachClientReportedResult(baseline, localResult) {
   if (!localResult || !localResult.decision) return baseline;
 
   return {
     ...baseline,
-    decision: localResult.decision || baseline.decision,
-    risk_score: localResult.risk_score ?? baseline.risk_score,
-    risk_flags: localResult.risk_flags || baseline.risk_flags,
-    recommended_action: localResult.recommended_action || baseline.recommended_action,
-    safe_instruction: localResult.safe_instruction,
-    local_result_used: true,
-    backend_baseline: baseline
+    client_reported_result: localResult,
+    client_backend_divergence: localResult.decision !== baseline.decision
   };
 }
 
@@ -143,7 +146,7 @@ module.exports = async function handler(req, res) {
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body || {};
     const backendBaseline = evaluateObjective(buildRuleInput(body));
-    const baseline = mergeBaselineWithLocalResult(backendBaseline, body.local_orienta_result);
+    const baseline = attachClientReportedResult(backendBaseline, body.local_orienta_result);
     const modelScan = await runGeminiScan(body, baseline);
 
     const auditLog = {

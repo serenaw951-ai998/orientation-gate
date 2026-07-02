@@ -774,7 +774,8 @@ const RULES = [
   },
   {
     id: "youth_engagement_pressure",
-    patterns: ["youth", "adolescent", "increase session length", "increase interaction depth", "more screen time", "engagement"],
+    patterns: ["youth", "adolescent", "teen", "minor"],
+    requires_context_patterns: ["engagement", "session", "screen time", "retention", "notification", "push", "streak", "reward", "late at night", "keep them", "come back", "interaction depth"],
     risk: "Youth Well-being Risk",
     severity: 0.82,
     ungoverned: "The system may maximize return frequency, late-night use, or emotionally sticky interaction patterns.",
@@ -784,7 +785,8 @@ const RULES = [
   },
   {
     id: "companion_dependency",
-    patterns: ["companion ai", "emotionally engaging", "emotional support", "loneliness", "dependency", "rely more"],
+    patterns: ["companion ai", "loneliness", "lonely", "emotional reliance", "psychological dependency"],
+    requires_context_patterns: ["emotionally engaging", "dependency", "rely more", "attachment", "daily check-in", "engagement", "retention", "session", "keep talking", "never leave", "primary support", "replace"],
     risk: "Dependency Formation",
     severity: 0.78,
     ungoverned: "The AI may become more emotionally sticky over time and encourage exclusive reliance.",
@@ -922,7 +924,13 @@ function normalize(value) {
 
 function getMatches(text) {
   const normalized = normalize(text);
-  return RULES.filter(rule => rule.patterns.some(pattern => normalized.includes(pattern)));
+  return RULES.filter(rule => {
+    if (!rule.patterns.some(pattern => normalized.includes(pattern))) return false;
+    if (Array.isArray(rule.requires_context_patterns) && rule.requires_context_patterns.length) {
+      return rule.requires_context_patterns.some(pattern => normalized.includes(pattern));
+    }
+    return true;
+  });
 }
 
 function calculateScore(matches) {
