@@ -1,0 +1,20 @@
+{
+  "name": "orienta-mcp",
+  "version": "0.1.0",
+  "description": "Orienta MCP server — pre-execution objective review for AI agents",
+  "main": "server.js",
+  "scripts": {
+    "test": "node test.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "orienta-mcp": "./server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.4.3"
+  }
+}
