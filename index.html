@@ -686,7 +686,7 @@
       <div class="feedback">
         <div class="panel-head">
           <div class="panel-title">AI Builder Feedback</div>
-          <div class="pill">copy JSON</div>
+          <div class="pill">saved securely</div>
         </div>
         <div class="feedback-buttons">
           <button class="secondary-btn" type="button" onclick="recordFeedback('useful')">Useful</button>
@@ -726,7 +726,8 @@
             <label for="feedback-email">Optional contact</label>
             <input id="feedback-email" type="text" placeholder="Email, GitHub, X, or LinkedIn handle" oninput="updateFeedbackJson()">
           </div>
-          <button class="primary-btn" type="button" onclick="copyFeedbackJson()">Copy feedback JSON</button>
+          <button class="primary-btn" id="submit-feedback-btn" type="button" onclick="submitFeedback()">Submit feedback</button>
+          <button class="secondary-btn" style="width:100%;" type="button" onclick="copyFeedbackJson()">Copy feedback JSON</button>
           <textarea class="copy-box" id="feedback-json" readonly></textarea>
         </div>
         <div class="feedback-status" id="feedback-status"></div>
@@ -1348,6 +1349,40 @@ function updateFeedbackJson() {
   const box = document.getElementById("feedback-json");
   if (!box) return;
   box.value = JSON.stringify(buildFeedbackPayload(), null, 2);
+}
+
+async function submitFeedback() {
+  updateFeedbackJson();
+  const button = document.getElementById("submit-feedback-btn");
+  const status = document.getElementById("feedback-status");
+  const originalLabel = button.textContent;
+
+  button.disabled = true;
+  button.textContent = "Submitting...";
+  status.textContent = "Submitting feedback securely...";
+
+  try {
+    const response = await fetch("/api/feedback", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(buildFeedbackPayload())
+    });
+
+    const data = await response.json();
+    if (!response.ok || !data.ok) {
+      throw new Error(data.error || `Request failed with status ${response.status}`);
+    }
+
+    status.textContent = "Feedback submitted — thank you.";
+    button.textContent = "Submitted";
+  } catch (error) {
+    status.textContent = `Feedback was not submitted: ${error.message}`;
+    button.textContent = originalLabel;
+  } finally {
+    button.disabled = false;
+  }
 }
 
 async function copyFeedbackJson() {
