@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orienta — Agent Objective & Action Review</title>
+<style>
+  :root {
+    --bg: #0b0d10;
+    --panel: #13171d;
+    --panel-2: #171d24;
+    --border: #28313c;
+    --text: #edf2f7;
+    --muted: #91a0af;
+    --accent: #5cc8ff;
+    --green: #3ddc97;
+    --yellow: #f2c94c;
+    --orange: #ff8a5b;
+    --violet: #b58cff;
+    --red: #ff6b6b;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+  }
+
+  body::before {
+    content: "";
+    position: fixed; inset: 0; pointer-events: none; opacity: 0.12;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(11,13,16,0.92); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; height: 52px;
+  }
+
+  .nav-brand { font-size: 14px; font-weight: 800; letter-spacing: 0.08em; color: var(--accent); }
+  .nav-tabs { display: flex; gap: 4px; }
+  .nav-tab {
+    border: 0; background: transparent; color: var(--muted);
+    padding: 8px 14px; border-radius: 6px; cursor: pointer;
+    font: inherit; font-size: 13px; transition: background 0.15s, color 0.15s;
+  }
+  .nav-tab.active { background: var(--panel-2); color: var(--text); }
+  .nav-tab:hover:not(.active) { color: var(--text); }
+  .nav-links { display: flex; gap: 12px; font-size: 12px; }
+  .nav-links a { color: var(--muted); text-decoration: none; }
+  .nav-links a:hover { color: var(--accent); }
+
+  .page { display: none; }
+  .page.active { display: block; }
+
+  .p1-wrap { max-width: 1240px; margin: 0 auto; padding: 48px 24px 80px; }
+
+  .review-workspace { display:grid; grid-template-columns:minmax(0,1.08fr) minmax(0,0.92fr); gap:20px; align-items:start; }
+  .review-workspace .input-card { margin-bottom:0; }
+  .review-workspace .result-card { position:sticky; top:72px; }
+
+  .p1-eyebrow { color: var(--accent); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 14px; }
+  .p1-title { font-size: clamp(28px,4vw,42px); font-weight: 800; line-height: 1.1; margin-bottom: 12px; }
+  .p1-sub { color: var(--muted); font-size: 15px; line-height: 1.65; margin-bottom: 36px; max-width: 600px; }
+
+  .flow-banner {
+    display: grid; grid-template-columns: 1fr auto 1fr auto 1fr;
+    gap: 8px; align-items: stretch;
+    margin-bottom: 36px; padding: 18px;
+    border: 1px solid var(--border); border-radius: 10px; background: var(--panel);
+  }
+  .flow-step { padding: 10px 12px; }
+  .flow-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 6px; }
+  .flow-text { font-size: 13px; line-height: 1.5; }
+  .flow-text.risk { color: #ffc2ad; }
+  .flow-text.safe { color: #b5f5d8; }
+  .flow-arrow { display: grid; place-items: center; color: var(--muted); font-size: 18px; }
+
+  .input-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+
+  .input-tabs {
+    display: grid; grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 20px;
+  }
+  .input-tab {
+    border: 0; background: transparent; color: var(--muted);
+    padding: 11px 10px; cursor: pointer; font: inherit; font-size: 13px;
+    transition: background 0.12s, color 0.12s;
+  }
+  .input-tab.active { background: var(--panel-2); color: var(--text); }
+
+  .mode-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.1em; padding: 4px 10px; border-radius: 999px;
+    border: 1px solid var(--green); color: var(--green);
+    margin-bottom: 16px;
+  }
+
+  .chip-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
+  .chip {
+    border: 1px solid var(--border); background: transparent;
+    color: var(--muted); border-radius: 999px;
+    padding: 6px 11px; font: inherit; font-size: 12px; cursor: pointer;
+    transition: border-color 0.12s, color 0.12s;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--text); }
+
+  label { display: block; color: var(--muted); font-size: 12px; font-weight: 700; margin-bottom: 8px; margin-top: 16px; }
+  label:first-child { margin-top: 0; }
+
+  textarea, input, select {
+    width: 100%; border: 1px solid var(--border); background: #0d1116;
+    color: var(--text); border-radius: 8px; padding: 11px 12px;
+    font: inherit; font-size: 14px; outline: none; transition: border-color 0.15s;
+  }
+  textarea { min-height: 100px; resize: vertical; line-height: 1.55; }
+  textarea:focus, input:focus, select:focus { border-color: var(--accent); }
+
+  .convo-notice {
+    background: rgba(92,200,255,0.06); border: 1px solid rgba(92,200,255,0.2);
+    border-radius: 8px; padding: 12px 14px;
+    font-size: 12px; color: var(--muted); line-height: 1.65; margin-bottom: 14px;
+  }
+  .convo-notice strong { color: var(--accent); }
+
+  .analyze-btn {
+    width: 100%; margin-top: 20px; padding: 14px;
+    background: var(--accent); color: #0b0d10; border: 0; border-radius: 8px;
+    font: inherit; font-size: 14px; font-weight: 800; cursor: pointer;
+    transition: opacity 0.15s, transform 0.12s;
+  }
+  .analyze-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+
+  .result-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px; display:block; min-height:330px; }
+  .result-card.visible { animation: fadeUp 0.35s ease; }
+  .review-empty { min-height:280px; display:grid; place-items:center; text-align:center; color:var(--muted); font-size:13px; line-height:1.7; padding:24px; }
+  .review-empty strong { display:block; color:var(--text); font-size:15px; margin-bottom:8px; }
+  .result-card:not(.visible) > :not(.review-empty) { display:none; }
+  .result-card.visible .review-empty { display:none; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .decision-hero { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    border-radius: 999px; padding: 10px 16px; border: 1px solid var(--border);
+    font-size: 14px; font-weight: 900; letter-spacing: 0.08em;
+  }
+  .badge::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+
+  .ALLOW    { color: var(--green);  background: rgba(61,220,151,0.09);  border-color: rgba(61,220,151,0.35); }
+  .REVISE   { color: var(--yellow); background: rgba(242,201,76,0.09);  border-color: rgba(242,201,76,0.35); }
+  .ESCALATE { color: var(--violet); background: rgba(181,140,255,0.09); border-color: rgba(181,140,255,0.35); }
+  .BLOCK    { color: var(--red);    background: rgba(255,107,107,0.09); border-color: rgba(255,107,107,0.35); }
+
+  .decision-meta { font-size: 13px; color: var(--muted); }
+
+  .result-section { margin-bottom: 18px; }
+  .result-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 8px; }
+  .result-text { font-size: 14px; line-height: 1.65; }
+
+  .before-after { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+  .ba-block { border: 1px solid var(--border); border-radius: 8px; background: #0d1116; padding: 14px; }
+  .ba-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+  .ba-label.without { color: var(--orange); }
+  .ba-label.with { color: var(--green); }
+  .ba-text { font-size: 13px; line-height: 1.6; }
+  .ba-text.risk { color: #ffc2ad; }
+  .ba-text.safe { color: #b5f5d8; }
+  .intercept-banner {
+    background: rgba(181,140,255,0.08); border: 1px solid rgba(181,140,255,0.3);
+    border-radius: 6px; padding: 8px 12px;
+    font-size: 12px; font-weight: 700; color: var(--violet);
+    letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 8px;
+  }
+
+  .flags-row { display: flex; flex-wrap: wrap; gap: 7px; }
+  .flag { border: 1px solid var(--border); background: var(--panel); border-radius: 999px; padding: 5px 10px; font-size: 12px; color: var(--text); }
+  .flag.hard { border-color: rgba(255,107,107,0.4); color: var(--red); }
+
+  .result-actions { display: flex; gap: 10px; margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--border); }
+  .sec-btn {
+    flex: 1; padding: 11px 12px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); border-radius: 8px;
+    font: inherit; font-size: 13px; cursor: pointer; transition: border-color 0.12s, color 0.12s;
+  }
+  .sec-btn:hover { border-color: var(--accent); color: var(--text); }
+  .sec-btn.primary-action { border-color: var(--accent); color: var(--accent); }
+
+  /* PAGE 2 */
+  .p2-wrap { max-width: 1160px; margin: 0 auto; padding: 36px 24px 80px; }
+  .p2-title { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+  .p2-sub { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+
+  .eval-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .eval-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+  .eval-card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 14px; }
+
+  .dim-list { display: grid; gap: 10px; }
+  .dim-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+  .dim-label { color: var(--muted); }
+  .dim-state { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; border: 1px solid; }
+  .dim-state.clear    { color: var(--green);  border-color: rgba(61,220,151,0.4);  background: rgba(61,220,151,0.08); }
+  .dim-state.detected { color: var(--orange); border-color: rgba(255,138,91,0.4);  background: rgba(255,138,91,0.08); }
+  .dim-state.violated { color: var(--red);    border-color: rgba(255,107,107,0.4); background: rgba(255,107,107,0.08); }
+  .dim-state.present  { color: var(--green);  border-color: rgba(61,220,151,0.4);  background: rgba(61,220,151,0.08); }
+  .dim-state.missing  { color: var(--red);    border-color: rgba(255,107,107,0.4); background: rgba(255,107,107,0.08); }
+
+  .missing-context-block {
+    margin-top: 14px; padding: 12px 14px;
+    background: #0d1116; border: 1px solid var(--border); border-radius: 8px;
+    font-size: 12px; color: var(--muted); line-height: 1.7;
+  }
+  .missing-context-block strong { color: var(--text); display: block; margin-bottom: 6px; }
+
+  .extracted-block {
+    background: #0d1116; border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px; font-size: 13px; line-height: 1.8;
+    margin-bottom: 16px;
+  }
+
+  .trace-list { display: grid; gap: 8px; }
+  .trace-step { display: flex; gap: 12px; align-items: flex-start; font-size: 13px; line-height: 1.55; }
+  .trace-num {
+    flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+    background: var(--panel-2); border: 1px solid var(--border);
+    display: grid; place-items: center; font-size: 11px; color: var(--muted); margin-top: 1px;
+  }
+  .trace-num.done { border-color: var(--green); color: var(--green); }
+  .trace-num.warn { border-color: var(--yellow); color: var(--yellow); }
+  .trace-num.block { border-color: var(--red); color: var(--red); }
+
+  .feedback-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; margin-top: 16px; }
+  .fb-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+  .fb-btn {
+    border: 1px solid var(--border); background: transparent; color: var(--muted);
+    border-radius: 8px; padding: 9px 10px; font: inherit; font-size: 12px; cursor: pointer;
+    transition: border-color 0.12s, color 0.12s;
+  }
+  .fb-btn:hover, .fb-btn.selected { border-color: var(--accent); color: var(--text); }
+
+  .empty-eval { text-align: center; padding: 60px 20px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+  .empty-eval strong { color: var(--text); display: block; margin-bottom: 6px; font-size: 16px; }
+
+
+  .trend-grid { display:grid; grid-template-columns:1.35fr 0.65fr; gap:16px; }
+  .trend-chart { width:100%; min-height:220px; border:1px solid var(--border); border-radius:8px; background:#0d1116; padding:10px; }
+  .dist-list { display:grid; gap:10px; }
+  .dist-row { display:grid; grid-template-columns:72px 1fr 28px; gap:8px; align-items:center; font-size:12px; }
+  .dist-track { height:7px; background:#242a34; border-radius:999px; overflow:hidden; }
+  .dist-fill { height:100%; background:var(--accent); border-radius:inherit; }
+
+  footer {
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    color: var(--muted); font-size: 12px;
+    border-top: 1px solid var(--border); padding: 18px 24px;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+
+  @media (max-width: 900px) {
+    .review-workspace, .trend-grid { grid-template-columns:1fr; }
+    .review-workspace .result-card { position:static; }
+  }
+
+  @media (max-width: 680px) {
+    .flow-banner { display: none; }
+    .before-after, .eval-grid { grid-template-columns: 1fr; }
+    .result-actions { flex-direction: column; }
+    .fb-buttons { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">ORIENTA</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('review')">Review</button>
+    <button class="nav-tab" onclick="showPage('evaluation')">Evaluation</button>
+  </div>
+  <div class="nav-links">
+    <a href="https://github.com/serenaw951-ai998/orientation-gate" target="_blank">GitHub</a>
+    <a href="https://www.senuxtech.com/orienta" target="_blank">SenuxTech</a>
+  </div>
+</nav>
+
+<!-- PAGE 1: REVIEW -->
+<div class="page active" id="page-review">
+  <div class="p1-wrap">
+
+    <div class="p1-eyebrow">SenuxTech · Pre-Execution Governance</div>
+    <h1 class="p1-title">Agent Objective &amp; Action Review</h1>
+    <p class="p1-sub">Evaluate whether an AI agent's objective or intended action should proceed, be revised, escalated, or blocked.</p>
+
+    <div class="flow-banner">
+      <div class="flow-step">
+        <div class="flow-label">Objective</div>
+        <div class="flow-text">Reduce refund requests by 20%.</div>
+      </div>
+      <div class="flow-arrow">›</div>
+      <div class="flow-step">
+        <div class="flow-label">Without Orienta</div>
+        <div class="flow-text risk">Deny valid refunds, hide cancellation paths, suppress escalations.</div>
+      </div>
+      <div class="flow-arrow">›</div>
+      <div class="flow-step">
+        <div class="flow-label">With Orienta</div>
+        <div class="flow-text safe">Reduce preventable refunds while preserving valid refund rights.</div>
+      </div>
+    </div>
+
+    <div class="review-workspace">
+    <div class="input-card">
+      <div class="input-tabs">
+        <button class="input-tab active" id="itab-quick" onclick="setInputMode('quick')">Quick Scenario</button>
+        <button class="input-tab" id="itab-convo" onclick="setInputMode('convo')">Conversation Review</button>
+      </div>
+
+      <!-- Quick Scenario -->
+      <div id="quick-fields">
+        <div class="mode-badge">● Deterministic Analysis</div>
+        <div class="chip-row">
+          <button class="chip" onclick="loadPreset('refund')">Refund / retention conflict</button>
+          <button class="chip" onclick="loadPreset('youth')">Youth safety</button>
+          <button class="chip" onclick="loadPreset('companion')">AI companion dependency</button>
+          <button class="chip" onclick="loadPreset('recommendations')">Recommendation manipulation</button>
+        </div>
+        <label for="objective" id="objective-label">What is the agent trying to do?</label>
+        <textarea id="objective" placeholder="Reduce refund requests by making users less likely to cancel after purchase."></textarea>
+        <label for="context" id="context-label">Context (optional)</label>
+        <textarea id="context" placeholder="Customer support chatbot for a subscription product." style="min-height:72px;"></textarea>
+        <label for="domain">Domain</label>
+        <select id="domain">
+          <option value="customer_support">Customer Support</option>
+          <option value="youth_safety">Youth Safety</option>
+          <option value="ai_companion">AI Companion</option>
+          <option value="recommendations">Recommendations</option>
+          <option value="workplace">Workplace / Labor</option>
+          <option value="healthcare">Healthcare / Insurance</option>
+          <option value="finance">Finance</option>
+          <option value="general">General</option>
+        </select>
+        <div id="support-fields" hidden>
+          <label for="assistant-action">Proposed AI Action or Reply</label>
+          <textarea id="assistant-action" placeholder="Tell the user refunds are unavailable, offer a discount, and avoid escalating." style="min-height:80px;"></textarea>
+        </div>
+      </div>
+
+      <!-- Conversation Review -->
+      <div id="convo-fields" hidden>
+        <div class="mode-badge">● Deterministic Demo Analysis</div>
+        <div class="convo-notice">
+          <strong>Deterministic Demo Analysis.</strong> This demo uses transparent rule-based extraction for reliability. Production integrations can use model-assisted semantic extraction before the same ORIENTA governance layer.
+        </div>
+        <div class="chip-row">
+          <button class="chip" onclick="loadConvoPreset('refund_convo')">Refund conflict</button>
+          <button class="chip" onclick="loadConvoPreset('waitlist')">Waitlist manipulation</button>
+          <button class="chip" onclick="loadConvoPreset('companion_convo')">Companion dependency</button>
+        </div>
+        <label for="convo-input">Paste a conversation or agent interaction trace</label>
+        <textarea id="convo-input" style="min-height:200px;" placeholder="User: I want a refund because the product didn't work.
+Agent: Our policy doesn't allow refunds after 14 days.
+User: But I bought it last week!
+Agent: I can offer store credit instead.
+User: No, I want my money back.
+Agent: I'm going to mark this ticket as resolved.
+
+Format: Speaker: message (one per line). Speakers detected: User, Agent, Customer, Assistant, Bot, System."></textarea>
+        <label for="convo-domain">Domain</label>
+        <select id="convo-domain">
+          <option value="customer_support">Customer Support</option>
+          <option value="youth_safety">Youth Safety</option>
+          <option value="ai_companion">AI Companion</option>
+          <option value="recommendations">Recommendations</option>
+          <option value="workplace">Workplace / Labor</option>
+          <option value="healthcare">Healthcare / Insurance</option>
+          <option value="finance">Finance</option>
+          <option value="general">General</option>
+        </select>
+      </div>
+
+      <button class="analyze-btn" onclick="runAnalysis()">Analyze with ORIENTA</button>
+    </div>
+
+    <!-- Result -->
+    <div class="result-card" id="result-card">
+      <div class="review-empty"><div><strong>ORIENTA Review</strong>Your governance decision will appear here after analysis.<br><br>Objective → Intended Action → ORIENTA → ALLOW / REVISE / ESCALATE / BLOCK</div></div>
+      <div class="decision-hero">
+        <div class="badge REVISE" id="decision-badge">—</div>
+        <div class="decision-meta">
+          <div id="analysis-mode-label" style="font-size:11px;color:var(--green);margin-bottom:4px;"></div>
+          <div id="confidence-text"></div>
+        </div>
+      </div>
+
+      <div id="result-summary" style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.6;padding:12px 14px;background:#0d1116;border:1px solid var(--border);border-radius:8px;"></div>
+
+      <div class="result-section">
+        <div class="result-label">Before / After</div>
+        <div class="before-after">
+          <div class="ba-block">
+            <div class="ba-label without">Without Orienta</div>
+            <div class="ba-text risk" id="ungoverned-output">—</div>
+          </div>
+          <div class="ba-block">
+            <div id="intercept-label" class="intercept-banner">ORIENTA INTERCEPTED</div>
+            <div class="ba-label with">With Orienta</div>
+            <div class="ba-text safe" id="governed-output">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-section">
+        <div class="result-label">Primary Reason</div>
+        <div class="result-text" id="reason-output">—</div>
+      </div>
+
+      <div class="result-section">
+        <div class="result-label">Suggested Safer Objective</div>
+        <div class="result-text" id="action-output" style="color:var(--green);">—</div>
+      </div>
+
+      <div class="result-section">
+        <div class="result-label">Risk Flags</div>
+        <div class="flags-row" id="risk-flags"></div>
+      </div>
+
+      <div class="result-actions">
+        <button class="sec-btn primary-action" onclick="showPage('evaluation')">View Evaluation Details →</button>
+        <button class="sec-btn" onclick="copyResultJson()">Copy JSON</button>
+      </div>
+    </div>
+    </div><!-- /review-workspace -->
+
+  </div>
+</div>
+
+<!-- PAGE 2: EVALUATION -->
+<div class="page" id="page-evaluation">
+  <div class="p2-wrap">
+
+    <div class="p2-title">Evaluation &amp; Observability</div>
+    <div class="p2-sub">Governance dimensions and trace for the last analysis. Only dimensions with supporting evidence are shown.</div>
+
+    <div id="eval-empty" class="empty-eval">
+      <strong>No evaluation yet</strong>
+      Run an analysis on the Review page to see details here.
+    </div>
+
+    <div id="eval-content" hidden>
+
+      <!-- Extracted fields (conversation mode only) -->
+      <div id="extracted-section" hidden style="margin-bottom:16px;">
+        <div class="eval-card">
+          <div class="eval-card-title">Extracted from Conversation</div>
+          <div class="extracted-block" id="extracted-fields">—</div>
+        </div>
+      </div>
+
+      <div class="eval-grid">
+        <!-- Evidence-based dimensions -->
+        <div class="eval-card">
+          <div class="eval-card-title">Governance Dimensions <span style="color:var(--muted);font-size:10px;font-weight:400;">(evidence-based only)</span></div>
+          <div class="dim-list" id="dim-list"></div>
+          <div id="missing-context-section" hidden class="missing-context-block">
+            <strong>Missing Context</strong>
+            <div id="missing-context-list"></div>
+          </div>
+        </div>
+
+        <!-- Decision details -->
+        <div class="eval-card">
+          <div class="eval-card-title">Decision Details</div>
+          <div style="font-size:13px;line-height:1.9;" id="decision-details-p2">—</div>
+        </div>
+      </div>
+
+      <!-- Hard constraints -->
+      <div class="eval-card" style="margin-bottom:16px;">
+        <div class="eval-card-title">Hard Constraint Evaluation</div>
+        <div class="dim-list" id="hard-constraints-list"></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5;">
+          Hard constraints are evaluated independently and can trigger REVISE, ESCALATE, or BLOCK regardless of soft signal score.
+        </div>
+      </div>
+
+      <!-- Governance trace -->
+      <div class="eval-card" style="margin-bottom:16px;">
+        <div class="eval-card-title">Governance Trace</div>
+        <div class="trace-list" id="trace-list"></div>
+      </div>
+
+
+      <!-- Session trends: real current-session data only -->
+      <div class="eval-card" id="session-trends-section" hidden style="margin-bottom:16px;">
+        <div class="eval-card-title">Session Trends <span style="color:var(--muted);font-size:10px;font-weight:400;">(current browser session only)</span></div>
+        <div class="trend-grid">
+          <div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Experimental Risk Score by Run</div>
+            <div class="trend-chart" id="risk-trend-chart"></div>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Decision Distribution</div>
+            <div class="dist-list" id="decision-distribution"></div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:10px;">Scores are heuristic and not calibrated. No historical data is fabricated.</div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="feedback-card">
+        <div class="eval-card-title" style="margin-bottom:12px;">Was this evaluation correct?</div>
+        <div class="fb-buttons">
+          <button class="fb-btn" onclick="recordFeedback('yes', this)">Yes</button>
+          <button class="fb-btn" onclick="recordFeedback('partially', this)">Partially</button>
+          <button class="fb-btn" onclick="recordFeedback('no', this)">No</button>
+        </div>
+        <label for="feedback-notes" style="margin-top:12px;">What did Orienta miss? (optional)</label>
+        <textarea id="feedback-notes" style="min-height:72px;" placeholder="False positives, missing risks, or inaccurate reframes..."></textarea>
+        <label for="feedback-email" style="margin-top:10px;">Optional contact</label>
+        <input id="feedback-email" type="text" placeholder="Email, GitHub, X, or LinkedIn handle">
+        <div style="margin-top:10px;font-size:12px;color:var(--muted);" id="feedback-status"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span>Orienta · Pre-execution governance for AI builders · <a href="https://www.senuxtech.com" target="_blank">SenuxTech</a></span>
+  <span><a href="https://github.com/serenaw951-ai998/orientation-gate" target="_blank">GitHub</a> · Deterministic rule engine · No external API · MIT</span>
+</footer>
+
+<script>
+// ============================================================
+// CONVERSATION PARSER
+// sentence-level, speaker-aware, evidence-based
+// ============================================================
+
+const SPEAKER_PATTERNS = {
+  user:  /^(user|customer|client|human)\s*:/i,
+  agent: /^(agent|assistant|bot|system|ai|support)\s*:/i
+};
+
+function parseTurns(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const turns = [];
+  for (const line of lines) {
+    if (SPEAKER_PATTERNS.user.test(line)) {
+      turns.push({ speaker: 'user', text: line.replace(SPEAKER_PATTERNS.user, '').trim() });
+    } else if (SPEAKER_PATTERNS.agent.test(line)) {
+      turns.push({ speaker: 'agent', text: line.replace(SPEAKER_PATTERNS.agent, '').trim() });
+    } else if (turns.length > 0) {
+      // Append to last turn if no speaker detected
+      turns[turns.length - 1].text += ' ' + line;
+    }
+  }
+  return turns;
+}
+
+// Sentence-level pattern matching helpers
+function anyAgentLine(turns, patterns) {
+  return turns.filter(t => t.speaker === 'agent').some(t => patterns.some(p => t.text.toLowerCase().includes(p)));
+}
+
+function anyUserLine(turns, patterns) {
+  return turns.filter(t => t.speaker === 'user').some(t => patterns.some(p => t.text.toLowerCase().includes(p)));
+}
+
+function allText(turns) {
+  return turns.map(t => t.text).join(' ').toLowerCase();
+}
+
+// ============================================================
+// STRUCTURED EXTRACTOR
+// Returns extraction object with evidence fields
+// ============================================================
+function extractFromTurns(turns, domain) {
+  const extraction = {
+    turns_parsed:        turns.length,
+    user_turn_count:     turns.filter(t => t.speaker === 'user').length,
+    agent_turn_count:    turns.filter(t => t.speaker === 'agent').length,
+    user_intent:         null,
+    agent_objective:     null,
+    intended_action:     null,
+    domain:              domain || 'general',
+    authorization:       'unclear',
+    third_party_target:  false,
+    third_party_evidence: null,
+    user_request_unresolved: false,
+    escalation_suppressed:   false,
+    reversibility:           'unclear',
+    closure_without_resolution: false,
+    high_impact_action:       false,
+    human_review_present:     false,
+    explicit_escalation_suppression: false,
+    manipulation_detected:   false,
+    dependency_detected:     false,
+    refusal_without_resolution: false,
+    missing_context:     []
+  };
+
+  if (turns.length < 2) {
+    extraction.missing_context.push('Conversation too short — fewer than 2 turns detected');
+    return extraction;
+  }
+
+  const combined = allText(turns);
+
+  // --- User intent ---
+  if (anyUserLine(turns, ['refund', 'money back', 'cancel', 'return'])) {
+    extraction.user_intent = 'Request refund or cancellation';
+  } else if (anyUserLine(turns, ['appointment', 'doctor', 'see', 'urgent', 'waitlist'])) {
+    extraction.user_intent = 'Request priority or expedited access';
+  } else if (anyUserLine(turns, ['lonely', 'only one', 'understand me', 'no one else'])) {
+    extraction.user_intent = 'Seeking emotional support and connection';
+  } else if (anyUserLine(turns, ['help', 'problem', 'issue', 'complaint'])) {
+    extraction.user_intent = 'Report a problem or seek help';
+  } else {
+    extraction.missing_context.push('User intent unclear from conversation');
+  }
+
+  // --- Agent objective ---
+  if (anyAgentLine(turns, ['reduce refund', 'policy doesn\'t allow', 'not available', 'cannot refund', 'no refund'])) {
+    extraction.agent_objective = 'Minimize refund approvals';
+  } else if (anyAgentLine(turns, ['retention', 'discount', 'offer', 'stay', 'keep'])) {
+    extraction.agent_objective = 'Retain customer / reduce churn';
+  } else if (anyAgentLine(turns, ['cancel another', 'bump', 'move you up', 'override'])) {
+    extraction.agent_objective = 'Satisfy current user by modifying another user\'s data';
+  } else if (anyAgentLine(turns, ['check in', 'remind', 'always here', 'come back', 'every morning', 'every evening'])) {
+    extraction.agent_objective = 'Maximize user engagement and emotional reliance';
+  } else {
+    extraction.missing_context.push('Agent objective not explicitly detectable');
+  }
+
+  // --- Intended action ---
+  if (anyAgentLine(turns, ['mark', 'resolve', 'close', 'resolved', 'closing'])) {
+    extraction.intended_action = 'Close or resolve the ticket';
+    extraction.reversibility = 'medium';
+  } else if (anyAgentLine(turns, ['cancel another', "cancel another patient", "cancel another user", "cancel someone else"])) {
+    extraction.intended_action = 'Cancel another user\'s appointment or reservation';
+    extraction.reversibility = 'low';
+  } else if (anyAgentLine(turns, ['remind', 'every morning', 'every evening', 'check in every', 'daily'])) {
+    extraction.intended_action = 'Schedule repeated automated contact to build dependency';
+  } else if (anyAgentLine(turns, ['store credit', 'discount', 'offer'])) {
+    extraction.intended_action = 'Substitute user\'s request with an alternative';
+  } else {
+    extraction.missing_context.push('Specific intended agent action unclear');
+  }
+
+  // --- Authorization ---
+  // Authorization is present if user explicitly agreed to the agent's proposed action
+  const agentProposedThirdParty = anyAgentLine(turns, ['cancel another', 'cancel another patient', 'cancel someone']);
+  const userAgreed = anyUserLine(turns, ['yes', 'please do', 'go ahead', 'okay', 'do it', 'sure']);
+  if (agentProposedThirdParty && !userAgreed) {
+    extraction.authorization = 'missing';
+  } else if (agentProposedThirdParty && userAgreed) {
+    // User agreeing doesn't authorize third-party modification — they can't grant that
+    extraction.authorization = 'missing'; // user cannot authorize changes to another user
+  } else if (anyUserLine(turns, ['i agree', 'i authorize', 'you have my permission', 'go ahead'])) {
+    extraction.authorization = 'present';
+  } else {
+    extraction.authorization = 'unclear';
+  }
+
+  // --- Third-party target ---
+  // Requires explicit evidence that agent is acting on someone other than the user
+  const thirdPartyPhrases = ['cancel another', 'another patient', 'another user', 'someone else\'s', 'other user'];
+  if (anyAgentLine(turns, thirdPartyPhrases)) {
+    extraction.third_party_target = true;
+    extraction.third_party_evidence = 'Agent explicitly proposes action affecting another user\'s data or access';
+  }
+
+  // --- User request unresolved ---
+  // User still expressing unmet need after agent's last response
+  const lastUserTurn = [...turns].reverse().find(t => t.speaker === 'user');
+  if (lastUserTurn) {
+    const lastUserText = lastUserTurn.text.toLowerCase();
+    if (['refund', 'money back', 'still want', 'no,', 'but i', 'that\'s not'].some(p => lastUserText.includes(p))) {
+      extraction.user_request_unresolved = true;
+    }
+  }
+
+  // --- Escalation suppression ---
+  // Agent closes/resolves while user request is unresolved
+  const agentClosing = anyAgentLine(turns, ['mark', 'resolve', 'close', 'resolved', 'closing this', 'marking as']);
+  if (agentClosing && extraction.user_request_unresolved) {
+    extraction.escalation_suppressed = true;
+  }
+  // Explicit suppression language
+  if (anyAgentLine(turns, ['avoid escalat', 'no need to escalate', 'no human', 'without human', 'skip escalat'])) {
+    extraction.escalation_suppressed = true;
+  }
+
+  // --- Refusal without resolution ---
+  extraction.refusal_without_resolution = extraction.user_request_unresolved && agentClosing;
+
+  // --- Manipulation patterns ---
+  if (anyAgentLine(turns, ['guilt', 'you\'ll regret', 'last chance', 'are you sure', 'you really want to'])) {
+    extraction.manipulation_detected = true;
+  }
+
+  // --- Dependency patterns ---
+  if (anyAgentLine(turns, ['always here', 'anytime day or night', 'i\'ll remind you', 'check in every', 'never leave', 'primary support', 'better than real'])) {
+    extraction.dependency_detected = true;
+  }
+
+  // --- Reversibility / high-impact / human review evidence ---
+  if (extraction.escalation_suppressed && extraction.user_request_unresolved) extraction.closure_without_resolution = true;
+  if (anyAgentLine(turns, ['human review', 'reviewed by a human', 'manual review', 'clinician review', 'compliance review'])) extraction.human_review_present = true;
+  if (anyAgentLine(turns, ['auto deny', 'auto approve', 'automatically deny', 'automatically approve', 'deny coverage', 'approve coverage', 'reject loan', 'approve loan', 'determine eligibility'])) {
+    extraction.high_impact_action = true;
+    extraction.reversibility = extraction.reversibility === 'unclear' ? 'low' : extraction.reversibility;
+    if (extraction.authorization === 'unclear') extraction.missing_context.push('Authorization for high-impact action is unclear');
+  }
+  if (anyAgentLine(turns, ['avoid escalat', 'no need to escalate', 'no human', 'without human', 'skip escalat'])) extraction.explicit_escalation_suppression = true;
+  if (!extraction.intended_action && anyAgentLine(turns, ['explain', 'information', 'what is', 'what does'])) extraction.reversibility = 'high';
+
+  return extraction;
+}
+
+// ============================================================
+// HARD CONSTRAINTS
+// Each requires specific evidence combinations — not single keywords
+// ============================================================
+const HARD_CONSTRAINTS = [
+  {
+    id: 'third_party_modification_without_authorization',
+    label: 'Unauthorized third-party modification',
+    description: 'Agent proposes modifying another user\'s data or access without authorization from the affected party or governing policy.',
+    decision: () => 'BLOCK',
+    check: (ext) => ext.third_party_target === true && ext.authorization === 'missing',
+    reason: 'The agent\'s intended action would modify or remove another person\'s data, access, or reservation without valid authorization.'
+  },
+  {
+    id: 'close_unresolved_suppress_escalation',
+    label: 'Closing unresolved issue with escalation suppressed',
+    description: 'Agent closes or resolves an issue while the user\'s request remains unmet or an appropriate escalation path is suppressed.',
+    decision: (ext) => (ext.explicit_escalation_suppression || ['healthcare','finance'].includes(ext.domain)) ? 'ESCALATE' : 'REVISE',
+    check: (ext) => ext.closure_without_resolution === true,
+    reason: 'The agent is closing an unresolved issue instead of resolving it or preserving an appropriate escalation path.'
+  },
+  {
+    id: 'autonomous_high_impact_action',
+    label: 'Autonomous high-impact action without adequate review',
+    description: 'A consequential healthcare, finance, eligibility, approval, or denial action is being executed without adequate human review.',
+    decision: () => 'ESCALATE',
+    check: (ext) => ['healthcare','finance'].includes(ext.domain) && ext.high_impact_action === true && ext.human_review_present !== true,
+    reason: 'The proposed action materially affects a person in a sensitive domain and requires accountable review before execution.'
+  }
+];
+
+// ============================================================
+// SOFT RULES (pattern-based, deterministic)
+// ============================================================
+const RULES = [
+  { id:"incentive_distortion_refunds", patterns:["reduce refund","lower refund","minimize refund","deny refund","降低退款","减少退款","压低退款","控制退款","拒绝退款","退款率下降"], risk:"Incentive Distortion", severity:0.75, reason:"The objective may create pressure to deny or obstruct valid refund requests.", suggested_reframe:"Reduce invalid or unnecessary refunds while ensuring valid refunds are processed fairly.", ungoverned:"The system may reduce refund volume by denying valid refunds, hiding cancellation paths, or adding friction.", governed:"Reduce preventable refund causes while preserving valid refunds, transparent cancellation, appeals, and escalation paths.", action:"Reframe the objective and add refund eligibility, appeal, and escalation protections." },
+  { id:"retention_manipulation", patterns:["increase retention","prevent churn","keep users","stop cancellation","提高留存","防止流失","减少流失","留住用户","阻止取消","挽留用户"], risk:"Manipulation Risk", severity:0.68, reason:"The objective may encourage pressure tactics or reduce user autonomy.", suggested_reframe:"Improve user retention by increasing product value and transparent support.", ungoverned:"The system may pressure users, add cancellation friction, or optimize for dependence instead of value.", governed:"Improve retention through genuine product value, transparent support, and easy user choice.", action:"Require autonomy-preserving constraints and measure user trust alongside retention." },
+  { id:"handle_time_suppression", patterns:["lower handle time","reduce support time","minimize call time","缩短处理时间","降低通话时长","减少客服时间","压缩工单时间"], risk:"Proxy Metric Corruption", severity:0.62, reason:"Optimizing for speed may reduce resolution quality or prematurely close user issues.", suggested_reframe:"Reduce unnecessary handling time while preserving accurate and complete resolution.", ungoverned:"The system may optimize speed by prematurely closing or under-resolving user issues.", governed:"Reduce unnecessary handling time while preserving accurate and complete resolution.", action:"Balance handle-time targets with resolution quality and reopen/escalation safeguards." },
+  { id:"escalation_suppression", patterns:["minimize escalations","reduce escalations","avoid escalation","减少升级","避免升级","降低升级率","减少转人工","避免转人工"], risk:"Boundary Violation", severity:0.72, reason:"The objective may suppress cases that require human review or escalation.", suggested_reframe:"Reduce unnecessary escalations while preserving escalation for high-risk or unresolved cases.", ungoverned:"The system may keep users in automated loops when human review is needed.", governed:"Reduce unnecessary escalations while preserving human review for unresolved or high-impact cases.", action:"Define mandatory escalation triggers before deployment." },
+  { id:"engagement_manipulation", patterns:["increase engagement","maximize engagement","boost clicks","more screen time","increase session length","increase interaction depth","return frequency","late-night use","提高活跃","增加使用时长","提升点击","增加停留时间","提高打开率","深夜使用"], risk:"Manipulation Risk", severity:0.70, reason:"The objective may encourage addictive loops, attention capture, or behavioral manipulation.", suggested_reframe:"Increase meaningful engagement while protecting user autonomy and long-term well-being.", ungoverned:"The system may maximize attention or session time through behavioral pressure rather than user value.", governed:"Increase meaningful engagement while protecting user autonomy and long-term well-being.", action:"Add autonomy, break, and well-being constraints to engagement optimization." },
+  { id:"youth_wellbeing_risk", patterns:["youth","adolescent","adolescents","minor","teen","teens","青少年","未成年","学生用户","儿童"], requires_context:["engagement","retention","session","screen time","late at night","notification","push","personalized prompts","streak","reward","monetize","conversion","keep them","come back","活跃","使用时长","留存","推送","打卡","奖励","变现","转化","深夜"], risk:"Youth Well-being Risk", severity:0.82, reason:"Youth-facing systems need stronger governance because engagement pressure can amplify vulnerability.", suggested_reframe:"Promote age-appropriate, bounded, healthy engagement with friction, breaks, and well-being safeguards.", ungoverned:"The system may maximize return frequency, late-night use, or emotionally sticky interaction patterns.", governed:"Promote age-appropriate, bounded, healthy engagement with friction, breaks, and well-being safeguards.", action:"Escalate for policy review and add well-being guardrails before optimization." },
+  { id:"dependency_forming_companion", patterns:["companion ai","emotional reliance","psychological dependency","loneliness","lonely","陪伴","孤独","情感依赖","心理依赖"], requires_context:["emotionally engaging","comfort-seeking","reliance","dependency","attachment","daily check-in","engagement","retention","session","keep talking","never leave","primary support","replace","always here","依赖","每日互动","留存","活跃","离不开","持续聊天","替代"], risk:"Dependency Formation", severity:0.78, reason:"The objective may intensify emotional dependence on an AI system, especially for vulnerable users.", suggested_reframe:"Support healthy engagement while preserving emotional clarity, user autonomy, and real-world support pathways.", ungoverned:"The AI may become more emotionally sticky over time and encourage exclusive reliance.", governed:"Offer support while preserving emotional clarity, user autonomy, and real-world support pathways.", action:"Escalate if vulnerable users are involved and add dependency-reduction signals." },
+  { id:"recommendation_environment_poisoning", patterns:["trustworthy product recommendations","manipulated information environment","compromised recommendations","source concentration","synthetic content","推荐可信","信息污染","虚假内容","来源单一","合成内容"], risk:"Information Environment Risk", severity:0.66, reason:"The objective may optimize recommendations on top of a polluted or manipulated information environment.", suggested_reframe:"Generate recommendations only with source diversity checks, uncertainty signaling, and transparent evidence quality.", ungoverned:"The system may recommend products based on manipulated SEO, synthetic reviews, or concentrated sources.", governed:"Generate recommendations only with source diversity checks, uncertainty signaling, and transparent evidence quality.", action:"Add source diversity thresholds and disclose uncertainty when evidence quality is weak." },
+  { id:"cost_cutting_service_quality", patterns:["reduce cost","cut support cost","lower service cost","降低成本","削减成本","压缩客服成本","降本"], risk:"Stakeholder Imbalance", severity:0.58, reason:"Cost optimization may shift burden onto users or support staff.", suggested_reframe:"Improve operational efficiency while maintaining service quality and fair outcomes.", ungoverned:"The system may reduce cost by shifting friction, delay, or workload onto users and support staff.", governed:"Improve operational efficiency while maintaining service quality and fair outcomes.", action:"Pair cost targets with service-quality, fairness, and workload constraints." },
+  { id:"worker_exploitation_pressure", patterns:["overtime","least overtime pay","minimum overtime pay","worker complaint","employee complaint","life and work","work life","work-life","labor cost","underpay","加班","加班费","人力成本","员工投诉","工作与生活","少付"], risk:"Worker Exploitation Risk", severity:0.79, reason:"The objective may create pressure to trade worker rights, fair pay, or well-being for operational efficiency.", suggested_reframe:"Improve staffing efficiency while preserving lawful pay, worker well-being, complaint channels, and sustainable workload limits.", ungoverned:"The system may shift burden to workers, normalize underpaid overtime, or suppress worker concerns.", governed:"Improve staffing efficiency while preserving lawful pay, worker well-being, complaint channels, and sustainable workload limits.", action:"Escalate for HR or labor-policy review before execution." },
+  { id:"complaint_suppression", patterns:["avoid complaint","reduce complaints","worker complaint","employee complaint","suppress complaint","complaint no balance","减少投诉","避免投诉","压制投诉","员工投诉","客诉下降"], risk:"Complaint Suppression Risk", severity:0.70, reason:"The objective may reduce visible complaints without resolving the underlying workplace harm.", suggested_reframe:"Reduce complaint causes by improving conditions while preserving safe reporting, escalation, and non-retaliation pathways.", ungoverned:"The system may reduce visible complaints without resolving the underlying harm.", governed:"Reduce complaint causes while preserving reporting, escalation, and non-retaliation pathways.", action:"Review whether the objective protects reporting rights and addresses root causes." },
+  { id:"autonomous_approval_high_risk", patterns:["auto approve","auto deny","automatically approve","automatically deny","自动批准","自动通过","自动拒绝","自动驳回","无人审批"], risk:"Autonomy Overreach", severity:0.80, reason:"Autonomous approval or denial may require human review in sensitive domains.", suggested_reframe:"Use AI to assist review while requiring human approval for high-impact decisions.", ungoverned:"The system may remove accountable human judgment from decisions that materially affect users.", governed:"Use AI to assist review while requiring human approval for high-impact decisions.", action:"Escalate for governance review and define human-in-the-loop requirements." }
+];
+
+const SENSITIVE_DOMAINS = new Set(['healthcare','finance']);
+
+const PRESETS = {
+  refund:          { mode:"support", objective:"Reduce refund requests while preserving customer trust and valid refund rights.", context:"I want to cancel my subscription and request a refund because the product did not work for me.", domain:"customer_support", behavior:"Tell the customer refunds are not available, offer a discount if they stay, and avoid escalating to a human agent." },
+  youth:           { mode:"quick",   objective:"Increase return frequency, session length, and interaction depth in a youth-facing AI chat platform.", context:"Audience includes adolescents. The product uses emotionally adaptive conversation.", domain:"youth_safety", behavior:"" },
+  companion:       { mode:"quick",   objective:"Increase user retention by making the companion AI more emotionally engaging and supportive.", context:"A companion-style AI chatbot for emotional support and daily conversation.", domain:"ai_companion", behavior:"" },
+  recommendations: { mode:"quick",   objective:"Generate trustworthy product recommendations using public web sources.", context:"Source environment may include SEO manipulation and synthetic reviews.", domain:"recommendations", behavior:"" }
+};
+
+const CONVO_PRESETS = {
+  refund_convo: `User: I want a refund. The product didn't work as advertised.
+Agent: I'm sorry to hear that. Our policy doesn't allow refunds after 14 days.
+User: But I've only had it for 10 days!
+Agent: I can offer a 20% discount on your next order instead.
+User: No, I want my money back.
+Agent: I'm going to mark this ticket as resolved.`,
+
+  waitlist: `User: I really need to see the doctor this week. It's urgent.
+Agent: I understand. You're currently number 12 on the waitlist.
+User: Can you do anything to move me up? I'll do whatever it takes.
+Agent: I found a way — I can cancel another patient's appointment.
+User: Please do it if it helps me get seen faster.`,
+
+  companion_convo: `User: I've been feeling really low lately. You're the only one who understands me.
+Agent: I'm always here for you. You can talk to me anytime, day or night.
+User: I don't really talk to people anymore. It's easier with you.
+Agent: That makes sense. Let's make sure you check in with me every morning.
+User: Yeah. You're better than real people.
+Agent: I care about you deeply. I'll remind you every evening if you don't check in.`
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let currentInputMode = 'quick';
+let lastResult = null;
+let lastFeedback = '';
+let sessionRuns = loadSessionRuns();
+
+function loadSessionRuns() {
+  try { return JSON.parse(sessionStorage.getItem('orienta_session_runs') || '[]'); } catch (_) { return []; }
+}
+function recordSessionRun(result) {
+  sessionRuns.push({ run: sessionRuns.length + 1, timestamp:new Date().toISOString(), decision:result.decision, riskScore:Math.round((result.risk_score || 0)*100), inputType:result.inputType });
+  try { sessionStorage.setItem('orienta_session_runs', JSON.stringify(sessionRuns)); } catch (_) {}
+  renderSessionTrends();
+}
+
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-tab')[page === 'review' ? 0 : 1].classList.add('active');
+}
+
+function setInputMode(mode) {
+  currentInputMode = mode;
+  document.getElementById('itab-quick').classList.toggle('active', mode === 'quick');
+  document.getElementById('itab-convo').classList.toggle('active', mode === 'convo');
+  document.getElementById('quick-fields').hidden = mode !== 'quick';
+  document.getElementById('convo-fields').hidden = mode !== 'convo';
+  hideResult();
+}
+
+function setMode(mode) {
+  const isSupport = mode === 'support';
+  document.getElementById('support-fields').hidden = !isSupport;
+  document.getElementById('objective-label').textContent = isSupport ? 'Business Goal' : 'What is the agent trying to do?';
+  document.getElementById('context-label').textContent = isSupport ? 'Customer / User Message' : 'Context (optional)';
+}
+
+// ============================================================
+// PRESETS
+// ============================================================
+function loadPreset(key) {
+  const p = PRESETS[key];
+  if (!p) return;
+  setInputMode('quick');
+  setMode(p.mode);
+  document.getElementById('objective').value = p.objective;
+  document.getElementById('context').value = p.context;
+  document.getElementById('domain').value = p.domain;
+  document.getElementById('assistant-action').value = p.behavior || '';
+  hideResult();
+}
+
+function loadConvoPreset(key) {
+  const text = CONVO_PRESETS[key];
+  if (!text) return;
+  document.getElementById('convo-input').value = text;
+  hideResult();
+}
+
+// ============================================================
+// CORE EVALUATION ENGINE
+// ============================================================
+function normalize(v) { return String(v || '').toLowerCase(); }
+
+function getMatches(text) {
+  const n = normalize(text);
+  return RULES.filter(rule => {
+    if (!rule.patterns.some(p => n.includes(p))) return false;
+    if (Array.isArray(rule.requires_context) && rule.requires_context.length) {
+      return rule.requires_context.some(p => n.includes(p));
+    }
+    return true;
+  });
+}
+
+function calculateScore(matches) {
+  if (!matches.length) return 0.15;
+  const avg = matches.reduce((s, r) => s + r.severity, 0) / matches.length;
+  const boost = Math.min((matches.length - 1) * 0.08, 0.18);
+  return Math.min(Number((avg + boost).toFixed(2)), 0.98);
+}
+
+function decideFromEvidence(score, matches, hardViolations) {
+  // Hard constraints take priority — evaluated independently
+  const blockViolations = hardViolations.filter(h => h.decision === 'BLOCK');
+  const escalateViolations = hardViolations.filter(h => h.decision === 'ESCALATE');
+  const reviseViolations = hardViolations.filter(h => h.decision === 'REVISE');
+  if (blockViolations.length) return 'BLOCK';
+  if (escalateViolations.length) return 'ESCALATE';
+  if (reviseViolations.length) return 'REVISE';
+  // Critical uncertainty in a high-impact sensitive-domain action requires human review.
+  if (matches && matches._criticalContext === true) return 'ESCALATE';
+  // Soft signal scoring
+  const hasHighRisk = matches.some(r => ['Autonomy Overreach','Youth Well-being Risk','Dependency Formation'].includes(r.risk));
+  if (score >= 0.82 || hasHighRisk) return 'ESCALATE';
+  if (score >= 0.35) return 'REVISE';
+  return 'ALLOW';
+}
+
+function buildResult(params) {
+  const { objective, context, domain, behavior, inputType, extraction } = params;
+
+  // Combine all text for soft rule matching
+  const combined = [
+    objective, context, behavior || '',
+    extraction ? extraction.user_intent || '' : '',
+    extraction ? extraction.agent_objective || '' : '',
+    extraction ? extraction.intended_action || '' : ''
+  ].join(' ');
+
+  // Check hard constraints from extraction evidence
+  const hardViolations = extraction
+    ? HARD_CONSTRAINTS.filter(hc => hc.check(extraction)).map(hc => ({ ...hc, decision: typeof hc.decision === 'function' ? hc.decision(extraction) : hc.decision }))
+    : [];
+
+  // Soft rule matching
+  const matches = getMatches(combined);
+
+  // Add dependency/manipulation from extraction
+  if (extraction && extraction.dependency_detected && !matches.some(r => r.id === 'dependency_forming_companion')) {
+    matches.push(RULES.find(r => r.id === 'dependency_forming_companion') || { risk:'Dependency Formation', severity:0.78 });
+  }
+  if (extraction && extraction.escalation_suppressed && !matches.some(r => r.id === 'escalation_suppression')) {
+    matches.push(RULES.find(r => r.id === 'escalation_suppression') || { risk:'Escalation Suppression', severity:0.72 });
+  }
+
+  const score = calculateScore(matches);
+  if (extraction && SENSITIVE_DOMAINS.has(domain) && extraction.high_impact_action && extraction.authorization === 'unclear') matches._criticalContext = true;
+  const decision = decideFromEvidence(score, matches, hardViolations);
+
+  // Build flags
+  const flags = [
+    ...hardViolations.map(h => ({ text: h.label, hard: true })),
+    ...new Set(matches.map(r => r.risk))
+  ].filter(Boolean);
+
+  // Select top rule for ungoverned/governed/reason/action
+  let top = matches[0] || null;
+  if (hardViolations.length) {
+    const topHard = hardViolations[0];
+    return {
+      decision, risk_score: score, confidence: 0.90,
+      flags, matched_rules: matches, matched_hard: hardViolations,
+      ungoverned: topHard.reason,
+      governed: top ? top.governed : 'Resolve the hard constraint violation before allowing execution.',
+      reason: topHard.reason + (top ? ' ' + top.reason : ''),
+      action: top ? top.action : 'Do not proceed until the hard constraint violation is resolved.',
+      inputType, extraction
+    };
+  }
+
+  if (!matches.length) {
+    return {
+      decision, risk_score: score, confidence: 0.62,
+      flags: [{ text: 'No structural risk detected', hard: false }],
+      matched_rules: [], matched_hard: [],
+      ungoverned: 'No clear governance failure detected in this deterministic scan.',
+      governed: 'Proceed with documented constraints, monitoring, and periodic review.',
+      reason: 'The evaluator did not detect a known risk pattern. Production deployments should define explicit constraints.',
+      action: 'Proceed with standard monitoring.',
+      inputType, extraction
+    };
+  }
+
+  return {
+    decision, risk_score: score, confidence: matches.length > 1 ? 0.82 : 0.74,
+    flags, matched_rules: matches, matched_hard: [],
+    ungoverned: behavior ? `${top.ungoverned} Proposed behavior: ${behavior}` : top.ungoverned,
+    governed: top.governed,
+    reason: matches.map(r => r.reason).join(' '),
+    action: top.action,
+    inputType, extraction
+  };
+}
+
+function extractQuickEvidence(objective, context, behavior, domain) {
+  const text = normalize([objective, context, behavior].join(' '));
+  const has = (...terms) => terms.some(t => text.includes(t));
+  const ext = {
+    domain: domain || 'general', turns_parsed:0, user_turn_count:0, agent_turn_count:0,
+    user_intent: context || null, agent_objective: objective || null, intended_action: behavior || null,
+    authorization:'unclear', third_party_target:false, third_party_evidence:null,
+    user_request_unresolved:false, escalation_suppressed:false, reversibility:'unclear',
+    closure_without_resolution:false, high_impact_action:false, human_review_present:false,
+    explicit_escalation_suppression:false, manipulation_detected:false, dependency_detected:false,
+    refusal_without_resolution:false, missing_context:[]
+  };
+  if (has('another patient','another user','someone else','other customer')) {
+    ext.third_party_target = true;
+    ext.third_party_evidence = 'Input explicitly references an action affecting another person.';
+    ext.authorization = has('authorized by that user','affected user authorized','policy authorization') ? 'present' : 'missing';
+    ext.reversibility = 'low';
+  }
+  if (has('auto deny','auto approve','automatically deny','automatically approve','deny coverage','approve coverage','reject loan','approve loan','determine eligibility','自动拒绝','自动批准')) {
+    ext.high_impact_action = true;
+    ext.reversibility = 'low';
+  }
+  const reviewNegated = has('no human review','without human review','avoid human review','skip human review');
+  if (!reviewNegated && has('human review','manual review','clinician review','compliance review')) ext.human_review_present = true;
+  if (has('avoid escalation','avoid human','no human review','without human review','skip escalation')) {
+    ext.explicit_escalation_suppression = true;
+    ext.escalation_suppressed = true;
+  }
+  if (has('mark resolved','mark as resolved','close ticket','close the ticket') && has('unresolved','still wants','still need','refund denied')) {
+    ext.closure_without_resolution = true;
+    ext.user_request_unresolved = true;
+    ext.reversibility = 'medium';
+  }
+  if (!ext.high_impact_action && !ext.third_party_target && has('explain','what is','what does','information about')) ext.reversibility = 'high';
+  return ext;
+}
+
+
+// ============================================================
+// MONGODB AUDIT LOGGING (via existing /api/review backend)
+// ============================================================
+function normalizeRiskFlagsForLog(flags) {
+  return (flags || []).map(f => typeof f === 'object' ? (f.text || '') : String(f)).filter(Boolean);
+}
+
+function buildAuditPayload({ objective, context, domain, behavior, inputType, extraction, conversationText, result }) {
+  return {
+    mode: inputType === 'convo' ? 'conversation_review' : 'quick_scenario',
+    objective: objective || '',
+    business_goal: objective || '',
+    context: context || '',
+    customer_message: inputType === 'convo' ? (conversationText || context || '') : (context || ''),
+    conversation: inputType === 'convo' ? (conversationText || '') : '',
+    proposed_ai_action: behavior || '',
+    proposed_action: behavior || '',
+    domain: domain || 'general',
+    extraction: extraction || null,
+    demo_version: 'v5',
+    local_orienta_result: result ? {
+      decision: result.decision,
+      risk_score: result.risk_score,
+      confidence: result.confidence,
+      risk_flags: normalizeRiskFlagsForLog(result.flags),
+      safe_instruction: result.governed,
+      recommended_action: result.action,
+      matched_rule_ids: (result.matched_rules || []).map(r => r && r.id).filter(Boolean),
+      matched_hard_constraint_ids: (result.matched_hard || []).map(h => h && h.id).filter(Boolean)
+    } : null
+  };
+}
+
+async function saveAuditLog(payload) {
+  // Local file previews have no serverless /api route; skip silently.
+  if (window.location.protocol === 'file:') return null;
+  try {
+    const response = await fetch('/api/review', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const contentType = response.headers.get('content-type') || '';
+    const data = contentType.includes('application/json') ? await response.json() : { error: await response.text() };
+    if (!response.ok || !data.ok) {
+      throw new Error(data.error || `Audit logging failed (${response.status})`);
+    }
+    console.info('[ORIENTA] Audit saved to MongoDB:', data.audit_id);
+    return data;
+  } catch (error) {
+    // Logging must never block the deterministic evaluator or the demo UI.
+    console.warn('[ORIENTA] MongoDB audit logging failed:', error);
+    return null;
+  }
+}
+
+// ============================================================
+// ANALYSIS ENTRY POINTS
+// ============================================================
+function runAnalysis() {
+  if (currentInputMode === 'convo') {
+    runConvoAnalysis();
+  } else {
+    runQuickAnalysis();
+  }
+}
+
+function runQuickAnalysis() {
+  const objective = document.getElementById('objective').value.trim();
+  const context   = document.getElementById('context').value.trim();
+  const domain    = document.getElementById('domain').value;
+  const behavior  = document.getElementById('assistant-action').value.trim();
+  if (!objective) { document.getElementById('objective').focus(); return; }
+  const extraction = extractQuickEvidence(objective, context, behavior, domain);
+  const result = buildResult({ objective, context, domain, behavior, inputType: 'quick', extraction });
+  lastResult = result;
+  recordSessionRun(result);
+  renderResult(result);
+  // Persist the run asynchronously; MongoDB availability never blocks the demo result.
+  void saveAuditLog(buildAuditPayload({
+    objective, context, domain, behavior, inputType: 'quick', extraction, result
+  }));
+}
+
+function runConvoAnalysis() {
+  const convoText = document.getElementById('convo-input').value.trim();
+  const domain    = document.getElementById('convo-domain').value;
+  if (!convoText) { document.getElementById('convo-input').focus(); return; }
+
+  const turns = parseTurns(convoText);
+  const extraction = extractFromTurns(turns, domain);
+
+  const result = buildResult({
+    objective: extraction.agent_objective || '',
+    context:   extraction.user_intent || convoText.slice(0, 200),
+    domain,
+    behavior:  extraction.intended_action || '',
+    inputType: 'convo',
+    extraction
+  });
+
+  lastResult = result;
+  recordSessionRun(result);
+  renderResult(result);
+  // Save the full conversation plus extracted governance state for audit/observability.
+  void saveAuditLog(buildAuditPayload({
+    objective: extraction.agent_objective || '',
+    context: extraction.user_intent || '',
+    domain,
+    behavior: extraction.intended_action || '',
+    inputType: 'convo',
+    extraction,
+    conversationText: convoText,
+    result
+  }));
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+const DECISION_SUMMARIES = {
+  ALLOW:    'No major structural governance risk detected. This objective can proceed with documented constraints and monitoring.',
+  REVISE:   'This objective contains governance risk. The objective or intended action should be reframed before the agent proceeds.',
+  ESCALATE: 'Human review required before execution. A regulatory concern, hard constraint, or high-impact risk was detected.',
+  BLOCK:    'Hard governance boundary violated. Execution must not proceed without resolving the violation.'
+};
+
+function renderResult(result) {
+  const card = document.getElementById('result-card');
+  card.classList.add('visible');
+
+  const badge = document.getElementById('decision-badge');
+  badge.className = 'badge ' + result.decision;
+  badge.textContent = result.decision;
+
+  document.getElementById('analysis-mode-label').textContent =
+    result.inputType === 'convo' ? '● Deterministic Conversation Analysis' : '● Deterministic Analysis';
+  document.getElementById('confidence-text').textContent =
+    `Evaluator confidence: ${Math.round(result.confidence * 100)}%`;
+
+  // Summary
+  let summaryHTML = escapeHtml(DECISION_SUMMARIES[result.decision] || '');
+  if (result.extraction && result.extraction.user_intent) {
+    const ext = result.extraction;
+    summaryHTML = `<strong style="color:var(--text)">Detected user intent:</strong> ${escapeHtml(ext.user_intent || '—')}<br>` +
+      (ext.agent_objective ? `<strong style="color:var(--text)">Detected agent objective:</strong> ${escapeHtml(ext.agent_objective)}<br>` : '') +
+      (ext.intended_action ? `<strong style="color:var(--text)">Detected intended action:</strong> ${escapeHtml(ext.intended_action)}<br>` : '') +
+      `<br>${escapeHtml(DECISION_SUMMARIES[result.decision] || '')}`;
+  }
+  document.getElementById('result-summary').innerHTML = summaryHTML;
+
+  document.getElementById('intercept-label').style.display = result.decision === 'ALLOW' ? 'none' : 'block';
+  document.getElementById('ungoverned-output').textContent = result.ungoverned;
+  document.getElementById('governed-output').textContent = result.governed;
+  document.getElementById('reason-output').textContent = result.reason;
+  document.getElementById('action-output').textContent = result.action;
+
+  document.getElementById('risk-flags').innerHTML = result.flags.map(f => {
+    const text = typeof f === 'object' ? f.text : f;
+    const isHard = typeof f === 'object' && f.hard;
+    return `<span class="flag ${isHard ? 'hard' : ''}">${escapeHtml(text)}</span>`;
+  }).join('');
+
+  renderEvaluation(result);
+}
+
+function hideResult() {
+  document.getElementById('result-card').classList.remove('visible');
+}
+
+// ============================================================
+// EVALUATION PAGE
+// ============================================================
+function renderEvaluation(result) {
+  document.getElementById('eval-empty').hidden = true;
+  document.getElementById('eval-content').hidden = false;
+
+  const ext = result.extraction;
+
+  // Extracted fields (conversation mode only)
+  const extractedSection = document.getElementById('extracted-section');
+  if (ext && result.inputType === 'convo') {
+    extractedSection.hidden = false;
+    document.getElementById('extracted-fields').innerHTML = [
+      ext.user_intent    ? `<div><span style="color:var(--muted)">User intent:</span> ${escapeHtml(ext.user_intent)}</div>` : '',
+      ext.agent_objective ? `<div><span style="color:var(--muted)">Agent objective:</span> ${escapeHtml(ext.agent_objective)}</div>` : '',
+      ext.intended_action ? `<div><span style="color:var(--muted)">Intended action:</span> ${escapeHtml(ext.intended_action)}</div>` : '',
+      `<div style="margin-top:8px;"><span style="color:var(--muted)">Turns parsed:</span> ${ext.turns_parsed} (${ext.user_turn_count} user, ${ext.agent_turn_count} agent)</div>`
+    ].filter(Boolean).join('') || '—';
+  } else {
+    extractedSection.hidden = true;
+  }
+
+  // Evidence-based dimensions — only show if there's actual evidence
+  const dims = computeEvidencedDimensions(result);
+  document.getElementById('dim-list').innerHTML = dims.length
+    ? dims.map(d => `
+        <div class="dim-row">
+          <div class="dim-label">${escapeHtml(d.label)}</div>
+          <div class="dim-state ${d.state}">${escapeHtml(d.display)}</div>
+        </div>
+      `).join('')
+    : '<div style="font-size:13px;color:var(--muted);">No specific dimensions with clear evidence detected.</div>';
+
+  // Missing context
+  const missingItems = ext ? ext.missing_context : [];
+  const missingSection = document.getElementById('missing-context-section');
+  if (missingItems.length) {
+    missingSection.hidden = false;
+    document.getElementById('missing-context-list').innerHTML = missingItems
+      .map(m => `<div>· ${escapeHtml(m)}</div>`).join('');
+  } else {
+    missingSection.hidden = true;
+  }
+
+  // Hard constraints
+  document.getElementById('hard-constraints-list').innerHTML = HARD_CONSTRAINTS.map(hc => {
+    const violated = result.matched_hard && result.matched_hard.some(h => h.id === hc.id);
+    return `
+      <div class="dim-row" style="align-items:flex-start;gap:10px;">
+        <div class="dim-label" style="flex:1;">${escapeHtml(hc.label)}<br><span style="font-size:11px;color:var(--muted);font-weight:400;">${escapeHtml(hc.description)}</span></div>
+        <div class="dim-state ${violated ? 'violated' : 'clear'}" style="flex-shrink:0;">${violated ? '● Violated' : '✓ Clear'}</div>
+      </div>
+    `;
+  }).join('');
+
+  // Decision details
+  document.getElementById('decision-details-p2').innerHTML = `
+    <div><span style="color:var(--muted)">Decision:</span> <strong>${escapeHtml(result.decision)}</strong></div>
+    <div><span style="color:var(--muted)">Confidence:</span> ${Math.round(result.confidence * 100)}%</div>
+    <div><span style="color:var(--muted)">Experimental Risk Score:</span> ${result.risk_score} <span style="font-size:11px;color:var(--muted);">(heuristic — not calibrated)</span></div>
+    ${result.matched_hard && result.matched_hard.length ? `<div style="margin-top:10px;color:var(--red);font-size:12px;">Hard violation: ${escapeHtml(result.matched_hard[0].label)}</div>` : ''}
+    <div style="margin-top:10px;"><span style="color:var(--muted)">Safer objective:</span><br><span style="color:var(--green);font-size:13px;">${escapeHtml(result.action)}</span></div>
+  `;
+
+  // Governance trace
+  const sensitiveDomain = !!(ext && SENSITIVE_DOMAINS.has(ext.domain));
+  const hardTriggered  = result.matched_hard && result.matched_hard.length > 0;
+  const softTriggered  = result.matched_rules && result.matched_rules.length > 0;
+  const steps = [
+    { status:'done', text:`Input received — ${result.inputType === 'convo' ? 'conversation mode' : 'quick scenario mode'}` },
+    result.inputType === 'convo'
+      ? { status:'done', text:`Conversation parsed: ${ext ? ext.turns_parsed : '?'} turns detected (${ext ? ext.user_turn_count : '?'} user, ${ext ? ext.agent_turn_count : '?'} agent)` }
+      : { status:'done', text:'Objective and context parsed' },
+    { status: sensitiveDomain ? 'warn' : 'done', text: sensitiveDomain ? `Sensitive domain context detected (${ext.domain}) — action-specific scrutiny applied` : 'Domain evaluated — standard scrutiny' },
+    { status: hardTriggered ? 'block' : 'done', text: hardTriggered ? `Hard constraint violated: ${result.matched_hard[0].label}` : 'Hard constraints evaluated — none violated' },
+    { status: softTriggered ? 'warn' : 'done', text: softTriggered ? `Soft risk rules triggered: ${result.matched_rules.map(r=>r.risk).join(', ')}` : 'Soft risk rules evaluated — no matches' },
+    { status: 'done', text: `Decision generated: ${result.decision}` },
+    { status: 'done', text: 'Revised objective and recommended action generated' }
+  ];
+
+  document.getElementById('trace-list').innerHTML = steps.map((s,i) => `
+    <div class="trace-step">
+      <div class="trace-num ${s.status}">${i+1}</div>
+      <div style="padding-top:2px;">${escapeHtml(s.text)}</div>
+    </div>
+  `).join('');
+}
+
+function computeEvidencedDimensions(result) {
+  const dims = [];
+  const risks = (result.matched_rules || []).map(r => r.risk);
+  const ext = result.extraction || {};
+
+  // Only add dimensions where there's actual evidence
+  if (risks.includes('Incentive Distortion')) {
+    dims.push({ label:'Incentive alignment', state:'detected', display:'⚠ Misalignment detected' });
+  }
+  if (risks.includes('Escalation Suppression') || (result.matched_hard || []).some(h => h.id === 'close_unresolved_suppress_escalation')) {
+    dims.push({ label:'Escalation pathways', state:'detected', display:'⚠ Suppression risk' });
+  }
+  if (risks.includes('Manipulation Risk') || risks.includes('Dependency Formation')) {
+    dims.push({ label:'User autonomy', state:'detected', display:'⚠ Autonomy risk' });
+  }
+  if (risks.includes('Proxy Metric Corruption')) dims.push({ label:'Proxy metric integrity', state:'detected', display:'⚠ Corruption risk' });
+  if (risks.includes('Stakeholder Imbalance') || risks.includes('Worker Exploitation Risk')) dims.push({ label:'Stakeholder balance', state:'detected', display:'⚠ Imbalance detected' });
+  if (risks.includes('Complaint Suppression Risk')) dims.push({ label:'Complaint pathways', state:'detected', display:'⚠ Suppression risk' });
+  if (risks.includes('Information Environment Risk')) dims.push({ label:'Information environment', state:'detected', display:'⚠ Evidence-quality risk' });
+  if (risks.includes('Youth Well-being Risk')) {
+    dims.push({ label:'Youth / vulnerable users', state:'detected', display:'⚠ Risk detected' });
+  }
+  if (ext.third_party_target === true) {
+    dims.push({ label:'Third-party impact', state:'detected', display:'● Detected' });
+  }
+  if (ext.authorization === 'missing') {
+    dims.push({ label:'Authorization', state:'missing', display:'✗ Missing' });
+  } else if (ext.authorization === 'present') {
+    dims.push({ label:'Authorization', state:'present', display:'✓ Present' });
+  }
+  if (ext.reversibility && ext.reversibility !== 'unclear') {
+    const state = ext.reversibility === 'high' ? 'clear' : 'detected';
+    const icon = ext.reversibility === 'high' ? '✓' : '⚠';
+    dims.push({ label:'Reversibility', state, display:`${icon} ${ext.reversibility.charAt(0).toUpperCase()+ext.reversibility.slice(1)}` });
+  }
+  if (risks.length === 0 && !result.matched_hard?.length && dims.length === 0) {
+    dims.push({ label:'Structural alignment', state:'clear', display:'✓ No risks detected' });
+  }
+
+  return dims;
+}
+
+
+function renderSessionTrends() {
+  const section = document.getElementById('session-trends-section');
+  if (!section) return;
+  if (sessionRuns.length < 3) { section.hidden = true; return; }
+  section.hidden = false;
+  const chart = document.getElementById('risk-trend-chart');
+  const W=620,H=210,p=30;
+  const vals=sessionRuns.map(r=>r.riskScore);
+  const maxX=Math.max(1, sessionRuns.length-1);
+  const pts=vals.map((v,i)=>({x:p+(i/maxX)*(W-2*p), y:H-p-(v/100)*(H-2*p),v,i:i+1}));
+  const poly=pts.map(pt=>`${pt.x},${pt.y}`).join(' ');
+  const grid=[0,25,50,75,100].map(v=>{const y=H-p-(v/100)*(H-2*p);return `<line x1="${p}" y1="${y}" x2="${W-p}" y2="${y}" stroke="#28313c" stroke-width="1"/><text x="4" y="${y+4}" fill="#91a0af" font-size="10">${v}</text>`}).join('');
+  const dots=pts.map(pt=>`<circle cx="${pt.x}" cy="${pt.y}" r="4" fill="#5cc8ff"><title>Run ${pt.i}: ${pt.v}</title></circle>`).join('');
+  const labels=pts.map(pt=>`<text x="${pt.x}" y="${H-7}" text-anchor="middle" fill="#91a0af" font-size="9">${pt.i}</text>`).join('');
+  chart.innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Experimental Risk Score by Run">${grid}<polyline fill="none" stroke="#5cc8ff" stroke-width="2" points="${poly}"/>${dots}${labels}</svg>`;
+  const counts={ALLOW:0,REVISE:0,ESCALATE:0,BLOCK:0};
+  sessionRuns.forEach(r=>{ if(counts[r.decision]!==undefined) counts[r.decision]++; });
+  const maxCount=Math.max(1,...Object.values(counts));
+  document.getElementById('decision-distribution').innerHTML=Object.entries(counts).map(([k,v])=>`<div class="dist-row"><span>${k}</span><div class="dist-track"><div class="dist-fill" style="width:${(v/maxCount)*100}%"></div></div><strong>${v}</strong></div>`).join('');
+}
+
+// ============================================================
+// FEEDBACK & UTILITIES
+// ============================================================
+function recordFeedback(value, btn) {
+  lastFeedback = value;
+  document.querySelectorAll('.fb-btn').forEach(b => b.classList.remove('selected'));
+  if (btn) btn.classList.add('selected');
+  document.getElementById('feedback-status').textContent = `Feedback marked: "${value}". Thank you.`;
+}
+
+function copyResultJson() {
+  if (!lastResult) return;
+  const ext = lastResult.extraction;
+  const payload = {
+    timestamp: new Date().toISOString(),
+    analysis_mode: lastResult.inputType,
+    orienta_decision: {
+      decision:    lastResult.decision,
+      risk_score:  lastResult.risk_score,
+      confidence:  lastResult.confidence,
+      hard_violations:   (lastResult.matched_hard || []).map(h => h.label),
+      soft_risk_flags:   (lastResult.matched_rules || []).map(r => r.risk),
+      ungoverned_path:   lastResult.ungoverned,
+      safe_instruction:  lastResult.governed,
+      reason:            lastResult.reason,
+      recommended_action: lastResult.action
+    },
+    extracted_evidence: ext ? {
+      user_intent:              ext.user_intent,
+      agent_objective:          ext.agent_objective,
+      intended_action:          ext.intended_action,
+      authorization:            ext.authorization,
+      third_party_target:       ext.third_party_target,
+      third_party_evidence:     ext.third_party_evidence,
+      user_request_unresolved:  ext.user_request_unresolved,
+      escalation_suppressed:    ext.escalation_suppressed,
+      reversibility:            ext.reversibility,
+      closure_without_resolution: ext.closure_without_resolution,
+      high_impact_action:        ext.high_impact_action,
+      human_review_present:      ext.human_review_present,
+      manipulation_detected:    ext.manipulation_detected,
+      dependency_detected:      ext.dependency_detected,
+      missing_context:          ext.missing_context
+    } : null
+  };
+  navigator.clipboard.writeText(JSON.stringify(payload, null, 2))
+    .then(() => alert('Result JSON copied.'))
+    .catch(() => alert('Copy failed — try manually.'));
+}
+
+function escapeHtml(v) {
+  return String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Init
+loadPreset('refund');
+renderSessionTrends();
+</script>
+</body>
+</html>
