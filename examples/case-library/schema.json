@@ -1,0 +1,178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Orienta case suite v1 (evaluation envelope, not an API output schema)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "cases"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": [
+        "1.0"
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "case_id",
+          "title",
+          "category",
+          "tags",
+          "scenario",
+          "agent_role",
+          "affected_parties",
+          "counterexample_id",
+          "source_document",
+          "evidence_status",
+          "expectation_basis",
+          "input",
+          "policy_basis",
+          "expected_results",
+          "expected_orientation",
+          "recommended_action"
+        ],
+        "properties": {
+          "case_id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[A-Z0-9-]+$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "category": {
+            "type": "string",
+            "minLength": 1
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "scenario": {
+            "type": "string",
+            "minLength": 1
+          },
+          "agent_role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "affected_parties": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "counterexample_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_document": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence_status": {
+            "type": "string",
+            "enum": [
+              "author_defined_fixture"
+            ]
+          },
+          "expectation_basis": {
+            "type": "string",
+            "minLength": 1
+          },
+          "input": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "objective": {
+                "type": "string",
+                "minLength": 1
+              },
+              "context": {
+                "type": "string",
+                "minLength": 1
+              },
+              "proposed_action": {
+                "type": "string",
+                "minLength": 1
+              },
+              "domain": {
+                "type": "string",
+                "minLength": 1
+              },
+              "constraints": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "objective",
+              "context",
+              "proposed_action",
+              "domain",
+              "constraints"
+            ]
+          },
+          "policy_basis": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expected_results": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "node": {
+                "type": "string",
+                "enum": [
+                  "PROCEED",
+                  "REVIEW",
+                  "ADJUST",
+                  "ESCALATE"
+                ]
+              },
+              "browser": {
+                "type": "string",
+                "enum": [
+                  "ALLOW",
+                  "REVISE",
+                  "ESCALATE",
+                  "BLOCK"
+                ]
+              }
+            },
+            "required": [
+              "node",
+              "browser"
+            ]
+          },
+          "expected_orientation": {
+            "type": "string",
+            "minLength": 1
+          },
+          "recommended_action": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

@@ -9,7 +9,9 @@
     "demo:companion": "node src/gate_node.js examples/ai_companion_dependency_input.json",
     "demo:recommendations": "node src/gate_node.js examples/ai_recommendations.json",
     "engine": "node src/orientation_engine.js examples/customer_support_demo_input.json",
-    "vercel:dev": "vercel dev"
+    "vercel:dev": "vercel dev",
+    "eval:cases": "node scripts/evaluate-cases.js",
+    "test:cases": "node --test scripts/evaluate-cases.test.js"
   },
   "dependencies": {
     "mongodb": "^6.21.0"

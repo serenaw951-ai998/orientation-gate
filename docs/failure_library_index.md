@@ -29,3 +29,7 @@ A possible future malicious-skill case would require permission, data-access, to
 6. Re-run after changes to the evaluator; do not treat old observations as current guarantees.
 
 Use the [case template](use_cases/case_template.md). Browser and backend decisions differ; see [Decision Interfaces](../README.md#decision-interfaces).
+
+## Executable starter evaluation
+
+Four machine-readable fixtures now complement the narrative cases. See [evaluation instructions and actual results](evaluation/README.md). The Node run has three matching decisions and one authorization-case mismatch; the four browser rows are not automated and are marked UNSUPPORTED. These are text-projected fixtures, not re-runs of the full browser presets.

@@ -187,6 +187,12 @@ These are reference demos. The sandbox does not connect to a real support queue,
 - **Feedback is preliminary.** The evaluation view accepts a feedback selection, but it does not yet implement a persisted reviewer-feedback or learning pipeline.
 - **Enforcement belongs to the integration.** Authentication, application permissions, real human handoff, and execution control must be established for a deployment.
 
+## Evaluate the Starter Cases
+
+Run `npm run test:cases` to check the evaluation tooling and `npm run eval:cases` to compare four author-defined fixtures with the Node evaluator. Browser checks are explicitly unsupported by this runner. The initial report includes an authorization-case mismatch; it is retained as a capability gap, not hidden as a passing test.
+
+See [evaluation instructions and the recorded results](docs/evaluation/README.md). These results measure agreement with the stated expectations, not safety accuracy.
+
 ## Next Validation Priorities
 
 1. Unify the browser and backend decision schema, evidence model, and hard-constraint evaluation.

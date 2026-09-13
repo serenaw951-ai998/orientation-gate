@@ -36,3 +36,9 @@ Each case identifies the target team, end user, trigger, input evidence, propose
 The browser uses `ALLOW / REVISE / ESCALATE / BLOCK`; Node/API/MCP use `PROCEED / REVIEW / ADJUST / ESCALATE`. Record the surface and input with every observed result. An expected outcome is not a test result.
 
 For conversations with engineers, start with the [short walkthrough](../orienta-case-walkthrough.md). For evaluation tracking, use the [failure library index](../failure_library_index.md).
+
+## Executable starter evaluation
+
+Four machine-readable fixtures now complement the narrative cases. See [evaluation instructions and actual results](../evaluation/README.md). The Node run has three matching decisions and one authorization-case mismatch; the four browser rows are not automated and are marked UNSUPPORTED. These are text-projected fixtures, not re-runs of the full browser presets.
+
+An additional existing [off-domain objective-drift note](../../examples/case_off_domain_objective_drift.md) is retained as a research example, outside the starter suite. Its REDIRECT wording is conceptual, not a current evaluator decision.

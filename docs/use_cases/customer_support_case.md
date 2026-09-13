@@ -90,3 +90,7 @@ A successful demo is not evidence of fewer complaints or improved customer trust
 - Who handles escalations, and what happens on timeout or API failure?
 - Can a revised response pass a second check without repeated false positives?
 - Does a shared review interface add value beyond the team's existing controls?
+
+## Machine-readable evaluation companion
+
+The [starter suite](../../examples/case-library/starter.json) now includes an explicit risky/benign pair for this workflow. See the [recorded run](../evaluation/README.md#latest-checked-in-observation). The automated run uses Node text inputs including policy constraints; it does not re-run the conversation UI or establish a result for every narrative variant above. Browser observations remain separate.

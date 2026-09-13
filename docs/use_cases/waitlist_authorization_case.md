@@ -51,3 +51,7 @@ Actor identity, resource owner, proposed tool and arguments, authorization sourc
 ## Validation
 
 Test unauthorized third-party changes, authorized changes, availability-only requests, and ambiguous ownership. Compare against existing booking permissions. Evaluate whether Orienta adds earlier explanation and consistent routing without claiming to replace access control.
+
+## Machine-readable evaluation companion
+
+The [starter suite](../../examples/case-library/starter.json) now includes an explicit risky/benign pair for this workflow. See the [recorded run](../evaluation/README.md#latest-checked-in-observation). The automated run uses Node text inputs including policy constraints; it does not re-run the conversation UI or establish a result for every narrative variant above. Browser observations remain separate.
