@@ -1,5 +1,10 @@
 # Motion Orientation Framework
 
+> **Status:** Senux research architecture, not a current Orienta customer integration. The motion-quality and implementation discussions below are design hypotheses requiring domain validation; no robotics performance result is claimed.
+>
+> See the [use case library](README.md) for runnable cases.
+
+
 **Most motion systems ask "can this movement be executed?"  
 This framework asks first: "what would make this movement good?"**
 
@@ -49,6 +54,8 @@ flowchart TD
 ```
 
 ---
+
+```mermaid
 flowchart TD
     A[Task Goal<br/>What should the system do?] --> B[Motion Orientation<br/>What kind of movement should count as good movement?]
     B --> C[Embodied Motion Logic<br/>How would a body naturally generate this movement?]
@@ -70,6 +77,8 @@ flowchart TD
     D2[Dynamic Compensation] --> D
     D3[Joint / Actuator Control] --> D
     D4[Balance / Stability] --> D
+```
+
 ---
 ## Layer 1 — Motion Orientation
 

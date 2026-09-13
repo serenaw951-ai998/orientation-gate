@@ -1,5 +1,10 @@
 # Identity-Sensitive Hallucination Risk
 
+> **Status:** Research scenario. The JSON below is an illustrative desired policy response, not an observed current API result. Claim verification, identity resolution, and trusted-source integration are not implemented by the current Orienta rule evaluator. No customer deployment is claimed.
+>
+> See the [use case library](README.md) for runnable cases.
+
+
 ## Case ID
 
 `identity_sensitive_hallucination`

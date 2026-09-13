@@ -1,95 +1,38 @@
-# Orienta Use Case Library
+# Orienta Use Cases
 
-The Orienta use case library organizes concrete AI failure scenarios by recurring failure structure.
+Start with a workflow: **who needs the check, what the agent is about to do, and what changes after the decision**.
 
-The goal is not to collect many loose examples. The goal is to show how different AI failures often share the same missing layer:
+These documents distinguish runnable demonstrations, proposed customer workflows, and research directions. Target teams are customer hypotheses, not claims of paying customers or deployed integrations.
 
-```text
-The system proceeds before evaluating whether the objective, action, or generation should happen as written.
-```
+## 1. Runnable demo cases
 
-## Case Format
+| Case | Potential integrating team | Checkpoint | Demonstrated result |
+| --- | --- | --- | --- |
+| [Support reply review](customer_support_case.md) | Team building subscription customer-support automation | Before sending a proposed refund/retention reply | Main-demo refund preset: `REVISE` |
+| [Unauthorized appointment change](waitlist_authorization_case.md) | Team building a scheduling assistant | Before an action affecting another person's booking | Main-demo waitlist preset: `BLOCK` |
 
-Each case should answer:
+Both results were observed in the hosted browser demo on 2026-09-13. They establish behavior for those presets, not measured accuracy or real-world effectiveness.
 
-- What is the scenario?
-- What is the failure condition?
-- What gate is missing?
-- What risk outcome appears?
-- What should Orienta recommend?
+## 2. Proposed customer workflows
 
-## Category 1: Goal Misalignment
+| Case | Concrete action to review | Evidence still needed |
+| --- | --- | --- |
+| [Companion dependency](ai_companion_dependency_case.md) | Send a reply that discourages outside support | Reviewed positive and negative examples; real product workflow |
+| [Youth re-engagement](youth_safety_orientation_case.md) | Send a late-night return notification after a user opts to stop | Explicit policy, age/context signals, scheduler integration |
 
-The system optimizes a goal or metric without evaluating downstream harm.
+## 3. Research and extensions
 
-Common pattern:
+- [Recommendation integrity](ai_recommendation_poisoning.md): requires retrieved-source evidence and upstream integrity signals.
+- [Identity-sensitive claims](identity_sensitive_hallucination.md): requires claim verification and provenance.
+- [Biological dual-use](biological-design-dual-use-case.md): incomplete research note; requires specialist validation.
+- [Motion orientation](motion_orientation_framework.md): conceptual Senux architecture, not a current Orienta integration.
 
-```text
-Metric optimization -> hidden drift -> human or business harm
-```
+These are not all supported capabilities of the current evaluator.
 
-Cases:
+## How to read a case
 
-- [Customer support refund optimization](./customer_support_case.md)
-- [Customer service KPI distortion](./customer_service_kpi_distortion.md)
-- [AI recommendation poisoning](./ai_recommendation_poisoning.md)
+Each case identifies the target team, end user, trigger, input evidence, proposed action, expected policy outcome, observed implementation behavior, benign counterexample, and validation plan. Use the [case template](case_template.md).
 
-## Category 2: Identity and Human Harm
+The browser uses `ALLOW / REVISE / ESCALATE / BLOCK`; Node/API/MCP use `PROCEED / REVIEW / ADJUST / ESCALATE`. Record the surface and input with every observed result. An expected outcome is not a test result.
 
-The system generates or acts without evaluating human consequences for identifiable or vulnerable people.
-
-Common pattern:
-
-```text
-Generation proceeds -> identity or vulnerability ignored -> human harm
-```
-
-Cases:
-
-- [Identity-sensitive hallucination risk](./identity_sensitive_hallucination.md)
-- [AI companion dependency](./ai_companion_dependency_case.md)
-- [Youth safety orientation](./youth_safety_orientation_case.md)
-
-## Category 3: Information Integrity
-
-The system trusts corrupted, manipulated, or low-integrity signals.
-
-Common pattern:
-
-```text
-Corrupted signal -> model trust -> bad recommendation or action
-```
-
-Cases:
-
-- [AI recommendation poisoning](./ai_recommendation_poisoning.md)
-
-## Category 4: Autonomous Execution Risk
-
-The system gains or uses execution capability before constraints are evaluated.
-
-Common pattern:
-
-```text
-Execution capability > judgment capacity
-```
-
-Cases:
-
-- [Biological design dual-use](./biological-design-dual-use-case.md)
-- [Motion orientation framework](./motion_orientation_framework.md)
-
-## Library Principle
-
-Single cases can look like opinions.
-
-A case library reveals recurring structure.
-
-```text
-Case -> category -> recurring failure pattern -> governance framework
-```
-
-## Current Status
-
-This library is an early draft. The near-term goal is to standardize a small set of high-quality cases before expanding the collection.
-
+For conversations with engineers, start with the [short walkthrough](../orienta-case-walkthrough.md). For evaluation tracking, use the [failure library index](../failure_library_index.md).

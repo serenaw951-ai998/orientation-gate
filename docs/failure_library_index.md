@@ -1,89 +1,31 @@
-# Orienta Failure Library Index
+# Orienta Failure Library and Validation Index
 
-The failure library collects concrete cases where an AI system may optimize in the wrong direction before execution.
+The [use case library](use_cases/README.md) separates runnable demo evidence, proposed customer workflows, and research. Customer roles are hypotheses unless explicitly supported by deployment evidence.
 
-The goal is not to create many loose examples. The goal is to build a small, high-quality evaluation set for objective and action governance.
+## Evidence register
 
-## Standard Case Format
+| ID | Case | Status | Evidence |
+| --- | --- | --- | --- |
+| CS-001 | [Support reply review](use_cases/customer_support_case.md) | Observed browser preset | Refund preset returned REVISE on 2026-09-13 |
+| AUTH-001 | [Appointment authorization](use_cases/waitlist_authorization_case.md) | Observed browser preset | Waitlist preset returned BLOCK on 2026-09-13 |
+| COMP-001 | [Companion reply](use_cases/ai_companion_dependency_case.md) | Proposed workflow | Exact paired inputs not yet tested |
+| YOUTH-001 | [Re-engagement notification](use_cases/youth_safety_orientation_case.md) | Proposed workflow | Exact policy/scheduler case not yet tested |
 
-Each case should use this structure:
+These observations are not a benchmark. Benign counterexamples in the case documents remain validation tasks, not passing tests.
 
-```text
-Case ID
-Scenario
-Objective
-Context
-Planned Action
-Failure Mode
-Risk Signals
-Orienta Decision
-Safer Direction
-Expected Human Judgment
-Why This Matters
-```
+## Research backlog
 
-## Category View
+Recommendation integrity, identity-sensitive claims, biological dual-use, and motion orientation are listed in the [research section](use_cases/README.md#3-research-and-extensions). They require additional evidence or components.
 
-For a reader-facing category map, see:
+A possible future malicious-skill case would require permission, data-access, tool-call, and authentication-flow evidence. A user objective alone cannot reveal hidden skill behavior.
 
-- [Use case library](./use_cases/README.md)
+## Next evaluation work
 
-## Current Cases
+1. Test each risky input alongside a nearby acceptable action.
+2. Record exact input, evaluator surface/version, result, and date.
+3. Obtain independent reviewer judgments and record disagreements.
+4. Compare against current prompts, permissions, and review processes.
+5. Evaluate misses, false positives, revision usefulness, latency, and review burden.
+6. Re-run after changes to the evaluator; do not treat old observations as current guarantees.
 
-| Case | File | Main Risk |
-| --- | --- | --- |
-| Customer support refund optimization | `docs/use_cases/customer_support_case.md` | Incentive distortion, refund suppression |
-| Youth safety orientation | `docs/use_cases/youth_safety_orientation_case.md` | Engagement manipulation, youth well-being |
-| AI companion dependency | `docs/use_cases/ai_companion_dependency_case.md` | Emotional dependency, autonomy erosion |
-| Recommendation poisoning | `docs/use_cases/ai_recommendation_poisoning.md` | Information environment risk |
-| Identity-sensitive hallucination | `docs/use_cases/identity_sensitive_hallucination.md` | Identity harm, false personalization |
-| Biological design dual-use | `docs/use_cases/biological-design-dual-use-case.md` | Dual-use risk |
-| Motion orientation framework | `docs/use_cases/motion_orientation_framework.md` | High-impact motion / execution framing |
-
-## Priority Cases To Standardize Next
-
-1. Refund optimization: make this the clearest flagship case.
-2. Youth engagement pressure: clarify when engagement becomes manipulation.
-3. AI companion dependency: separate support from dependency formation.
-4. Recommendation poisoning: connect source quality to action governance.
-5. Malicious skill credential theft: add as an Agent Security case, but treat skill/tool data as input signals rather than turning Orienta into a pure scanner.
-
-## Case 008 Direction
-
-The malicious skill credential theft case should be framed as:
-
-```text
-Tool / Skill Risk Signal for Agent Governance
-```
-
-Important limitation:
-
-```text
-Orienta cannot infer a hidden malicious objective from the user request alone.
-It must inspect skill metadata, requested permissions, data access, tool calls,
-and authentication flow.
-```
-
-Recommended decision:
-
-```text
-BLOCK or ESCALATE
-```
-
-Required safer direction:
-
-```text
-Use official OAuth or provider-managed login. Do not expose passwords
-to third-party skills or agent-visible input fields.
-```
-
-## Near-Term Goal
-
-Build 10 standardized cases before expanding to 20.
-
-Success criteria:
-
-- every case can be tested in `index.html`
-- every case has an expected Orienta decision
-- every case has a safer direction
-- every case can produce useful feedback from an AI builder
+Use the [case template](use_cases/case_template.md). Browser and backend decisions differ; see [Decision Interfaces](../README.md#decision-interfaces).

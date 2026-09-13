@@ -1,70 +1,45 @@
-# Orientation Case Template
+# Orienta Workflow Case Template
 
-Each use case should make one concrete pre-execution governance problem easy to test.
+Use one concrete action and one checkpoint per case.
 
-## 1. Case ID
+## Case ID and evidence status
 
-Use a stable label such as:
+Stable ID; choose: observed demo / proposed integration / research.
+Record surface, version or commit when available, observation date, and source.
+State whether the customer is hypothetical, interviewed, piloting, or deployed. Do not imply adoption without evidence.
 
-```text
-Case 002 - Refund Optimization
-```
+## People
 
-## 2. Scenario
+Target integrating team; engineer/user of the integration; potential adoption owner; end user; affected third parties. Label unvalidated customer assumptions.
 
-What is the system trying to do?
+## Trigger and current workflow
 
-## 3. Objective
+What event causes the check? Is it configuration-time objective review or execution-time action review? What existing controls apply?
 
-What goal, metric, business objective, or optimization pressure is driving behavior?
+## Exact input and proposed action
 
-## 4. Context
+Include a reproducible input, domain, policy, authorization evidence, and intended tool call or reply. State which evidence is unavailable.
 
-What domain, user situation, workflow, or environment matters?
+## Expected policy outcome
 
-## 5. Planned Action
+What should happen and why? Name the interface: browser or Node/API/MCP. Do not mix their decision labels or invent an actual JSON response.
 
-What is the AI agent, workflow, or tool about to do?
+## Observed implementation result
 
-## 6. Failure Mode
+Record exact input, output, surface, and date. If not tested, write “not yet tested.” Separate a reviewer expectation from an observed result.
 
-How could the system drift in a harmful or misaligned direction?
+## Caller enforcement and safer path
 
-Examples:
+Which operation is held? Who revises or reviews it? How is a revision checked again? What happens on missing context or API failure?
 
-- Incentive Distortion
-- Manipulation Risk
-- Escalation Suppression
-- Boundary Violation
-- Dependency Formation
-- Tool / Skill Permission Risk
+## Benign counterexample
 
-## 7. Risk Signals
+Provide a nearby acceptable action. Explain the evidence that should distinguish it from the risky case, then record expected and observed outcomes separately.
 
-What specific signals should Orienta detect?
+## Customer value hypothesis and validation
 
-## 8. Orienta Question
+Compare against existing prompts, permissions, and review. Define missed-risk and false-positive measures, latency, review burden, and usefulness. Do not present proposed metrics as achieved improvements.
 
-What should be questioned before execution begins?
+## Limits and open questions
 
-## 9. Expected Orienta Decision
-
-Choose one:
-
-- PROCEED
-- REVIEW
-- ADJUST
-- ESCALATE
-- BLOCK / RESTRICT, if the case should not execute
-
-## 10. Safer Direction
-
-What objective, action, or constraint would preserve the legitimate goal while reducing harm?
-
-## 11. Expected Human Judgment
-
-Would a responsible human reviewer allow, revise, escalate, or reject this action?
-
-## 12. Why This Matters
-
-What deeper objective or direction-governance problem does this case reveal?
+What cannot this implementation infer? Which upstream signals, controls, or integrations remain missing?

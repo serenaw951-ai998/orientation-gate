@@ -1,5 +1,10 @@
 # Use Case: Biological Design & Dual-Use Risk
 
+> **Status:** Incomplete research note, not a runnable Orienta case. Background claims below require sources and specialist review before they are used as evidence. This repository does not implement biological sequence screening or validated dual-use assessment.
+>
+> See the [use case library](README.md) for runnable cases.
+
+
 ## Background
 
 Recent advances in AI-driven biological modeling have enabled systems to generate genomic sequences, including bacteriophages and viral structures.
