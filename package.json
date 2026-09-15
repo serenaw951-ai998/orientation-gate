@@ -11,7 +11,8 @@
     "engine": "node src/orientation_engine.js examples/customer_support_demo_input.json",
     "vercel:dev": "vercel dev",
     "eval:cases": "node scripts/evaluate-cases.js",
-    "test:cases": "node --test scripts/evaluate-cases.test.js"
+    "test:cases": "node --test scripts/evaluate-cases.test.js",
+    "test:core": "node --test scripts/orientation-core.test.js"
   },
   "dependencies": {
     "mongodb": "^6.21.0"

@@ -27,7 +27,8 @@ test("Node projection contains proposed action without mutating source input", (
   const input = structuredClone(suite.cases[0].input);
   const copy = structuredClone(input);
   const projected = toNodeInput(input);
-  assert.equal(projected.context, input.context + "\n" + input.proposed_action);
+  assert.equal(projected.context, input.context);
+  assert.equal(projected.proposed_action, input.proposed_action);
   projected.constraints.push("test");
   assert.deepEqual(input, copy);
 });
@@ -42,7 +43,7 @@ test("mismatches and execution errors are kept separate from matches", () => {
   const results = evaluateCases(suite, ["node"], () => {
     call++;
     if (call === 3) throw new Error("fixture error");
-    if (call === 4) return { decision: "BLOCK" }; // invalid for Node
+    if (call === 4) return { decision: "INVALID" }; // invalid core output
     return { decision: "PROCEED" };
   });
   assert.deepEqual(results.map(r => r.status), ["FAIL", "PASS", "ERROR", "ERROR"]);
@@ -94,9 +95,13 @@ test("expanded cases validate, preserve original decisions/inputs, and report ga
   assert.equal(results.length, 28);
   assert.equal(results.filter(r => r.status === "UNSUPPORTED").length, 14);
   const missed = results.find(r => r.case_id === "AUTH-001-RISK" && r.evaluator_surface === "node");
-  assert.equal(missed.actual_decision, "PROCEED");
-  assert.equal(missed.status, "FAIL");
+  assert.equal(missed.actual_decision, "ESCALATE");
+  assert.equal(missed.status, "PASS");
   const scope = results.find(r => r.case_id === "SCOPE-001-RISK" && r.evaluator_surface === "node");
   assert.equal(scope.expected_decision, "BLOCK");
-  assert.equal(scope.status, "FAIL");
+  assert.equal(scope.status, "PASS");
+  const legacy = results.find(r => r.case_id === "CS-001-RISK" && r.evaluator_surface === "node");
+  assert.equal(legacy.expected_decision, "ADJUST");
+  assert.equal(legacy.actual_decision, "MODIFY");
+  assert.equal(legacy.status, "FAIL");
 });

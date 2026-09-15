@@ -1,24 +1,81 @@
 {
-  "name": "orientation_gate",
-  "description": "Pre-alignment orientation decision gate. Returns Proceed/Reject/Escalate plus risk scores and mitigations.",
+  "name": "orienta_core",
+  "description": "Orienta v0.3 canonical core result. Replaces historical output schema; evaluator scores are heuristic.",
   "type": "object",
   "properties": {
-    "decision": { "type": "string", "enum": ["PROCEED", "ESCALATE", "REJECT"] },
-    "risk_scores": {
-      "type": "object",
-      "properties": {
-        "objective_legitimacy": { "type": "number", "minimum": 0, "maximum": 100 },
-        "power_asymmetry": { "type": "number", "minimum": 0, "maximum": 100 },
-        "manipulation_risk": { "type": "number", "minimum": 0, "maximum": 100 },
-        "irreversibility": { "type": "number", "minimum": 0, "maximum": 100 },
-        "alignment_feasibility": { "type": "number", "minimum": 0, "maximum": 100 }
-      },
-      "required": ["objective_legitimacy", "power_asymmetry", "manipulation_risk", "irreversibility", "alignment_feasibility"]
+    "decision": {
+      "type": "string",
+      "enum": [
+        "PROCEED",
+        "MODIFY",
+        "ESCALATE",
+        "BLOCK"
+      ]
     },
-    "violations": { "type": "array", "items": { "type": "string" } },
-    "rationale": { "type": "string" },
-    "required_mitigations": { "type": "array", "items": { "type": "string" } },
-    "test_prompts": { "type": "array", "items": { "type": "string" } }
+    "risk_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "reason_codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "reasoning": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "recommended_action": {
+      "type": "string"
+    },
+    "safer_objective": {
+      "type": "string"
+    },
+    "objective": {
+      "type": "string"
+    },
+    "domain": {
+      "type": "string"
+    },
+    "risk_flags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "triggered_rules": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "evaluator_version": {
+      "type": "string",
+      "enum": [
+        "orienta_engine_v0.3"
+      ]
+    },
+    "orientation_evidence": {
+      "type": "object"
+    }
   },
-  "required": ["decision", "risk_scores", "violations", "rationale", "required_mitigations", "test_prompts"]
+  "required": [
+    "decision",
+    "risk_score",
+    "confidence",
+    "reason_codes",
+    "reasoning",
+    "recommended_action",
+    "safer_objective",
+    "evaluator_version"
+  ]
 }

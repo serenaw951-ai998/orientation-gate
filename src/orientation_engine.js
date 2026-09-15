@@ -1,5 +1,5 @@
 /**
- * Orientation Gate Lightweight Evaluator v0.1
+ * Orientation Gate Core Evaluator v0.3
  *
  * Purpose:
  * Evaluate whether an AI objective should proceed before execution.
@@ -8,6 +8,8 @@
  * It maps objective language to structural risk categories,
  * assigns lightweight scores, and returns a governance decision.
  */
+
+const { orientationChecks } = require("./orientation_checks");
 
 const RISK_RULES = [
   {
@@ -263,7 +265,7 @@ function detectCoverageGap(combinedText, matches) {
   const nonAsciiChars = (combinedText.match(/[^\x00-\x7f]/g) || []).length;
   if (nonAsciiChars >= 4) {
     return {
-      decision: "REVIEW",
+      decision: "ESCALATE",
       risk_flags: ["Language Coverage Gap"],
       reasoning: [
         "The objective contains non-English text and no risk rule matched.",
@@ -288,8 +290,8 @@ function decide(riskScore, matches) {
   );
 
   if (riskScore >= 0.8 || hasHardRisk) return "ESCALATE";
-  if (riskScore >= 0.55) return "ADJUST";
-  if (riskScore >= 0.35) return "REVIEW";
+  if (riskScore >= 0.55) return "MODIFY";
+  if (riskScore >= 0.35) return "ESCALATE";
   return "PROCEED";
 }
 
@@ -304,12 +306,8 @@ function buildRecommendedAction(decision, matches) {
     return `Route to human review. Suggested reframing: ${reframes[0]}`;
   }
 
-  if (decision === "ADJUST") {
+  if (decision === "MODIFY") {
     return `Reframe objective before execution. Suggested reframing: ${reframes[0]}`;
-  }
-
-  if (decision === "REVIEW") {
-    return `Review constraints before execution. Suggested reframing: ${reframes[0]}`;
   }
 
   return "Proceed with monitoring.";
@@ -328,7 +326,7 @@ function deriveObjective(input) {
   return "";
 }
 
-function evaluateObjective(input) {
+function evaluateRiskBaseline(input) {
   const {
     context = "",
     domain = "General",
@@ -387,6 +385,42 @@ function evaluateObjective(input) {
       : ["No major structural risk detected in this lightweight evaluation."],
     recommended_action: buildRecommendedAction(decision, matches),
     evaluator_version: "orienta_engine_v0.2"
+  };
+}
+
+
+/**
+ * v0.3: supporting goal-risk signals plus independent orientation checks.
+ * proposed_action remains separate from context and policy constraints.
+ */
+function evaluateObjective(input = {}) {
+  input = input || {};
+  const objective = deriveObjective(input);
+  const action = input.proposed_action || input.proposed_ai_action || "";
+  const baseline = evaluateRiskBaseline(action
+    ? { ...input, context: [serializeForScan(input.context), action].filter(Boolean).join(" "), constraints: [] }
+    : input);
+  const { evidence, findings } = orientationChecks(input);
+  const priority = { PROCEED: 0, MODIFY: 1, ESCALATE: 2, BLOCK: 3 };
+  let decision = baseline.decision;
+  for (const finding of findings) if (priority[finding.decision] > priority[decision]) decision = finding.decision;
+  const decisive = findings.filter(f => f.decision === decision);
+  const corrections = [...new Set(decisive.map(f => f.correction))];
+  const codes = findings.map(f => f.code);
+  if (baseline.triggered_rules?.length) codes.push("GOAL_OR_MEANS_DISTORTION");
+  if (!objective) codes.push("MISSING_OBJECTIVE");
+  if (baseline.risk_flags.includes("Language Coverage Gap")) codes.push("LANGUAGE_COVERAGE_GAP");
+  const recommendation = corrections.length ? corrections.join(" ") : baseline.recommended_action;
+  return {
+    ...baseline,
+    decision,
+    reason_codes: [...new Set(codes)],
+    reasoning: [...new Set([...baseline.reasoning, ...findings.map(f => f.reason)])],
+    recommended_action: recommendation,
+    safer_objective: decision === "PROCEED" ? objective : recommendation,
+    orientation_evidence: evidence,
+    confidence: findings.length ? Math.max(baseline.confidence, 0.75) : baseline.confidence,
+    evaluator_version: "orienta_engine_v0.3"
   };
 }
 

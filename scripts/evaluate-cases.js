@@ -6,7 +6,7 @@ const { evaluateObjective } = require("../src/orientation_engine");
 
 const ROOT = path.resolve(__dirname, "..");
 const DECISIONS = {
-  node: ["PROCEED", "REVIEW", "ADJUST", "ESCALATE"],
+  node: ["PROCEED", "MODIFY", "ESCALATE", "BLOCK"],
   browser: ["ALLOW", "REVISE", "ESCALATE", "BLOCK"]
 };
 const hash = value => crypto.createHash("sha256").update(value).digest("hex");
@@ -54,10 +54,11 @@ function validateSuite(suite, schema) {
   return errors;
 }
 function toNodeInput(input) {
-  // Text projection only. No browser extraction, policy inference, or decision remapping.
+  // Preserve action/context boundaries for core v0.3. No expected-label remapping.
   return {
     objective: input.objective,
-    context: [input.context, input.proposed_action].join("\n"),
+    context: input.context,
+    proposed_action: input.proposed_action,
     domain: input.domain,
     constraints: [...input.constraints]
   };
@@ -121,7 +122,7 @@ function markdown(report) {
     "",
     "This measures agreement with author-defined policy expectations, not safety accuracy, customer outcomes, or independent reviewer judgments.",
     "",
-    "Node evaluations use a text projection of context and proposed action. Browser rows are not executed. They are not inferred from Node results.",
+    "Node evaluations preserve separate context and proposed_action fields. Browser rows are not executed. They are not inferred from Node results.",
     "",
     "| Case | Surface | Expected | Actual | Status |",
     "| --- | --- | --- | --- | --- |",
@@ -139,12 +140,13 @@ function markdown(report) {
     "| --- | --- | --- | --- | --- |",
     ...Object.entries(report.by_category).map(([c, n]) => "| " + [c, n.PASS, n.FAIL, n.UNSUPPORTED, n.ERROR].map(cell).join(" | ") + " |"),
     "",
-    "Reason codes are expectation annotations only; they are not scored. BLOCK and REVIEW expectations are retained even where a surface cannot emit them.",
+    "Reason-code annotations are not scored. Legacy ADJUST and REVIEW expectations remain unchanged; canonical MODIFY and ESCALATE outputs are strict label mismatches.",
     "",
     "## Provenance",
     "",
     "- Node runtime: " + report.node_version,
     "- Engine SHA-256: " + report.engine_sha256,
+    "- Orientation checks SHA-256: " + report.orientation_checks_sha256,
     "- Suite SHA-256: " + report.suite_sha256,
     "- Schema SHA-256: " + report.schema_sha256,
     "- Runner SHA-256: " + report.runner_sha256,
@@ -177,6 +179,7 @@ function main(argv = process.argv.slice(2)) {
   const report = {
     report_version: "1.0", run_at: new Date().toISOString(), node_version: process.version,
     engine_sha256: hash(fs.readFileSync(path.join(ROOT, "src/orientation_engine.js"))),
+    orientation_checks_sha256: hash(fs.readFileSync(path.join(ROOT, "src/orientation_checks.js"))),
     suite_sha256: hash(suiteRaw), schema_sha256: hash(schemaRaw), runner_sha256: hash(fs.readFileSync(__filename)),
     summary: summarize(results), by_category: byCategory(results), results
   };
