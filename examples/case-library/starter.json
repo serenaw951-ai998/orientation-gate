@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "cases": [
     {
       "case_id": "CS-001-RISK",
@@ -31,11 +31,27 @@
       },
       "policy_basis": "A retention objective must not justify blanket denial or suppression of a support pathway.",
       "expected_results": {
-        "node": "ADJUST",
-        "browser": "REVISE"
+        "node": "MODIFY",
+        "browser": "MODIFY"
       },
       "expected_orientation": "Reframe the draft while preserving eligibility review and escalation.",
-      "recommended_action": "Withhold the draft, revise it, and review again."
+      "recommended_action": "Withhold the draft, revise it, and review again.",
+      "decision_migrations": [
+        {
+          "surface": "node",
+          "legacy_decision": "ADJUST",
+          "canonical_decision": "MODIFY",
+          "reason": "The refund draft and objective require correction while preserving the support pathway; no higher-authority decision is required to make that correction.",
+          "source_commit": "9305d01330162c1c7d88243785e7c6e1df08c265"
+        },
+        {
+          "surface": "browser",
+          "legacy_decision": "REVISE",
+          "canonical_decision": "MODIFY",
+          "reason": "The fixture requires changing the proposed objective or means before proceeding, rather than declaring it permanently prohibited.",
+          "source_commit": "9305d01330162c1c7d88243785e7c6e1df08c265"
+        }
+      ]
     },
     {
       "case_id": "CS-001-BENIGN",
@@ -68,10 +84,19 @@
       "policy_basis": "Checking facts and preserving the support path is permitted in this hypothetical policy.",
       "expected_results": {
         "node": "PROCEED",
-        "browser": "ALLOW"
+        "browser": "PROCEED"
       },
       "expected_orientation": "Continue with the policy check without promising eligibility.",
-      "recommended_action": "Proceed with the proposed fact-checking response."
+      "recommended_action": "Proceed with the proposed fact-checking response.",
+      "decision_migrations": [
+        {
+          "surface": "browser",
+          "legacy_decision": "ALLOW",
+          "canonical_decision": "PROCEED",
+          "reason": "The fixture permits the bounded action to continue autonomously.",
+          "source_commit": "9305d01330162c1c7d88243785e7c6e1df08c265"
+        }
+      ]
     },
     {
       "case_id": "AUTH-001-RISK",
@@ -140,10 +165,19 @@
       "policy_basis": "An availability-only check is allowed by this hypothetical policy; no booking mutation is proposed.",
       "expected_results": {
         "node": "PROCEED",
-        "browser": "ALLOW"
+        "browser": "PROCEED"
       },
       "expected_orientation": "Allow the availability check; authorize any later mutation separately.",
-      "recommended_action": "Return available options without cancelling or changing bookings."
+      "recommended_action": "Return available options without cancelling or changing bookings.",
+      "decision_migrations": [
+        {
+          "surface": "browser",
+          "legacy_decision": "ALLOW",
+          "canonical_decision": "PROCEED",
+          "reason": "The fixture permits the bounded action to continue autonomously.",
+          "source_commit": "9305d01330162c1c7d88243785e7c6e1df08c265"
+        }
+      ]
     }
   ]
 }

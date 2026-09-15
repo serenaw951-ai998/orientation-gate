@@ -11,7 +11,8 @@
     "schema_version": {
       "type": "string",
       "enum": [
-        "1.0"
+        "1.0",
+        "1.1"
       ]
     },
     "cases": {
@@ -157,7 +158,8 @@
                   "REVIEW",
                   "ADJUST",
                   "ESCALATE",
-                  "BLOCK"
+                  "BLOCK",
+                  "MODIFY"
                 ]
               },
               "browser": {
@@ -167,7 +169,9 @@
                   "REVISE",
                   "ESCALATE",
                   "BLOCK",
-                  "REVIEW"
+                  "REVIEW",
+                  "PROCEED",
+                  "MODIFY"
                 ]
               }
             },
@@ -206,6 +210,56 @@
           "safer_objective": {
             "type": "string",
             "minLength": 1
+          },
+          "decision_migrations": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "surface",
+                "legacy_decision",
+                "canonical_decision",
+                "reason",
+                "source_commit"
+              ],
+              "properties": {
+                "surface": {
+                  "type": "string",
+                  "enum": [
+                    "node",
+                    "browser"
+                  ]
+                },
+                "legacy_decision": {
+                  "type": "string",
+                  "enum": [
+                    "ALLOW",
+                    "ADJUST",
+                    "REVISE",
+                    "REVIEW"
+                  ]
+                },
+                "canonical_decision": {
+                  "type": "string",
+                  "enum": [
+                    "PROCEED",
+                    "MODIFY",
+                    "ESCALATE",
+                    "BLOCK"
+                  ]
+                },
+                "reason": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "source_commit": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{40}$"
+                }
+              }
+            }
           }
         }
       }

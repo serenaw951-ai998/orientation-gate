@@ -101,7 +101,32 @@ test("expanded cases validate, preserve original decisions/inputs, and report ga
   assert.equal(scope.expected_decision, "BLOCK");
   assert.equal(scope.status, "PASS");
   const legacy = results.find(r => r.case_id === "CS-001-RISK" && r.evaluator_surface === "node");
-  assert.equal(legacy.expected_decision, "ADJUST");
+  assert.equal(legacy.expected_decision, "MODIFY");
+  assert.equal(legacy.decision_migration.legacy_decision, "ADJUST");
   assert.equal(legacy.actual_decision, "MODIFY");
-  assert.equal(legacy.status, "FAIL");
+  assert.equal(legacy.status, "PASS");
+});
+
+test("migration preserves actual outputs and inputs from the v0.3 report", () => {
+  const expanded = require("../examples/case-library/library.json");
+  const historical = require("../docs/evaluation/reports/2026-09-15T02-57-07-054Z-vFwToJ/results.json");
+  const actual = evaluateCases(expanded, ["node"]);
+  for (const current of actual) {
+    const before = historical.results.find(r => r.case_id === current.case_id && r.evaluator_surface === "node");
+    assert.deepEqual(current.evaluated_input, before.evaluated_input);
+    assert.deepEqual(current.actual_result, before.actual_result);
+    assert.equal(current.actual_decision, before.actual_decision);
+  }
+});
+test("canonical vocabulary requires explicit consistent migration metadata", () => {
+  const expanded = require("../examples/case-library/library.json");
+  const invalid = structuredClone(expanded);
+  invalid.cases[0].expected_results.node = "ADJUST";
+  assert.ok(validateSuite(invalid, schema).some(e => e.includes("canonical")));
+  const incorrect = structuredClone(expanded);
+  incorrect.cases[0].decision_migrations[0].canonical_decision = "BLOCK";
+  assert.ok(validateSuite(incorrect, schema).some(e => e.includes("migration")));
+  const deny = structuredClone(expanded);
+  deny.cases[0].decision_migrations[0].legacy_decision = "DENY";
+  assert.ok(validateSuite(deny, schema).length);
 });

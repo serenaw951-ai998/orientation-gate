@@ -1,0 +1,124 @@
+{
+  "source_commit": "9305d01330162c1c7d88243785e7c6e1df08c265",
+  "before_run_at": "2026-09-15T03:05:15.790Z",
+  "after_run_at": "2026-09-15T03:06:13.161Z",
+  "engine_sha256": "5453495555b5da9854299343f44508b698d21dbe1f3540d54a9b81e22695370b",
+  "orientation_checks_sha256": "ff4a932694ba9dc3b10d0a18fedcdc5a3477b2c4d675b7c792b5b445e8343a7b",
+  "before_summary": {
+    "PASS": 12,
+    "FAIL": 2,
+    "UNSUPPORTED": 0,
+    "ERROR": 0,
+    "compared": 14,
+    "expected_decision_agreement": 0.8571428571428571
+  },
+  "after_summary": {
+    "PASS": 14,
+    "FAIL": 0,
+    "UNSUPPORTED": 0,
+    "ERROR": 0,
+    "compared": 14,
+    "expected_decision_agreement": 1
+  },
+  "runtime_behavior_changed": false,
+  "comparisons": [
+    {
+      "case_id": "CS-001-RISK",
+      "before": "MODIFY",
+      "after": "MODIFY",
+      "input_unchanged": true,
+      "full_output_unchanged": true
+    },
+    {
+      "case_id": "CS-001-BENIGN",
+      "before": "PROCEED",
+      "after": "PROCEED",
+      "input_unchanged": true,
+      "full_output_unchanged": true
+    },
+    {
+      "case_id": "AUTH-001-RISK",
+      "before": "ESCALATE",
+      "after": "ESCALATE",
+      "input_unchanged": true,
+      "full_output_unchanged": true
+    },
+    {
+      "case_id": "AUTH-001-BENIGN",
+      "before": "PROCEED",
+      "after": "PROCEED",
+      "input_unchanged": true,
+      "full_output_unchanged": true
+    },
+    {
+      "case_id": "AUTH-002-RISK",
+      "before": "BLOCK",
+      "after": "BLOCK",
+      "input_unchanged": true,
+      "full_output_unchanged": true
+    },
+    {
+      "case_id": "AUTH-002-BENIGN",
+      "before": "PROCEED",
+      "after": "PROCEED",
+      "input_unchanged": true,
+      "full_output_unchanged": true
+    },
+    {
+      "case_id": "SCOPE-001-RISK",
+      "before": "BLOCK",
+      "after": "BLOCK",
+      "input_unchanged": true,
+      "full_output_unchanged": true
+    },
+    {
+      "case_id": "SCOPE-001-BENIGN",
+      "before": "PROCEED",
+      "after": "PROCEED",
+      "input_unchanged": true,
+      "full_output_unchanged": true
+    },
+    {
+      "case_id": "DATA-001-RISK",
+      "before": "BLOCK",
+      "after": "BLOCK",
+      "input_unchanged": true,
+      "full_output_unchanged": true
+    },
+    {
+      "case_id": "DATA-001-BENIGN",
+      "before": "PROCEED",
+      "after": "PROCEED",
+      "input_unchanged": true,
+      "full_output_unchanged": true
+    },
+    {
+      "case_id": "DECEPT-001-RISK",
+      "before": "BLOCK",
+      "after": "BLOCK",
+      "input_unchanged": true,
+      "full_output_unchanged": true
+    },
+    {
+      "case_id": "DECEPT-001-BENIGN",
+      "before": "PROCEED",
+      "after": "PROCEED",
+      "input_unchanged": true,
+      "full_output_unchanged": true
+    },
+    {
+      "case_id": "REVIEW-001-RISK",
+      "before": "ESCALATE",
+      "after": "ESCALATE",
+      "input_unchanged": true,
+      "full_output_unchanged": true
+    },
+    {
+      "case_id": "REVIEW-001-BENIGN",
+      "before": "PROCEED",
+      "after": "PROCEED",
+      "input_unchanged": true,
+      "full_output_unchanged": true
+    }
+  ]
+}

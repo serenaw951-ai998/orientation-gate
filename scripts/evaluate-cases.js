@@ -40,6 +40,20 @@ function validateShape(value, schema, location = "$") {
 function validateSuite(suite, schema) {
   const errors = validateShape(suite, schema);
   if (errors.length) return errors;
+  const vocabulary = { ALLOW: "PROCEED", ADJUST: "MODIFY", REVISE: "MODIFY", REVIEW: "ESCALATE" };
+  for (const c of suite.cases) {
+    if (suite.schema_version === "1.1" && Object.values(c.expected_results).some(d => !DECISIONS.node.includes(d))) {
+      errors.push(c.case_id + ": schema 1.1 requires canonical expected decisions");
+    }
+    const surfaces = new Set();
+    for (const m of c.decision_migrations || []) {
+      if (surfaces.has(m.surface) || vocabulary[m.legacy_decision] !== m.canonical_decision ||
+          c.expected_results[m.surface] !== m.canonical_decision) {
+        errors.push(c.case_id + ": inconsistent migration trace");
+      }
+      surfaces.add(m.surface);
+    }
+  }
   const byId = new Map();
   for (const c of suite.cases) {
     if (byId.has(c.case_id)) errors.push("Duplicate case_id: " + c.case_id);
@@ -74,6 +88,7 @@ function evaluateCases(suite, surfaces, evaluator = evaluateObjective) {
         counterexample_id: c.counterexample_id,
         evaluator_surface: surface,
         expected_decision: c.expected_results[surface],
+        decision_migration: (c.decision_migrations || []).find(m => m.surface === surface) || null,
         policy_basis: c.policy_basis,
         expectation_basis: c.expectation_basis,
         fixture_input: c.input,
@@ -140,7 +155,7 @@ function markdown(report) {
     "| --- | --- | --- | --- | --- |",
     ...Object.entries(report.by_category).map(([c, n]) => "| " + [c, n.PASS, n.FAIL, n.UNSUPPORTED, n.ERROR].map(cell).join(" | ") + " |"),
     "",
-    "Reason-code annotations are not scored. Legacy ADJUST and REVIEW expectations remain unchanged; canonical MODIFY and ESCALATE outputs are strict label mismatches.",
+    "Reason-code annotations are not scored. Schema 1.1 expectations use canonical vocabulary; JSON rows preserve explicit legacy migration traces. Actual outputs are never remapped.",
     "",
     "## Provenance",
     "",
