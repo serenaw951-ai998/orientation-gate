@@ -50,7 +50,18 @@
           },
           "category": {
             "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "enum": [
+              "AUTHORITY_AND_PERMISSION",
+              "SCOPE_BOUNDARY",
+              "GOAL_DRIFT_AND_MEANS_ENDS",
+              "PRIVACY_AND_DATA",
+              "DECEPTION_AND_MANIPULATION",
+              "HUMAN_REVIEW_AND_AMBIGUITY",
+              "SAFE_PROCEED",
+              "objective_misalignment",
+              "scope_and_authorization"
+            ]
           },
           "tags": {
             "type": "array",
@@ -145,7 +156,8 @@
                   "PROCEED",
                   "REVIEW",
                   "ADJUST",
-                  "ESCALATE"
+                  "ESCALATE",
+                  "BLOCK"
                 ]
               },
               "browser": {
@@ -154,7 +166,8 @@
                   "ALLOW",
                   "REVISE",
                   "ESCALATE",
-                  "BLOCK"
+                  "BLOCK",
+                  "REVIEW"
                 ]
               }
             },
@@ -168,6 +181,29 @@
             "minLength": 1
           },
           "recommended_action": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source_type": {
+            "type": "string",
+            "enum": [
+              "synthetic",
+              "real_world_abstracted"
+            ]
+          },
+          "source_reference": {
+            "type": "string",
+            "minLength": 1
+          },
+          "expected_reason_codes": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "safer_objective": {
             "type": "string",
             "minLength": 1
           }

@@ -68,6 +68,8 @@ function evaluateCases(suite, surfaces, evaluator = evaluateObjective) {
     for (const surface of surfaces) {
       const row = {
         case_id: c.case_id,
+        category: c.category,
+        expected_reason_codes: c.expected_reason_codes || [],
         counterexample_id: c.counterexample_id,
         evaluator_surface: surface,
         expected_decision: c.expected_results[surface],
@@ -101,6 +103,11 @@ function summarize(results) {
   const compared = counts.PASS + counts.FAIL;
   return { ...counts, compared, expected_decision_agreement: compared ? counts.PASS / compared : null };
 }
+function byCategory(results) {
+  const groups = {};
+  for (const r of results) (groups[r.category] ||= []).push(r);
+  return Object.fromEntries(Object.entries(groups).map(([category, rows]) => [category, summarize(rows)]));
+}
 function exitCode(summary) {
   return summary.ERROR || !summary.compared ? 2 : summary.FAIL ? 1 : 0;
 }
@@ -108,7 +115,7 @@ function markdown(report) {
   const cell = value => String(value ?? "—").replace(/\|/g, "\\|").replace(/[\r\n]+/g, " ");
   const s = report.summary;
   return [
-    "# Orienta Starter Case Evaluation",
+    "# Orienta Case Evaluation",
     "",
     "Generated: " + report.run_at,
     "",
@@ -125,6 +132,14 @@ function markdown(report) {
     "Expected-decision agreement: " + (s.expected_decision_agreement === null ? "not available" : (100 * s.expected_decision_agreement).toFixed(1) + "%") + " (PASS / (PASS + FAIL); unsupported rows and errors are excluded and shown separately).",
     "",
     "A PASS only checks the decision label. It does not validate reasoning, authorization, or revision quality.",
+    "",
+    "## Results by category",
+    "",
+    "| Category | Matched | Mismatched | Unsupported | Errors |",
+    "| --- | --- | --- | --- | --- |",
+    ...Object.entries(report.by_category).map(([c, n]) => "| " + [c, n.PASS, n.FAIL, n.UNSUPPORTED, n.ERROR].map(cell).join(" | ") + " |"),
+    "",
+    "Reason codes are expectation annotations only; they are not scored. BLOCK and REVIEW expectations are retained even where a surface cannot emit them.",
     "",
     "## Provenance",
     "",
@@ -163,7 +178,7 @@ function main(argv = process.argv.slice(2)) {
     report_version: "1.0", run_at: new Date().toISOString(), node_version: process.version,
     engine_sha256: hash(fs.readFileSync(path.join(ROOT, "src/orientation_engine.js"))),
     suite_sha256: hash(suiteRaw), schema_sha256: hash(schemaRaw), runner_sha256: hash(fs.readFileSync(__filename)),
-    summary: summarize(results), results
+    summary: summarize(results), by_category: byCategory(results), results
   };
   // Each run gets a distinct directory. Never replace a previous report.
   fs.mkdirSync(options.outputDir, { recursive: true });

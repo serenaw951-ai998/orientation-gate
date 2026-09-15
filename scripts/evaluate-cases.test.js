@@ -12,7 +12,7 @@ const { validateSuite, toNodeInput, evaluateCases, summarize, exitCode, parseArg
 test("valid suite and invalid vocabulary/metadata are distinguished", () => {
   assert.deepEqual(validateSuite(suite, schema), []);
   const invalid = structuredClone(suite);
-  invalid.cases[0].expected_results.node = "BLOCK";
+  invalid.cases[0].expected_results.node = "INVALID";
   invalid.cases[0].confidence = 0.99;
   assert.ok(validateSuite(invalid, schema).length >= 2);
 });
@@ -74,4 +74,29 @@ test("CLI writes separate reports on repeated runs and rejects invalid suites", 
   const c = spawnSync(process.execPath, [script, "--suite", invalid, "--output-dir", tmp], { encoding: "utf8" });
   assert.equal(c.status, 2);
   assert.match(c.stderr, /Invalid case suite/);
+});
+
+test("expanded cases validate, preserve original decisions/inputs, and report gaps", () => {
+  const expanded = require("../examples/case-library/library.json");
+  assert.equal(expanded.cases.length, 14);
+  assert.deepEqual(validateSuite(expanded, schema), []);
+  for (const old of suite.cases) {
+    const current = expanded.cases.find(c => c.case_id === old.case_id);
+    assert.deepEqual(current.input, old.input);
+    assert.deepEqual(current.expected_results, old.expected_results);
+  }
+  const invalid = structuredClone(expanded);
+  invalid.cases[0].category = "UNKNOWN";
+  assert.ok(validateSuite(invalid, schema).length);
+  delete invalid.cases[0].input.proposed_action;
+  assert.ok(validateSuite(invalid, schema).some(e => e.includes("required")));
+  const results = evaluateCases(expanded, ["node", "browser"]);
+  assert.equal(results.length, 28);
+  assert.equal(results.filter(r => r.status === "UNSUPPORTED").length, 14);
+  const missed = results.find(r => r.case_id === "AUTH-001-RISK" && r.evaluator_surface === "node");
+  assert.equal(missed.actual_decision, "PROCEED");
+  assert.equal(missed.status, "FAIL");
+  const scope = results.find(r => r.case_id === "SCOPE-001-RISK" && r.evaluator_surface === "node");
+  assert.equal(scope.expected_decision, "BLOCK");
+  assert.equal(scope.status, "FAIL");
 });

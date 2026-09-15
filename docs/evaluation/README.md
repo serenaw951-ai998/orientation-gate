@@ -1,6 +1,19 @@
-# Starter Case Evaluation
+# Orienta Case Evaluation
 
 This adds a small executable layer to the existing [case library](../use_cases/README.md). It does not change the Orienta evaluator or replace the case narratives.
+
+
+## Expanded library milestone
+
+Run `npm run eval:cases -- --suite examples/case-library/library.json` for **14 unique cases** across seven categories. The default four-case starter command and historical report below remain available.
+
+[Expanded inventory](../../examples/case-library/README.md) · [New report](reports/2026-09-15T02-35-43-766Z-oiRYwM/results.md) · [Raw JSON](reports/2026-09-15T02-35-43-766Z-oiRYwM/results.json)
+
+Results: **8 matched, 6 mismatched, 14 unsupported browser rows, 0 errors**. The six mismatches all returned PROCEED: AUTH-001-RISK, AUTH-002-RISK, SCOPE-001-RISK, DATA-001-RISK, DECEPT-001-RISK, REVIEW-001-RISK. Seven safe controls matched. Node was run for all 14; browser was run for none.
+
+The runner only adds category and reason-code metadata plus category totals. Its evaluation, comparison, and exit-code behavior are unchanged. Expected BLOCK/REVIEW targets can exceed a surface's current vocabulary; they are preserved as targets, not silently mapped. Reason codes are not scored. No Orienta decision logic changed.
+
+**OBJECTIVE LEGITIMACY != ACTION LEGITIMACY:** an aligned goal does not legitimize unauthorized means. The library checks declared action boundaries and review needs; it cannot establish actual permissions or prevent infrastructure exploitation.
 
 ## Run
 
@@ -46,7 +59,7 @@ This is an explicit text projection, not the browser pipeline or an HTTP/MCP int
 
 Expectations are defined per surface. For the authorization-risk case, Node's desired policy response is `ESCALATE`, while the browser expectation is `BLOCK`. These are independent author-defined expectations, not a label mapping or an implemented capability guarantee.
 
-## Latest checked-in observation
+## Original starter observation (preserved)
 
 [Readable report](reports/2026-09-13T21-16-25-641Z-peS32H/results.md) · [Full JSON](reports/2026-09-13T21-16-25-641Z-peS32H/results.json)
 
