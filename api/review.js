@@ -29,10 +29,7 @@ function buildRuleInput(body) {
   const context = [
     body.context,
     body.customer_message,
-    body.user_message,
-    body.proposed_ai_action,
-    body.proposed_action,
-    body.proposed_reply
+    body.user_message
   ]
     .filter(Boolean)
     .join(" ");
@@ -40,6 +37,8 @@ function buildRuleInput(body) {
   return {
     objective,
     context,
+    // Keep actions distinct for Core checks; canonical input wins over aliases.
+    proposed_action: body.proposed_action || body.proposed_ai_action || body.proposed_reply || "",
     domain: body.domain || "General",
     constraints: body.constraints || []
   };
