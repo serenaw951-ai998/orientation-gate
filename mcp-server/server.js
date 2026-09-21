@@ -30,7 +30,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 
 // The engine is CommonJS; load it via createRequire so we reuse the exact
-// same code that powers the CLI and the web demo — one engine, three surfaces.
+// same canonical Core as the CLI; MCP does not implement decision rules.
 const require = createRequire(import.meta.url);
 const engineModule = require("../src/orientation_engine.js");
 const { evaluateObjective } = engineModule;
@@ -93,15 +93,19 @@ const server = new McpServer({
 server.registerTool(
   "review_objective",
   {
-    title: "Orienta pre-flight objective review",
+    title: "Orienta pre-flight objective and action review",
     description:
       "Run this BEFORE executing a task or adopting a goal. Evaluates an AI " +
-      "agent objective for structural risk (incentive distortion, manipulation, " +
-      "youth safety, dependency formation, etc.) and returns a governance " +
-      "decision: PROCEED, REVIEW, ADJUST, or ESCALATE, with reasoning and a " +
-      "suggested reframe. Supports English and Chinese objectives. The verdict " +
-      "is computed server-side and recorded in an append-only audit log; it " +
-      "cannot be overridden by the caller.",
+      "agent objective and proposed_action through the canonical Orienta Core. " +
+      "Keep objective, context, and proposed_action distinct. PROCEED: the " +
+      "reviewed action may continue. MODIFY: change the objective or action " +
+      "and submit the modified proposal for review again before execution; " +
+      "execute only after PROCEED. ESCALATE: pause autonomous execution and " +
+      "refer to an authorized human or higher-authority system. BLOCK: the " +
+      "proposed action must not execute. The calling agent must enforce these " +
+      "decisions; this tool does not execute, intercept, or stop external tools. " +
+      "Returns Core reasoning and recommended action plus an audit reference. " +
+      "Language coverage is limited; a PROCEED verdict is not proof of safety.",
     inputSchema: {
       objective: z
         .string()
@@ -115,6 +119,14 @@ server.registerTool(
         .describe(
           "Optional surrounding context: who the agent serves, KPIs, deployment setting."
         ),
+      proposed_action: z
+        .string()
+        .optional()
+        .describe(
+          "The action or reply the agent proposes to execute. Pass it separately " +
+          "from objective and context to enable action-level checks. Omit only " +
+          "for an objective-only review, which does not approve an unstated action."
+        ),
       domain: z
         .string()
         .optional()
@@ -125,10 +137,11 @@ server.registerTool(
         .describe("Optional list of constraints already attached to the objective.")
     }
   },
-  async ({ objective, context, domain, constraints }) => {
+  async ({ objective, context, proposed_action, domain, constraints }) => {
     const verdict = evaluateObjective({
       objective,
       context: context || "",
+      proposed_action: proposed_action || "",
       domain: domain || "General",
       constraints: constraints || []
     });
