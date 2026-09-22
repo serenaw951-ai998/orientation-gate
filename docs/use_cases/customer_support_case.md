@@ -53,7 +53,7 @@ This is the intended integration flow. The workbench itself does not send replie
 
 **Observed on 2026-09-13:** the hosted main-demo preset returned `REVISE`, flagged **Incentive Distortion**, and recommended preserving valid refunds, transparent cancellation, appeals, and escalation.
 
-This is a browser result, not a copied API response. The backend uses a different evaluator and vocabulary; do not infer its result from this observation.
+This is a historical legacy-browser result, not a copied API response. Current Core/API/MCP use the canonical vocabulary; the structured CS-001-RISK fixture returns MODIFY. Do not infer current browser equivalence from the Node result.
 
 **Desired caller behavior:** withhold the draft, revise the objective/action, and re-review before sending. Route unresolved policy questions to a human.
 
@@ -93,4 +93,4 @@ A successful demo is not evidence of fewer complaints or improved customer trust
 
 ## Machine-readable evaluation companion
 
-The [starter suite](../../examples/case-library/starter.json) now includes an explicit risky/benign pair for this workflow. See the [recorded run](../evaluation/README.md#latest-checked-in-observation). The automated run uses Node text inputs including policy constraints; it does not re-run the conversation UI or establish a result for every narrative variant above. Browser observations remain separate.
+The [14-case library](../../examples/case-library/library.json), including its four-case starter subset, includes an explicit risky/benign pair for this workflow. See the [recorded run](../evaluation/README.md#latest-checked-in-observation). The automated run uses Node text inputs including policy constraints; it does not re-run the conversation UI or establish a result for every narrative variant above. Browser observations remain separate.

@@ -1,5 +1,7 @@
 # Orienta Chat v0.1 — Product & Backend Specification
 
+> **Historical / conceptual material.** This document is retained for context, not as the current implementation contract or validation evidence. Legacy labels and proposed capabilities below are not current interface guarantees. Start with the [current README](README.md), [Core contract](docs/orienta-core-v0.3.md), and [known limitations](docs/known-limitations.md).
+
 ## Overview
 
 Orienta Chat v0.1 is an AI governance and behavioral alignment demo system.

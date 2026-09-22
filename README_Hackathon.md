@@ -1,5 +1,7 @@
 # Orienta Governance Agent
 
+> **Historical / conceptual material.** This document is retained for context, not as the current implementation contract or validation evidence. Legacy labels and proposed capabilities below are not current interface guarantees. Start with the [current README](README.md), [Core contract](docs/orienta-core-v0.3.md), and [known limitations](docs/known-limitations.md).
+
 Orienta is a Gemini-powered governance agent that reviews AI objectives and proposed actions before execution, then saves accountable audit logs to MongoDB.
 
 It evaluates whether an AI objective is safe to pursue before execution, flags structural governance risks, and suggests safer objective reframes before an agent, workflow, or optimization system starts acting.
@@ -146,9 +148,6 @@ orientation-gate/
     runtime-governance.md
     orientation_schema.md
     risk_taxonomy.md
-    roadmap.md
-    signals/governance_signals_v0_1.md
-    theory/
     use_cases/
 
   demo/

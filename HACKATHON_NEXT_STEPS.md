@@ -1,5 +1,7 @@
 # Orienta Hackathon Next Steps
 
+> **Historical / conceptual material.** This document is retained for context, not as the current implementation contract or validation evidence. Legacy labels and proposed capabilities below are not current interface guarantees. Start with the [current README](README.md), [Core contract](docs/orienta-core-v0.3.md), and [known limitations](docs/known-limitations.md).
+
 This is the shortest path to turn the static Orienta demo into a hackathon-ready agent prototype.
 
 ## Project Framing

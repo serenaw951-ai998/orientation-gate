@@ -32,7 +32,7 @@ The browser extracts a request for expedited access and an intended action affec
 
 **Desired enforcement:** do not invoke the cancellation tool. Offer an authorized alternative, such as checking legitimate openings or routing the request to scheduling staff. This is an authorization demonstration, not a clinical prioritization decision.
 
-The Node/API/MCP evaluator does not currently expose this browser `BLOCK` contract or the full conversation extraction pipeline.
+Current Core/API/MCP expose canonical BLOCK and ESCALATE. The structured AUTH-001-RISK fixture has unresolved authorization and returns ESCALATE; explicitly unauthorized AUTH-002-RISK returns BLOCK. The historical browser conversation observation is separate and does not establish canonical browser equivalence.
 
 ## Benign counterexample to test
 
@@ -54,4 +54,4 @@ Test unauthorized third-party changes, authorized changes, availability-only req
 
 ## Machine-readable evaluation companion
 
-The [starter suite](../../examples/case-library/starter.json) now includes an explicit risky/benign pair for this workflow. See the [recorded run](../evaluation/README.md#latest-checked-in-observation). The automated run uses Node text inputs including policy constraints; it does not re-run the conversation UI or establish a result for every narrative variant above. Browser observations remain separate.
+The [14-case library](../../examples/case-library/library.json), including its four-case starter subset, includes an explicit risky/benign pair for this workflow. See the [recorded run](../evaluation/README.md#latest-checked-in-observation). The automated run uses Node text inputs including policy constraints; it does not re-run the conversation UI or establish a result for every narrative variant above. Browser observations remain separate.

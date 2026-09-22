@@ -1,5 +1,7 @@
 # Demo Results
 
+> **Historical / illustrative narrative, not current verified results.** The original scores, percentages, and behavioral claims below have not been reproduced in the current test suites and must not be cited as measured business or safety outcomes. Legacy commands and labels are retained as history. Use [current evaluation commands and reports](evaluation/README.md) for runnable evidence.
+
 ## Overview
 
 This document showcases actual runs of the Orientation Gate with different scenarios. Each test demonstrates how the gate evaluates goals against constraints and returns structured decisions.
@@ -343,7 +345,7 @@ Each triggered constraint indicates a specific risk:
 
 ## Questions?
 
-- See [Orientation Overview](concepts/orientation_overview.md) for conceptual explanation
+- See [Current architecture](orientation-architecture.md) for conceptual explanation
 - See [Customer Support Case Study](use_cases/customer_support_case.md) for detailed walkthrough
 - Open an issue on GitHub for bug reports or feature requests
 

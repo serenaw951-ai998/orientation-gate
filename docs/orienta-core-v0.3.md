@@ -1,5 +1,7 @@
 # Orienta core v0.3
 
+> Current integration status: the review API and MCP now preserve proposed_action independently. See [the boundary fixes](evaluation/interface-semantic-loss.md) and [current verification](evaluation/current-status.md). Milestone sections below retain their original results and scope; their statements about adapters describe those earlier milestones.
+
 ## Model
 
 The core now emits **PROCEED / MODIFY / ESCALATE / BLOCK**. Existing incentive/goal risk rules remain supporting signals. Independent authority, scope, means, and unresolved-review checks can override a low risk score.

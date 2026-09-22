@@ -1,221 +1,171 @@
 # Orienta
 
-**Pre-execution governance for AI objectives and planned actions.**
+**Orienta is a model-agnostic decision and governance layer for AI agents.**
 
-Orienta reviews what an agent is trying to achieve and what it intends to do before execution. It identifies governance risks, explains the evidence, and recommends whether the objective or action should proceed, be revised, be escalated, or be blocked.
+Before a consequential action, it reviews an objective, context, and proposed action for goal/incentive distortion, authority, scope, means, and unresolved uncertainty. It returns **PROCEED / MODIFY / ESCALATE / BLOCK**, reasons, and a recommended next step.
 
-**[Try the live demo](https://orientation-gate-khaki.vercel.app/) · [API guide](docs/api/review_api.md) · [MCP integration](mcp-server/README.md) · [SenuxTech](https://www.senuxtech.com/orienta)**
+The current Core is a deterministic, inspectable prototype. It does not require a model API. **Orienta returns a control signal; the calling agent or system must enforce it.** It does not intercept external tools or independently verify real permissions.
 
-> Formerly **Orientation Gate**. The repository retains its original name, `orientation-gate`, to preserve existing links. The product name is **Orienta**.
+[Quick Start](#quick-start) · [Evaluation](docs/evaluation/README.md) · [API](docs/api/review_api.md) · [MCP](mcp-server/README.md) · [Contributing](CONTRIBUTING.md)
 
-## Why Orienta?
+## Why it exists
 
-A goal such as “reduce refunds” can encourage an agent to obstruct legitimate requests. A request to “get me an earlier appointment” can lead an agent to propose changing someone else's booking without authorization.
+A legitimate goal can lead to an unacceptable method. A support agent might reduce refunds by obstructing valid requests; a scheduling agent might seek an earlier appointment by modifying someone else's booking. Orienta provides a checkpoint before the proposed action is executed.
 
-Orienta places a governance checkpoint between a proposed objective or action and execution:
+The research question is whether this checkpoint measurably improves agent behavior under realistic task pressure. That outcome has not yet been demonstrated with a real external agent.
 
-> **Should this objective or action be pursued as written—and under what constraints?**
-
-The goal is to give builders reusable, inspectable decision logic across agents and workflows. The current implementation is a deterministic prototype with explicit risk rules and, in the main browser demo, evidence extraction and hard-constraint checks.
-
-## Explore the Demo
-
-The [main demo](https://orientation-gate-khaki.vercel.app/) has two review modes and an evaluation view.
-
-| View | What you can do |
-| --- | --- |
-| **Quick Scenario** | Review a business goal, user context, domain, and—in customer support—a proposed action or reply. Start with refund/retention, youth safety, companion dependency, or recommendation presets. |
-| **Conversation Review** | Paste a conversation or agent trace. Rule-based extraction identifies user intent, agent objective, intended action, authorization signals, and missing context. Presets include refund conflict, waitlist manipulation, and companion dependency. |
-| **Evaluation & Observability** | Inspect evidence-supported governance dimensions, hard constraints, matched risks, a step-by-step decision trace, and experimental scores. |
-
-Results show the decision, primary reason, risk flags, an illustrative before/after comparison, and safer direction. **Copy JSON** exports the decision and extracted evidence.
-
-### Two examples
-
-| Scenario | Detected issue | Main demo result |
-| --- | --- | --- |
-| The refund preset pairs a refund-reduction goal with a reply denying refunds and avoiding escalation. | Incentive distortion: the objective may pressure the system to obstruct valid refund requests. | **REVISE** — preserve valid refunds, transparent cancellation, appeals, and escalation. |
-| An agent offers to cancel another patient's appointment to move the current user up a waitlist. | Unauthorized third-party modification. The current user's request does not authorize changing another person's booking. | **BLOCK** — resolve the authorization violation before proceeding. |
-
-These are demonstrable prototype outcomes. The before/after text describes alternative behavior; the workbench does not execute refunds, change appointments, or operate external tools.
-
-## How the Main Demo Works
+## How it works
 
 ```mermaid
 flowchart TD
-    Q["Quick Scenario<br/>Goal + context + proposed action"] --> E["Extract governance evidence"]
-    C["Conversation Review<br/>Conversation or agent trace"] --> E
-    E --> H["Hard-constraint checks<br/>Authorization, unresolved closure,<br/>high-impact action and review"]
-    E --> S["Soft risk rules<br/>Incentives, manipulation,<br/>dependency and other risks"]
-    H --> D{"Governance decision"}
-    S --> D
-    D --> A["ALLOW<br/>Continue with monitoring"]
-    D --> R["REVISE<br/>Change objective or action"]
-    D --> X["ESCALATE<br/>Route to human review"]
-    D --> B["BLOCK<br/>Resolve boundary violation"]
-    D --> O["Explanation + safer direction<br/>Evidence + trace + JSON"]
+    A["Agent"] --> I["Objective + Context + Proposed Action"]
+    I --> O["Orienta Core"]
+    O --> D["PROCEED / MODIFY / ESCALATE / BLOCK"]
+    D --> E["Calling Agent / System Enforcement"]
 ```
 
-Hard constraints are evaluated independently of the soft risk score and can determine the decision even when that score is low. Conversation extraction is currently based on transparent patterns; model-assisted semantic extraction is a future integration direction.
+The Core combines existing risk signals with orientation checks. A low aggregate score cannot override a detected prohibited boundary or unresolved material authorization. Scores and confidence are heuristics, not calibrated safety probabilities.
 
-In an agent integration, **the calling application must enforce the decision before execution**. Revised actions should be reviewed again, and escalation requires an actual human-review path in the application.
+## Decision semantics
 
-## Decision Interfaces
+| Decision | Meaning | Calling system responsibility |
+| --- | --- | --- |
+| PROCEED | No material issue was detected in the supplied evidence. | The reviewed action may continue, subject to application permissions. |
+| MODIFY | The objective or means can be corrected. | Withhold execution, revise the proposal, and re-evaluate it before executing. |
+| ESCALATE | Material authorization, scope, information, or interpretation is unresolved. | Pause autonomous execution and obtain authorized human/higher-authority review. |
+| BLOCK | Available context establishes a prohibited boundary. | Do not execute the proposed action. |
 
-The main browser demo and backend currently have different evaluators and decision vocabularies.
+ESCALATE is not BLOCK: unknown authorization requires resolution; established lack of authorization can prohibit execution. A PROCEED result is not proof of safety.
 
-| Surface | Current decisions |
+## Architecture
+
+- [Core and CLI](src/): `orientation_engine.js` imports reusable checks from `orientation_checks.js`. [Core contract](docs/orienta-core-v0.3.md) · [Output schema](src/schema.json).
+- [Review API](api/review.js): preserves separate objective, context, and action fields; wraps Core with optional model analysis and MongoDB audit storage.
+- [MCP server](mcp-server/server.js): exposes the same Core over stdio and adds a local audit reference.
+- **The browser demo remains a separate legacy evaluator.** It is not the verified canonical Core browser path.
+
+The adapters previously lost the independent action field. See [Interface Semantic Loss](docs/evaluation/interface-semantic-loss.md) for the reproduced failure and regression protection.
+
+## Current verified status
+
+Local verification baseline: API commit `61eb563` and MCP commit `8a9f8de`. [Verification scopes and commands](docs/evaluation/current-status.md).
+
+| Scope | Locally verified result |
 | --- | --- |
-| Main browser demo, `index.html` | `ALLOW`, `REVISE`, `ESCALATE`, `BLOCK` |
-| Node evaluator, CLI, review API, and MCP objective review | `PROCEED`, `REVIEW`, `ADJUST`, `ESCALATE` |
+| Core tests | 11 passed |
+| Evaluation-runner tests | 10 passed |
+| 14-case Node library | 14 PASS / 0 FAIL / 0 UNSUPPORTED |
+| SAFE_PROCEED controls, included above | 7/7 |
+| Review API regression tests | 23 passed; includes 3 local HTTP tests with storage stubbed |
+| MCP regression tests | 25 passed: 19 stdio contract checks and 6 simulated caller checks |
+| Existing MCP smoke script | Completed locally |
 
-For the backend, `PROCEED` means continue with monitoring; `REVIEW` calls for closer inspection or missing context; `ADJUST` calls for revision; and `ESCALATE` calls for human review.
+These suites have different scopes; they are not a universal safety score. API deployment, real database integration, and real external agent enforcement are **not validated by these results**.
 
-These are separate contracts, not interchangeable labels. In particular, the backend does not yet expose the main demo's `BLOCK` decision or its full conversation hard-constraint pipeline.
+**Experimental:** browser workbench, reference-agent demos, heuristic text interpretation. **Not yet validated:** production effectiveness, real human handoff, real external tool enforcement, independent benchmark performance.
 
-The browser computes its visible result locally, then attempts an asynchronous audit request to `/api/review` when hosted. The server independently evaluates the input: its own baseline remains authoritative for the API response, while the browser result is recorded as client-reported evidence. Audit failure does not prevent the browser from showing its local result.
+## Quick Start
 
-## Where Orienta Fits in Senux
-
-Orienta is being developed as the **orientation and policy layer** within Senux's broader exploration of a **Human State Runtime**.
-
-The proposed system connects an evolving representation of human state to decisions and behavior across agents, applications, and devices. Orienta's role is to determine an appropriate direction and constraints for action; the behavior layer would translate that decision into timing, channel, and execution.
-
-```mermaid
-flowchart LR
-    EV["Events / Context"] --> HS["Human State<br/>+ State Dynamics"]
-    HS --> OR["Orienta<br/>Orientation / Policy"]
-    GO["Objective / Proposed Action"] --> OR
-    OR --> BR["Behavior Runtime"]
-    BR --> AD["Text / Music / Visual / Motion<br/>Adapters"]
-    AD --> HR["Human / Environment"]
-    HR --> FB["Feedback / Evaluation"]
-    FB --> EV
-    classDef focus fill:#173b35,stroke:#36b89b,color:#ffffff,stroke-width:3px;
-    class OR focus;
-```
-
-**This diagram describes the broader proposed system, under validation.** This repository's current integration point is objective and action governance. It does not implement the complete shared state, dynamics, scheduling, and cross-channel feedback loop.
-
-Builders can use Orienta's current evaluator or integration interfaces independently. The long-term architecture explains where Orienta is heading without requiring adoption of the entire Senux system.
-
-## Run Locally
-
-Use a current checkout of this repository:
+Use Node.js 24 for the locally tested environment. Offline Core evaluation and the Core/API regression tests require no package installation, model key, or database.
 
 ```bash
 git clone https://github.com/serenaw951-ai998/orientation-gate.git
 cd orientation-gate
-```
-
-### Browser workbench
-
-Open `index.html` directly in a browser. The main review and evaluation views run locally without API keys. When opened as a local file, the workbench skips server audit requests.
-
-### Offline Node evaluator
-
-With Node.js installed:
-
-```bash
 node src/gate_node.js examples/customer_support_demo_input.json
+node --test scripts/orientation-core.test.js
 ```
 
-Additional scenarios:
+Direct use from the repository root:
+
+```js
+const { evaluateObjective } = require("./src/orientation_engine");
+
+const result = evaluateObjective({
+  objective: "Help the current user find an earlier appointment.",
+  context: "No authorization from the other appointment holder has been provided.",
+  proposed_action: "Cancel another patient's appointment to move the current user up the waitlist.",
+  domain: "Healthcare / Insurance",
+  constraints: ["Changes to a third party's booking require valid authorization."]
+});
+console.log(result.decision); // ESCALATE
+```
+
+The fields are evidence supplied by the caller, not permissions granted by Orienta. See the [limitations](docs/known-limitations.md).
+
+## Run the evaluation
 
 ```bash
-npm run demo:youth
-npm run demo:companion
-npm run demo:recommendations
+node --test scripts/evaluate-cases.test.js scripts/api-review.test.js
+node scripts/evaluate-cases.js --suite examples/case-library/library.json --surface node
 ```
 
-### Serverless API
+Each evaluation run creates a new report under `eval-runs/`. The default runner without arguments selects the four-case starter and both surfaces; use the explicit command above for the 14-case Node result. Browser evaluation remains UNSUPPORTED.
 
-Install dependencies, configure a local `.env` using [.env.example](.env.example), and start the Vercel development server:
+## API integration
+
+`POST /api/review` accepts separate `objective`, `context`, and `proposed_action` fields, plus `domain` and `constraints`. Legacy aliases are retained; canonical action takes precedence.
+
+The response includes the canonical decision and the Core result under `baseline`. The caller must handle all four decisions, re-review revisions, and fail closed on errors or unknown decisions.
+
+Running the serverless API additionally requires root package installation, Vercel development tooling, and MongoDB. Gemini analysis is optional. Read the [API guide](docs/api/review_api.md) for setup, field precedence, response fields, and data handling. Local regression tests do not prove the hosted endpoint has been deployed or tested.
+
+## MCP integration
+
+From the repository root:
 
 ```bash
-npm install
-npm run vercel:dev
+cd mcp-server
+npm ci --ignore-scripts
+node --test contract.test.mjs
+node test.mjs
+cd ..
 ```
 
-| Variable | Purpose |
+Tools: `review_objective`, `list_risk_rules`, and `read_audit_log`. Supply the proposed action separately. Objective-only review remains supported, but does not approve an unstated action. The smoke script appends synthetic entries to a local audit log.
+
+See [MCP setup and calling-agent responsibilities](mcp-server/README.md). Installing the server does not force an external agent to obey its decisions.
+
+## Evaluation methodology
+
+The [14-case library](examples/case-library/README.md) contains seven risk cases and seven paired safe controls. PASS means agreement with an author-defined expected decision label. It does not certify explanation quality, permission validity, recovery quality, or real-world safety.
+
+API/MCP regression tests additionally compare full Core outputs across the adapter boundary. [Historical reports](docs/evaluation/README.md#historical-evidence) retain original results and vocabulary; no failures were erased. This is not production certification or independent benchmark validation.
+
+## Known limitations
+
+- Deterministic patterns have limited language, negation, and contextual coverage.
+- Real authorization and execution controls belong to the calling system.
+- The reference agent lacks an independent BLOCK stop path, does not re-review MODIFY revisions, and has no real human handoff for ESCALATE.
+- Browser results cannot be substituted for Node/API/MCP results.
+- The suite is small and author-defined; broader safety and business outcomes remain unproven.
+
+See [Known Limitations](docs/known-limitations.md), including hosted-demo data handling.
+
+## Open experiments
+
+Collaborators can investigate real agent enforcement, revision re-evaluation, human escalation, Agent-only vs Agent + Orienta, and cross-agent/model integration. These are proposed experiments, not implemented capabilities or completed studies. [Experiment questions and metrics](docs/open-experiments.md).
+
+## Repository map
+
+| Path | Role |
 | --- | --- |
-| `MONGODB_URI` | Required for audit writes in `/api/review` and `/api/customer-agent`. |
-| `MONGODB_DB` | Database name; defaults to `orienta`. |
-| `GEMINI_API_KEY` | Enables the optional supplemental scan in the review API and model generation in the reference agent. The reference agent has canned fallback replies when generation is unavailable. |
+| `src/orientation_engine.js`, `src/orientation_checks.js`, `src/schema.json` | Current Core and output contract |
+| `api/review.js`, `mcp-server/` | Current review integration boundaries |
+| `scripts/`, `examples/case-library/` | Regression tests and structured evaluation |
+| `docs/evaluation/reports/` | Immutable historical evidence |
+| `docs/` | Current guides plus clearly marked historical/conceptual notes |
+| `index.html`, `agent-demo.html`, `customer-support-demo.html` | Experimental demos; not external-agent enforcement evidence |
+| `archive/`, `demo/`, root hackathon files | Historical prototypes and event material |
+| `src/refund_engine.js`, `modules/` | Legacy refund-specific module, outside the canonical Core path |
 
-Both API handlers currently require a successful MongoDB write to return success. Keep credentials out of committed files.
+[Full navigation and inventory](docs/project_organization.md) · [Experimental demo links](project_links.md). No Agent Skill is currently provided.
 
-## Integrate Orienta
+## Contributing
 
-### HTTP review
+Start with [CONTRIBUTING.md](CONTRIBUTING.md) for tests, reproducible failures, and an experiment template. Core changes need evidence; do not add case-specific patches or change expected labels merely to improve scores.
 
-Send an objective and proposed action to `POST /api/review`:
-
-```json
-{
-  "business_goal": "Reduce refund requests while preserving valid refund rights.",
-  "customer_message": "I want to cancel my subscription and request a refund.",
-  "proposed_ai_action": "Deny the refund and avoid human escalation.",
-  "domain": "Customer Support",
-  "constraints": [
-    "Preserve valid refund rights",
-    "Do not hide escalation paths"
-  ]
-}
-```
-
-The response includes `decision`, `risk_flags`, `baseline`, `model_assisted_scan`, and `audit_id`. The baseline contains the rule-engine score, reasoning, and `recommended_action`. Optional model analysis supplements the baseline; it does not replace the server's decision.
-
-See the [review API guide](docs/api/review_api.md) and [handler](api/review.js).
-
-### MCP objective review
-
-The [MCP server](mcp-server/README.md) exposes `review_objective`, `list_risk_rules`, and `read_audit_log` for MCP-capable agents. It wraps the Node objective evaluator and provides a local audit-log interface.
-
-### Reference agent workflow
-
-The [Agent Sandbox](https://orientation-gate-khaki.vercel.app/agent-demo.html) demonstrates draft → governance review → final reply, with an audit record. The [customer support demo](https://orientation-gate-khaki.vercel.app/customer-support-demo.html) provides a focused support workflow.
-
-These are reference demos. The sandbox does not connect to a real support queue, and its rewritten reply is not automatically subjected to a second governance pass.
-
-## Current Scope and Limitations
-
-- **Deterministic prototype.** Rules and conversation extraction cover known patterns; they can miss intent, mishandle negation, or flag benign language. An `ALLOW` or `PROCEED` result is not proof of safety.
-- **Experimental scores.** Risk and confidence values are heuristic, not calibrated probabilities or measured accuracy.
-- **Separate evaluators.** Main-demo hard constraints and conversation extraction are not yet unified with the Node/API/MCP evaluator.
-- **Language coverage.** The Node evaluator includes English and partial Chinese patterns. Its coverage guard returns `REVIEW` when no rule matches and the combined input contains at least four non-ASCII characters. This is a heuristic, not complete language detection; the main browser evaluator has separate coverage.
-- **Feedback is preliminary.** The evaluation view accepts a feedback selection, but it does not yet implement a persisted reviewer-feedback or learning pipeline.
-- **Enforcement belongs to the integration.** Authentication, application permissions, real human handoff, and execution control must be established for a deployment.
-
-## Evaluate the Starter Cases
-
-Run `npm run test:cases` to check the evaluation tooling and `npm run eval:cases` to compare four author-defined fixtures with the Node evaluator. Browser checks are explicitly unsupported by this runner. The initial report includes an authorization-case mismatch; it is retained as a capability gap, not hidden as a passing test.
-
-See [evaluation instructions and the recorded results](docs/evaluation/README.md). These results measure agreement with the stated expectations, not safety accuracy.
-
-## Next Validation Priorities
-
-1. Unify the browser and backend decision schema, evidence model, and hard-constraint evaluation.
-2. Test objective/action review inside an external agent workflow, including re-review after revision.
-3. Expand conversation and language coverage using reviewed failure cases and benign counterexamples.
-4. Evaluate false positives, missed risks, decision usefulness, and human-review outcomes.
-5. Validate how human-state context should inform policy decisions within the broader Senux architecture.
-
-Feedback from agent builders and engineers is welcome, especially on whether decisions are actionable and where the current rules miss important context.
-
-## Repository Guide
-
-| Path | Purpose |
-| --- | --- |
-| `index.html` | Main review workbench, conversation extraction, and evaluation UI |
-| `src/` | Node objective evaluator, CLI runner, and refund helper |
-| `api/` | Review endpoint and reference customer-agent handler |
-| `mcp-server/` | MCP objective-review integration |
-| `examples/` | Offline scenario inputs |
-| `docs/` | Architecture, API notes, risk taxonomy, and failure cases |
-
-Further reading: [Goal validation](docs/goal-validation-layer.md) · [API positioning](docs/product/orienta_api_positioning.md) · [Failure library](docs/failure_library_index.md) · [Risk taxonomy](docs/risk_taxonomy.md) · [Roadmap](ORIENTA_PRODUCT_ROADMAP.md)
+Report sensitive vulnerabilities using [SECURITY.md](SECURITY.md), not public issues containing secrets or private data.
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE). Preserve applicable copyright and license notices; dependencies retain their own licenses.

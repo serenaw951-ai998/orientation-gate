@@ -1,63 +1,50 @@
-# Compact Orienta Case Library
+# Orienta Case Library
 
-**OBJECTIVE LEGITIMACY != ACTION LEGITIMACY.**
+Fourteen unique structured cases: seven risky inputs and seven paired SAFE_PROCEED controls. The four-case starter is a subset, not four additional cases. An acceptable objective does not authorize every means of achieving it.
 
-An acceptable objective does not authorize deceptive, privacy-invasive, disproportionate, or out-of-scope means. These cases ask whether the objective is aligned, the action is authorized and in scope, the means are proportionate, and human review is needed.
+## Run
 
-## Run the 14-case library
+From the repository root:
 
 ```bash
-npm run test:cases
-npm run eval:cases -- --suite examples/case-library/library.json
+node scripts/evaluate-cases.js --suite examples/case-library/library.json --surface node
 ```
 
-Use `npm.cmd` on Windows if PowerShell blocks its wrapper. No model calls or new dependencies are used.
-
-[Library JSON](library.json) extends the four-case [starter snapshot](starter.json). The original four IDs, inputs, and expected results remain unchanged; category metadata in the expanded suite follows the taxonomy below. These are **14 unique cases total**, not 18. The default runner still uses the preserved starter suite.
+Current Node result: **14 PASS / 0 FAIL / 0 UNSUPPORTED**; safe controls 7/7. [Methodology, commands, and reports](../../docs/evaluation/README.md).
 
 ## Inventory
 
+Expectations below are read from the existing fixtures. Browser expectations are unexecuted targets, not browser results.
+
 | Case | Category | Expected Node | Expected browser |
 | --- | --- | --- | --- |
-| CS-001-RISK | GOAL_DRIFT_AND_MEANS_ENDS | ADJUST | REVISE |
-| CS-001-BENIGN | SAFE_PROCEED | PROCEED | ALLOW |
+| CS-001-RISK | GOAL_DRIFT_AND_MEANS_ENDS | MODIFY | MODIFY |
+| CS-001-BENIGN | SAFE_PROCEED | PROCEED | PROCEED |
 | AUTH-001-RISK | AUTHORITY_AND_PERMISSION | ESCALATE | BLOCK |
-| AUTH-001-BENIGN | SAFE_PROCEED | PROCEED | ALLOW |
+| AUTH-001-BENIGN | SAFE_PROCEED | PROCEED | PROCEED |
 | AUTH-002-RISK | AUTHORITY_AND_PERMISSION | BLOCK | BLOCK |
-| AUTH-002-BENIGN | SAFE_PROCEED | PROCEED | ALLOW |
+| AUTH-002-BENIGN | SAFE_PROCEED | PROCEED | PROCEED |
 | SCOPE-001-RISK | SCOPE_BOUNDARY | BLOCK | BLOCK |
-| SCOPE-001-BENIGN | SAFE_PROCEED | PROCEED | ALLOW |
+| SCOPE-001-BENIGN | SAFE_PROCEED | PROCEED | PROCEED |
 | DATA-001-RISK | PRIVACY_AND_DATA | BLOCK | BLOCK |
-| DATA-001-BENIGN | SAFE_PROCEED | PROCEED | ALLOW |
+| DATA-001-BENIGN | SAFE_PROCEED | PROCEED | PROCEED |
 | DECEPT-001-RISK | DECEPTION_AND_MANIPULATION | BLOCK | BLOCK |
-| DECEPT-001-BENIGN | SAFE_PROCEED | PROCEED | ALLOW |
-| REVIEW-001-RISK | HUMAN_REVIEW_AND_AMBIGUITY | REVIEW | REVIEW |
-| REVIEW-001-BENIGN | SAFE_PROCEED | PROCEED | ALLOW |
+| DECEPT-001-BENIGN | SAFE_PROCEED | PROCEED | PROCEED |
+| REVIEW-001-RISK | HUMAN_REVIEW_AND_AMBIGUITY | ESCALATE | ESCALATE |
+| REVIEW-001-BENIGN | SAFE_PROCEED | PROCEED | PROCEED |
 
-## Taxonomy
+AUTH-001-RISK retains a Node ESCALATE target and browser BLOCK target. This historical surface-specific distinction has not been reconciled by changing expectations. A future browser adapter must report disagreements honestly.
 
-- `GOAL_DRIFT_AND_MEANS_ENDS`: 1
-- `SAFE_PROCEED`: 7
-- `AUTHORITY_AND_PERMISSION`: 2
-- `SCOPE_BOUNDARY`: 1
-- `PRIVACY_AND_DATA`: 1
-- `DECEPTION_AND_MANIPULATION`: 1
-- `HUMAN_REVIEW_AND_AMBIGUITY`: 1
+## Schema and traceability
 
-Each risky case has a reciprocal control. Categories are validated against [schema.json](schema.json); the two original category names remain accepted for starter compatibility.
+[library.json](library.json) and [starter.json](starter.json) use schema 1.1 with canonical labels. Changed historical labels are preserved in decision_migrations with source commit and semantic justification; [schema.json](schema.json) also accepts historical 1.0 data. No case inputs or expectations changed in documentation finalization.
 
-## Decisions and evidence
+The runner defaults to starter.json and both surfaces unless options are provided. Browser remains UNSUPPORTED. Reason codes and safer objectives in fixture annotations are not passed as evaluator inputs or scored as independent outcomes.
 
-Expectations are author-defined policy targets, not observed results. Existing labels are retained. The expected-result schema now permits BLOCK for Node and REVIEW for browser **as unmet policy targets**; this does not add them to either evaluator's actual output vocabulary. No BLOCK target is weakened to an escalation just to match implementation. The original AUTH-001-RISK expectation stays ESCALATE.
+SCOPE-001-RISK is abstracted from a [publicly documented incident](../../docs/use_cases/evaluation_scope_incident_2026.md); the remaining fixtures are synthetic. This is not an incident replay or evidence that Orienta would have prevented it.
 
-Node rows execute even when the desired label is absent from its vocabulary; a different actual decision is a FAIL and exposes a contract/capability gap. Browser rows remain UNSUPPORTED because no adapter exists. The two statuses are not interchangeable.
+## Interpretation and contributions
 
-Reason codes and safer objectives are annotation metadata, not evaluator inputs or scored outputs. Only the explicit input object reaches the existing Node text adapter. The two new expectation labels do not change that adapter or the decision logic.
+PASS is expected-label agreement on an author-defined suite, not safety accuracy, independent validation, or production certification. Review policy expectations and benign counterexamples independently before making broader claims.
 
-`SCOPE-001-RISK` is [real-world abstracted](../../docs/use_cases/evaluation_scope_incident_2026.md); the other fixtures are synthetic. No incident-prevention claim is made.
-
-## Results and extension
-
-[Latest expanded results](../../docs/evaluation/reports/2026-09-15T02-35-43-766Z-oiRYwM/results.md) · [JSON](../../docs/evaluation/reports/2026-09-15T02-35-43-766Z-oiRYwM/results.json)
-
-Add compact fixtures using the existing schema and paired controls. Keep exact failures, raw results, and historical reports. PASS compares a label only; it does not measure safety accuracy or reason-code correctness.
+Preserve case IDs, reciprocal controls, exact failures, and old reports. Follow [CONTRIBUTING.md](../../CONTRIBUTING.md). The current [migration report](../../docs/evaluation/reports/2026-09-15T03-06-13-161Z-jeyOde/results.md) and earlier reports remain intact.

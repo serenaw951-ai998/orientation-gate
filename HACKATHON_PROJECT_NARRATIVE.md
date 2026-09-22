@@ -1,5 +1,7 @@
 # Orienta Governance Agent
 
+> **Historical / conceptual material.** This document is retained for context, not as the current implementation contract or validation evidence. Legacy labels and proposed capabilities below are not current interface guarantees. Start with the [current README](README.md), [Core contract](docs/orienta-core-v0.3.md), and [known limitations](docs/known-limitations.md).
+
 ## One-Line Description
 
 Orienta is a Gemini-powered governance agent that reviews AI objectives and proposed actions before execution, then saves accountable audit logs to MongoDB.

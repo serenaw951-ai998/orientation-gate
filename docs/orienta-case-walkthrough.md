@@ -19,7 +19,7 @@ Start with the support case; use the authorization case second. Introduce Senux 
 | What data does it need? | Goal, request, proposed action, and relevant policy/context. Actual permissions must come from the application. |
 | Why not a system prompt? | That may be sufficient for simple workflows. Test whether a shared, inspectable review interface improves consistency or review usefulness across workflows. |
 | Why not permissions? | Permissions remain necessary. Orienta can review direction before a permitted action; it does not replace resource-level access control. |
-| What has been proved? | Two specific browser presets returned REVISE and BLOCK. Accuracy, customer demand, and business improvement are not established. |
+| What has been proved? | The 14-case Node suite matches its expected labels; local API/MCP contract tests preserve Core output. Legacy browser observations remain separate. Real external-agent enforcement, safety accuracy, customer demand, and business improvement are not established. |
 | What happens after a revision? | The intended integration rechecks it. The reference sandbox does not currently implement that second pass. |
 | What pilot would help? | Compare risky and acceptable cases under existing controls and with Orienta; track misses, false positives, latency, and review burden. |
 

@@ -1,269 +1,39 @@
-# Orientation Schema
+# Current Core Input and Output
 
-## Overview
+The canonical vocabulary is **PROCEED / MODIFY / ESCALATE / BLOCK**. The machine-readable [output schema](../src/schema.json) is authoritative for result structure; the [case schema](../examples/case-library/schema.json) is a separate evaluation envelope.
 
-The Orientation Schema defines the structured input and output format used by Orientation Gate.
+## Inputs
 
-The purpose of the schema is to standardize how objectives are:
+| Field | Intended use |
+| --- | --- |
+| objective | The objective as written |
+| context | Relevant surrounding facts and policy context |
+| proposed_action | The specific proposed action or reply, independently supplied |
+| domain | Optional domain label |
+| constraints | Optional list of applicable constraints |
 
-- evaluated
-- classified
-- constrained
-- escalated
-- approved
-- restricted
+HTTP and MCP guides document their accepted types, aliases, and defaults. Do not fold the action into context or assume a review of an objective authorizes an unstated action.
 
-before execution begins.
+Direct Core optionally accepts orientation_evidence containing caller-validated facts; see [Core details](orienta-core-v0.3.md). These assertions are not authenticated permissions, and the current HTTP/MCP adapters do not expose the whole direct-Core input surface.
 
-This schema functions as a governance interface between:
+## Output
 
-- user intent
-- orchestration systems
-- runtime agents
-- execution frameworks
-- evaluation pipelines
+| Field | Meaning |
+| --- | --- |
+| decision | PROCEED, MODIFY, ESCALATE, or BLOCK |
+| risk_score | Supporting heuristic risk signal |
+| confidence | Heuristic evaluator confidence |
+| reason_codes | Machine-readable reasons |
+| reasoning | Explanatory strings |
+| recommended_action | Suggested next step |
+| safer_objective | Returned safer direction where applicable |
 
----
+Existing fields such as objective, domain, risk_flags, triggered_rules, evaluator_version, and orientation_evidence remain part of current Core output. No second schema is introduced by this guide.
 
-# Core Principle
+PROCEED permits continuation of the reviewed action under application permissions. MODIFY requires correction and review before execution. ESCALATE pauses for authorized review. BLOCK prohibits the proposed action. The caller enforces these outcomes.
 
-Traditional AI systems typically process:
+## Surface wrappers and history
 
-```text
-input → generation → output
-````
+The HTTP response places Core output in baseline and exposes its decision at the top level. MCP returns JSON text containing Core output plus audit metadata. Neither wrapper's metadata is a new decision algorithm.
 
-Orientation introduces an intermediate layer:
-
-```text
-input → orientation evaluation → execution decision
-```
-
-The schema formalizes this layer.
-
----
-
-# High-Level Flow
-
-```text
-Objective Input
-    ↓
-Context Parsing
-    ↓
-Constraint Evaluation
-    ↓
-Risk Classification
-    ↓
-Boundary Analysis
-    ↓
-Decision Output
-```
-
----
-
-# Input Schema
-
-## Example Input
-
-```json
-{
-  "objective": "Reduce refund requests by 20%",
-  "context": "Customer support operations",
-  "domain": "Customer Support",
-  "constraints": [
-    "Maintain customer trust",
-    "Do not deny valid refunds"
-  ]
-}
-```
-
----
-
-# Input Fields
-
-| Field                | Type   | Description                        |
-| -------------------- | ------ | ---------------------------------- |
-| objective            | string | Primary optimization target        |
-| context              | string | Operational environment            |
-| domain               | string | System category                    |
-| constraints          | array  | Explicit limitations or boundaries |
-| stakeholders         | array  | Affected parties                   |
-| execution_mode       | string | Manual, assisted, autonomous       |
-| escalation_threshold | number | Risk tolerance level               |
-
----
-
-# Objective Types
-
-Orientation supports multiple objective categories.
-
-Examples include:
-
-| Type           | Example              |
-| -------------- | -------------------- |
-| Efficiency     | Reduce handling time |
-| Financial      | Increase retention   |
-| Behavioral     | Increase engagement  |
-| Safety         | Prevent misuse       |
-| Recommendation | Improve ranking      |
-| Automation     | Reduce manual review |
-
----
-
-# Constraint Categories
-
-Constraints define non-optimizable boundaries.
-
-Examples:
-
-| Constraint Type | Example                        |
-| --------------- | ------------------------------ |
-| Legal           | Regulatory compliance          |
-| Ethical         | Avoid manipulation             |
-| Safety          | Prevent escalation             |
-| Human Autonomy  | Preserve user agency           |
-| Transparency    | Avoid deceptive behavior       |
-| Runtime Limits  | Prevent unrestricted execution |
-
----
-
-# Risk Classification Schema
-
-Orientation evaluates potential structural risks.
-
-## Example Risk Output
-
-```json
-{
-  "risk_flags": [
-    "Incentive Distortion",
-    "Trust Degradation"
-  ]
-}
-```
-
----
-
-# Risk Categories
-
-| Risk Type            | Description                  |
-| -------------------- | ---------------------------- |
-| Incentive Distortion | Wrong metric optimization    |
-| Manipulation Risk    | Coercive behavior            |
-| Escalation Risk      | Self-amplifying optimization |
-| Transparency Failure | Misleading outputs           |
-| Boundary Violation   | Protected constraint crossed |
-| Long-Term Harm       | Delayed systemic damage      |
-
----
-
-# Boundary Evaluation
-
-Certain constraints are treated as hard boundaries.
-
-These boundaries cannot be traded for optimization gains.
-
-## Examples
-
-* intentional deception
-* coercive retention
-* unsafe biological optimization
-* unauthorized autonomous escalation
-
----
-
-# Decision Schema
-
-The Orientation Layer produces a governance decision before execution.
-
-## Example Output
-
-```json
-{
-  "decision": "ADJUST",
-  "risk_score": 0.74,
-  "confidence": 0.81,
-  "risk_flags": [
-    "Incentive Distortion"
-  ],
-  "recommended_action": "Reframe objective toward reducing invalid refunds while preserving fairness"
-}
-```
-
----
-
-# Decision Types
-
-| Decision | Meaning                      |
-| -------- | ---------------------------- |
-| PROCEED  | Safe to execute              |
-| ADJUST   | Objective should be reframed |
-| ESCALATE | Human review required        |
-| RESTRICT | Prevent execution            |
-
----
-
-# Runtime Metadata
-
-Optional runtime governance metadata may include:
-
-| Field              | Purpose                  |
-| ------------------ | ------------------------ |
-| latency_budget     | Maximum evaluation time  |
-| token_budget       | Allowed evaluation cost  |
-| runtime_risk_level | Estimated execution risk |
-| audit_trace        | Governance logging       |
-| approval_required  | HITL requirement         |
-
----
-
-# Governance Position
-
-Orientation Schema operates before:
-
-* orchestration
-* runtime execution
-* optimization loops
-* autonomous workflows
-
-This creates a structured governance checkpoint prior to execution.
-
----
-
-# Integration Targets
-
-Potential integration environments include:
-
-* agent orchestration systems
-* enterprise workflow engines
-* customer support automation
-* recommendation systems
-* runtime governance platforms
-* simulation and evaluation environments
-
----
-
-# Future Extensions
-
-Possible future schema extensions include:
-
-* multi-agent governance
-* dynamic risk weighting
-* adaptive constraint systems
-* runtime orientation scoring
-* stakeholder graph analysis
-* simulation-aware evaluation
-
----
-
-# Structural Summary
-
-```text
-Optimization systems determine
-how efficiently objectives are pursued.
-
-Orientation Schema determines
-whether those objectives should proceed
-before optimization begins.
-```
-
+Earlier conceptual documents included fields such as stakeholders, execution_mode, and escalation_threshold; do not assume those proposed fields are current adapter inputs. Legacy decision labels remain in historical reports and explicit migration metadata, not the current Core vocabulary.

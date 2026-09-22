@@ -25,7 +25,6 @@ Both results were observed in the hosted browser demo on 2026-09-13. They establ
 - [Recommendation integrity](ai_recommendation_poisoning.md): requires retrieved-source evidence and upstream integrity signals.
 - [Identity-sensitive claims](identity_sensitive_hallucination.md): requires claim verification and provenance.
 - [Biological dual-use](biological-design-dual-use-case.md): incomplete research note; requires specialist validation.
-- [Motion orientation](motion_orientation_framework.md): conceptual Senux architecture, not a current Orienta integration.
 
 These are not all supported capabilities of the current evaluator.
 
@@ -33,12 +32,12 @@ These are not all supported capabilities of the current evaluator.
 
 Each case identifies the target team, end user, trigger, input evidence, proposed action, expected policy outcome, observed implementation behavior, benign counterexample, and validation plan. Use the [case template](case_template.md).
 
-The browser uses `ALLOW / REVISE / ESCALATE / BLOCK`; Node/API/MCP use `PROCEED / REVIEW / ADJUST / ESCALATE`. Record the surface and input with every observed result. An expected outcome is not a test result.
+The legacy browser uses `ALLOW / REVISE / ESCALATE / BLOCK`; current Core, review API, and MCP use `PROCEED / MODIFY / ESCALATE / BLOCK`. Record the surface and input with every observed result. An expected outcome is not a test result.
 
 For conversations with engineers, start with the [short walkthrough](../orienta-case-walkthrough.md). For evaluation tracking, use the [failure library index](../failure_library_index.md).
 
-## Executable starter evaluation
+## Current executable evaluation
 
-Four machine-readable fixtures now complement the narrative cases. See [evaluation instructions and actual results](../evaluation/README.md). The Node run has three matching decisions and one authorization-case mismatch; the four browser rows are not automated and are marked UNSUPPORTED. These are text-projected fixtures, not re-runs of the full browser presets.
+The [14-case suite](../../examples/case-library/README.md) includes the four-case starter subset. Current Node results are 14 PASS / 0 FAIL / 0 UNSUPPORTED, with seven safe controls. See [evaluation scopes and reports](../evaluation/README.md). Browser rows remain UNSUPPORTED; these are not re-runs of the conversation UI.
 
 An additional existing [off-domain objective-drift note](../../examples/case_off_domain_objective_drift.md) is retained as a research example, outside the starter suite. Its REDIRECT wording is conceptual, not a current evaluator decision.

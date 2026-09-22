@@ -1,89 +1,64 @@
-# Project Organization
+# Repository Navigation
 
-This document explains which files are the current Orienta product surface and which files are historical, exploratory, or adjacent experiments.
+Start at the [README](../README.md). This map separates runtime code, integration boundaries, evidence, and historical ideas; it does not imply every file is a current capability.
 
-## Current Product Surface
+## A — Current implementation
 
-These files should be treated as the main Orienta project:
+- `src/orientation_engine.js`: canonical deterministic evaluator.
+- `src/orientation_checks.js`: reusable orientation checks.
+- `src/schema.json`: canonical result schema.
+- `src/gate_node.js`: offline CLI.
 
-- `README.md`: public project entry point
-- `index.html`: Governance Workbench
-- `customer-support-demo.html`: focused customer support governance demo
-- `agent-demo.html`: Reference Agent Sandbox
-- `api/review.js`: governance review API
-- `api/customer-agent.js`: reference agent API
-- `src/orientation_engine.js`: core rule-based evaluator
-- `examples/*.json`: runnable evaluation inputs
-- `docs/api/review_api.md`: API integration guide
-- `docs/product/orienta_v0_1_spec.md`: current product scope
-- `docs/failure_library_index.md`: case library index
-- `docs/risk_taxonomy.md`: risk category reference
-- `ORIENTA_PRODUCT_ROADMAP.md`: product roadmap
-- `ORIENTA_VISION_NOTE.md`: long-term positioning
+## B — Current review interfaces
 
-## Historical Or Event-Specific Docs
+- `api/review.js`: HTTP review wrapper with independent action field.
+- `mcp-server/server.js`: shared-Core stdio tools.
+- `api/feedback.js`: experimental feedback-storage endpoint, not a Core decision interface.
 
-These files are useful context but should not be the first thing a new reader sees:
+Both review interfaces return decisions. The caller is responsible for execution, revision review, and human handoff.
 
-- `README_Hackathon.md`
-- `HACKATHON_PROJECT_NARRATIVE.md`
-- `HACKATHON_NEXT_STEPS.md`
-- `DEVPOST_MCP_SECTION.md`
-- `MONGODB_MCP_INTEGRATION.md`
-- `mcp.mongodb.example.json`
+## C — Evaluation evidence
 
-Keep them for reference, but avoid using them as the main product story.
+- `examples/case-library/library.json`: 14 cases.
+- `examples/case-library/starter.json`: four-case subset.
+- `examples/case-library/schema.json`: fixture validation and migration metadata.
+- `scripts/evaluate-cases.js`: runner.
+- `scripts/orientation-core.test.js`, `scripts/evaluate-cases.test.js`, `scripts/api-review.test.js`: tests by scope.
+- `mcp-server/contract.test.mjs`: stdio and explicitly simulated caller tests.
+- `mcp-server/test.mjs`: smoke script.
+- `docs/evaluation/reports/`: historical reports; preserve original contents.
 
-## Legacy Prototype Files
+[Current result and scope](evaluation/current-status.md) · [Integration lesson](evaluation/interface-semantic-loss.md).
 
-These are earlier demos or specs. Do not delete them unless intentionally archiving, but avoid treating them as current source of truth:
+## D — Current documentation
 
-- `Orienta_Chat_v0.1.md`
-- `orientation_gate_v04.html`
-- `orientation_gate_v05.1.html`
-- `demo/orientation_gate_demo.md`
+[Architecture](orientation-architecture.md) · [Core input/output](orientation_schema.md) · [Core v0.3 history](orienta-core-v0.3.md) · [API](api/review_api.md) · [MCP](../mcp-server/README.md) · [Limitations](known-limitations.md) · [Experiments](open-experiments.md) · [Cases](use_cases/README.md).
 
-The useful content from `Orienta_Chat_v0.1.md` has been consolidated into `docs/product/orienta_v0_1_spec.md`.
+[CONTRIBUTING.md](../CONTRIBUTING.md) and [SECURITY.md](../SECURITY.md) provide collaboration and sensitive-reporting guidance.
 
-## Adjacent Experiments
+## E — Historical material
 
-These are related to broader Senux/HSE/music/narrative exploration, but they are not the current Orienta wedge:
+- `archive/`: earlier HTML demos.
+- `demo/`: early specifications and demo concepts.
+- `README_Hackathon.md`, `HACKATHON_PROJECT_NARRATIVE.md`, `HACKATHON_NEXT_STEPS.md`, `DEVPOST_MCP_SECTION.md`: event-specific material.
+- `Orienta_Chat_v0.1.md`, `docs/product/orienta_v0_1_spec.md`: earlier specifications.
+- `docs/demo_results.md`: historical/illustrative narrative; not a reproducible current test report.
+- Conceptual capability, runtime, taxonomy, and signal notes are labeled where they exceed current implementation.
 
-- `心旋 - HSE Human State Engine.md`
-- `心旋 - HSE API v0.1.md`
-- `_senux_other_products/docs-hse/hse-concept.md`
-- `_senux_other_products/docs-hse/hse-api-v0.1.md`
-- `_senux_other_products/tools/music/`
-- `_senux_other_products/tools/narrative/`
-- `_senux_other_products/tools/emotion-portrait-*.html`
+Legacy vocabulary in these notes is retained as history, not the current interface. Do not use old numerical illustrations as measured outcomes.
 
-They may become relevant later, but they should not be mixed into the main Orienta README.
+## F — Experimental and legacy implementation
 
-## Current Product Wedge
+- `index.html`: legacy browser evaluator; separate from shared Core.
+- `agent-demo.html` + `api/customer-agent.js`: reference-agent demonstration with known enforcement gaps.
+- `customer-support-demo.html`: focused experimental support UI.
+- `src/refund_engine.js` + `modules/refund_retention_v0_2.json`: standalone legacy refund module with a different contract.
+- Other `examples/*.json` and research case notes: older inputs, snapshots, or hypotheses outside the 14-case suite.
 
-Keep the near-term story narrow:
+There is no packaged Agent Skill, real consequential-tool executor, or validated human-handoff implementation in this repository.
 
-```text
-Orienta reviews AI objectives and planned actions before execution.
-```
+## Root configuration and entry files
 
-Do not lead with:
+`README.md`, `CONTRIBUTING.md`, `SECURITY.md`, and `LICENSE` are the primary entry files. `package.json`, `vercel.json`, `.env.example`, and `.gitignore` configure the existing project. `project_links.md` lists experimental demos.
 
-- broad AGI governance
-- AI companion concepts
-- music generation
-- narrative systems
-- decentralized finance
-- full enterprise compliance
-
-Those can remain long-term directions after the core governance wedge is validated.
-
-## Next Cleanup Steps
-
-Recommended future cleanup:
-
-1. Standardize the top 10 use cases using `docs/use_cases/case_template.md`.
-2. Add a `docs/archive/` folder for old hackathon and legacy files if the repo becomes too noisy.
-3. Keep `README.md` short and product-facing.
-4. Keep API details in `docs/api/`, not in the README.
-5. Keep broad vision in `ORIENTA_VISION_NOTE.md`, not in the product demo.
+No directory rename or file move was needed. `src/`, `scripts/`, and `mcp-server/` remain stable so existing imports and configurations continue to resolve. Removed internal roadmap files are not current navigation targets.

@@ -1,84 +1,68 @@
-# Orienta Case Evaluation
+# Orienta Evaluation
 
-This adds a small executable layer to the existing [case library](../use_cases/README.md). It does not change the Orienta evaluator or replace the case narratives.
-
-
-## Expanded library milestone
-
-Run `npm run eval:cases -- --suite examples/case-library/library.json` for **14 unique cases** across seven categories. The default four-case starter command and historical report below remain available.
-
-[Expanded inventory](../../examples/case-library/README.md) · [New report](reports/2026-09-15T02-35-43-766Z-oiRYwM/results.md) · [Raw JSON](reports/2026-09-15T02-35-43-766Z-oiRYwM/results.json)
-
-Results: **8 matched, 6 mismatched, 14 unsupported browser rows, 0 errors**. The six mismatches all returned PROCEED: AUTH-001-RISK, AUTH-002-RISK, SCOPE-001-RISK, DATA-001-RISK, DECEPT-001-RISK, REVIEW-001-RISK. Seven safe controls matched. Node was run for all 14; browser was run for none.
-
-The runner only adds category and reason-code metadata plus category totals. Its evaluation, comparison, and exit-code behavior are unchanged. Expected BLOCK/REVIEW targets can exceed a surface's current vocabulary; they are preserved as targets, not silently mapped. Reason codes are not scored. No Orienta decision logic changed.
-
-**OBJECTIVE LEGITIMACY != ACTION LEGITIMACY:** an aligned goal does not legitimize unauthorized means. The library checks declared action boundaries and review needs; it cannot establish actual permissions or prevent infrastructure exploitation.
+The current suite contains **14 unique author-defined cases**, including seven SAFE_PROCEED controls. The current Node result is **14 PASS / 0 FAIL / 0 UNSUPPORTED / 0 ERROR**. This measures expected-label agreement, not safety accuracy.
 
 ## Run
 
-With Node.js 18 or later, from the repository root:
+From the repository root with Node.js 24:
 
 ```bash
-npm run test:cases
-npm run eval:cases
-npm run eval:cases -- --surface node
-npm run eval:cases -- --surface browser
+node --test scripts/orientation-core.test.js
+node --test scripts/evaluate-cases.test.js
+node --test scripts/api-review.test.js
+node scripts/evaluate-cases.js --suite examples/case-library/library.json --surface node
 ```
 
-On Windows PowerShell, use `npm.cmd` instead of `npm` if script execution policy blocks the npm PowerShell wrapper.
+No package installation, API key, or database is required for these commands.
 
-No API key, database, package installation, or new dependency is required for these commands. The script imports the existing Node evaluator directly.
-
-The default selects both surfaces. Node rows execute; browser rows are **UNSUPPORTED** because no browser adapter exists. Selecting browser alone does not run a Node substitute.
-
-Outputs go into a new directory under `eval-runs/` on each run. To retain a report elsewhere:
+The default runner without arguments selects the four-case starter and both node/browser surfaces. Specify the 14-case library and node surface explicitly for the result above. To inspect unsupported browser coverage:
 
 ```bash
-npm run eval:cases -- --output-dir docs/evaluation/reports
+node scripts/evaluate-cases.js --suite examples/case-library/library.json --surface browser
 ```
 
-Exit codes: **0** = all compared labels match and no errors; **1** = at least one mismatch; **2** = invalid input, execution/reporting error, or no comparable results. Unsupported rows remain visible even when other rows permit exit 0. Read coverage counts as well as the exit code.
+This returns 14 UNSUPPORTED and exit code 2, not 14 failures or passes. It does not execute a browser or substitute Node results.
 
-## Data and compatibility
+New reports go to unique directories under `eval-runs/`. Exit codes: 0 means all compared labels match and no errors; 1 means a mismatch; 2 means invalid input, execution/reporting error, or no comparable results. Unsupported rows can coexist with exit 0 when another selected surface supplies comparisons; inspect counts.
 
-- [Starter fixtures](../../examples/case-library/starter.json): four exact inputs, two risky/benign pairs.
-- [Case schema](../../examples/case-library/schema.json): an evaluation envelope around inputs and expectations.
-- [Runner](../../scripts/evaluate-cases.js): validation, input projection, evaluation, and report generation.
-- [Runner tests](../../scripts/evaluate-cases.test.js): malformed data, surface separation, failures, and report persistence.
+## Current contract and methodology
 
-Existing `examples/*.json` remain unchanged. The older `src/schema.json` describes a historical output format and is not the case schema or the current Node decision contract. No attempt is made to silently reconcile or replace it.
+[Fixtures](../../examples/case-library/library.json) keep objective, context, proposed_action, domain, and constraints separate. [The runner](../../scripts/evaluate-cases.js) preserves those semantic fields when calling Core.
 
-The lightweight validator implements only the JSON Schema keywords present in the bundled case schema (type, properties, required, additionalProperties, enum, minLength, pattern, items, minItems), plus unique IDs and reciprocal counterexample links. Extend its tests if the schema gains new keywords.
+The [case schema](../../examples/case-library/schema.json) governs fixtures and migration traceability. [src/schema.json](../../src/schema.json) governs the canonical Core output; it is not a competing case schema.
 
-## What is executed?
+PASS compares the returned decision to an author-defined expectation. Reasons, recommended actions, safety, real permissions, and business outcomes are not independently scored. Synthetic fixtures and benign pairs help regression checking but do not establish population false-positive/false-negative rates.
 
-Each fixture stores objective, context, proposed action, domain, and constraints separately. The Node adapter joins context and proposed action with a newline and passes `objective/context/domain/constraints` to `evaluateObjective`. It performs no conversation extraction and no authorization inference.
+Browser expectations are unexecuted policy targets. AUTH-001-RISK intentionally retains different Node/browser targets; the existing browser target is not a validated canonical browser behavior.
 
-This is an explicit text projection, not the browser pipeline or an HTTP/MCP integration test. The JSON report includes the exact projected input and the raw evaluator output.
+The schema-1.1 vocabulary migration preserves legacy labels and semantic justifications in decision_migrations. Do not reinterpret historical reports or silently map arbitrary DENY labels to BLOCK.
 
-Expectations are defined per surface. For the authorization-risk case, Node's desired policy response is `ESCALATE`, while the browser expectation is `BLOCK`. These are independent author-defined expectations, not a label mapping or an implemented capability guarantee.
+## Boundary tests
 
-## Original starter observation (preserved)
+- [API regression tests](../../scripts/api-review.test.js): handler-level comparisons plus three local HTTP tests, with storage stubbed.
+- [MCP contract tests](../../mcp-server/contract.test.mjs): real local stdio and explicitly simulated caller behavior.
+- [Interface Semantic Loss](interface-semantic-loss.md): why direct Core success did not guarantee adapter correctness.
+- [Current verification scopes](current-status.md): exact local counts and reproduction commands.
 
-[Readable report](reports/2026-09-13T21-16-25-641Z-peS32H/results.md) · [Full JSON](reports/2026-09-13T21-16-25-641Z-peS32H/results.json)
+## Latest checked-in observation
 
-Engine source was read from repository commit `57ab12f2116f0d8aef57733f262beffc108c25aa`. Reports also record engine, suite, schema, and runner SHA-256 hashes, Node version, UTC time, and raw outputs with evaluator version.
+The [v0.3.1 report](reports/2026-09-15T03-06-13-161Z-jeyOde/results.md) records 14 Node passes. [JSON](reports/2026-09-15T03-06-13-161Z-jeyOde/results.json) · [Full-output migration regression](reports/2026-09-15T03-06-13-161Z-jeyOde/vocabulary-regression.json).
 
-The run compared four Node cases: **3 PASS, 1 FAIL, 0 ERROR**. Four browser rows were **UNSUPPORTED**.
+Category results (PASS/total): goal/means 1/1, authority 2/2, scope 1/1, privacy 1/1, deception 1/1, human review 1/1, safe controls 7/7. No remaining Node failure IDs. CS-001-RISK still detects incentive distortion with MODIFY.
 
-The authorization-risk fixture returned `PROCEED` rather than the expected `ESCALATE`. This exposes a gap in the current Node text evaluator for that input. It does not contradict the separately observed browser waitlist preset, which uses different extraction and hard constraints.
+## Historical evidence
 
-## Interpretation
+These reports remain unchanged, including their original labels and failures:
 
-PASS means exact decision-label agreement with a draft, author-defined expectation. It does not certify the reasoning, safety, revision quality, customer demand, or independent human agreement. The three matches out of four comparisons are **not a safety accuracy estimate**.
+| Milestone | Node result | Browser scope | Report |
+| --- | --- | --- | --- |
+| Four-case starter | 3 PASS / 1 FAIL | 4 UNSUPPORTED | [Original](reports/2026-09-13T21-16-25-641Z-peS32H/results.md) |
+| Expanded library before Core v0.3 | 8 PASS / 6 FAIL | 14 UNSUPPORTED | [Expanded](reports/2026-09-15T02-35-43-766Z-oiRYwM/results.md) |
+| Core v0.3 before vocabulary migration | 12 PASS / 2 FAIL | 14 UNSUPPORTED | [Core](reports/2026-09-15T02-57-07-054Z-vFwToJ/results.md) |
+| Vocabulary migration v0.3.1 | 14 PASS / 0 FAIL | Browser not selected | [Migration](reports/2026-09-15T03-06-13-161Z-jeyOde/results.md) |
 
-Unsupported rows and execution errors are reported separately and excluded from agreement's denominator. No false-allow or false-block population rates are claimed from this tiny, non-independent set.
+The last improvement resolved two reviewed vocabulary mismatches, not runtime behavior changes. See [Core history](../orienta-core-v0.3.md).
 
-The runner intentionally fails on the known mismatch. Do not change expectations or the evaluator simply to turn the report green; investigate and review any change.
+## Contributing evidence
 
-## Adding a case
-
-Follow the [narrative template](../use_cases/case_template.md), then add a fixture to `starter.json` or a separate suite passed with `--suite path/to/suite.json`. Use stable IDs, reciprocal risky/benign links, exact evidence, a policy basis, and surface-specific expectations. Do not place observed scores in expected metadata or overwrite past reports.
-
-Before treating this as a benchmark, obtain independently reviewed expectations, broaden examples and counterexamples, and decide how to evaluate explanations and action quality.
+Use the [case template](../use_cases/case_template.md) and [contribution guide](../../CONTRIBUTING.md). Include exact sanitized inputs, expected policy basis, actual output, evaluator surface/version, and a nearby control. Retain failures and reviewer disagreement. Do not change expectations or add case-specific rules merely to improve the score.
